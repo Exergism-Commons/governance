@@ -15,6 +15,7 @@ Project-specific legal, philosophical, analytical, and technical authority remai
 - [`cla/ENTITY-CLA-1.0-DRAFT.md`](cla/ENTITY-CLA-1.0-DRAFT.md) — proposed entity/corporate Contributor License Agreement.
 - [`cla/PROJECT-SCHEDULE.md`](cla/PROJECT-SCHEDULE.md) — repository-by-repository scope and outbound constraints.
 - [`cla/PROCESS.md`](cla/PROCESS.md) — proposed acceptance, verification, records and exception process.
+- [`cla/PRIVACY-AND-RECORDS.md`](cla/PRIVACY-AND-RECORDS.md) — privacy, data minimization, retention and agreement-record architecture.
 - [`cla/LEGACY-CONTRIBUTIONS.md`](cla/LEGACY-CONTRIBUTIONS.md) — treatment of contributions made before CLA adoption.
 - [`cla/AI-ASSISTED-CONTRIBUTIONS.md`](cla/AI-ASSISTED-CONTRIBUTIONS.md) — provenance rules for AI-assisted work.
 - [`cla/DESIGN-RATIONALE.md`](cla/DESIGN-RATIONALE.md) — why this model was selected and what it deliberately does not do.

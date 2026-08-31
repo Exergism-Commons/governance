@@ -54,11 +54,11 @@ A repository can remain outside CLA coverage until its scope is ready.
 
 ### CLA-05 — privacy and records system
 
-Define the data controller/record custodian, collection purpose, data fields, access, retention, correction, security and contributor contact process appropriate to applicable privacy law.
+Adopt an exact version of [`PRIVACY-AND-RECORDS.md`](PRIVACY-AND-RECORDS.md) or a qualified-review replacement and identify the data controller/record custodian, collection purposes, data fields, access controls, retention schedule, correction/request process, security controls, processors and international-transfer treatment appropriate to applicable law.
 
 Public Git must not become the default store for signatures, addresses or identity documents.
 
-**Current: open.**
+**Current: open. Draft architecture exists; production controller/system/retention/legal basis remain unresolved.**
 
 ### CLA-06 — acceptance/signature mechanism
 
