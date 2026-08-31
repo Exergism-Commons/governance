@@ -18,3 +18,7 @@ Organization-level governance should preserve the ecosystem's existing separatio
 - **organization governance** — cross-project stewardship, contributor provenance, institutional process, and shared policy.
 
 Repository administration does not by itself transfer contributor copyright or patent rights to Exergism Commons.
+
+## Architecture proposals
+
+- [`architecture/DOMAIN-AND-URI-ARCHITECTURE.md`](architecture/DOMAIN-AND-URI-ARCHITECTURE.md) — proposed allocation of `exergism.org`, persistent semantic identifiers, ontology namespaces, release URLs, registry boundaries, and migration rules.
