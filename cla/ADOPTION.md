@@ -1,0 +1,141 @@
+# CLA Adoption and Release Gate
+
+> **Current status: BLOCKED / DRAFT.** EC-ICLA 1.0-DRAFT and EC-ECLA 1.0-DRAFT must not be presented for binding acceptance yet.
+
+## 1. Why an adoption gate exists
+
+A contributor agreement is not made valid or institutionally sound merely by merging Markdown into GitHub. The production system needs an identifiable contracting party, exact terms, a rights-compatible project schedule, an acceptance mechanism and durable records.
+
+This gate separates drafting from legal activation.
+
+## 2. Mandatory blockers
+
+Every item below must be complete before `policy/cla-status.yaml` may set `operative: true`.
+
+### CLA-01 — competent legal Steward
+
+Record the exact legal person/entity that receives the CLA grant, including enough identity information to avoid confusion with the GitHub namespace.
+
+The record must explain the Steward's relationship to Exergism Commons and authority to steward the Covered Projects.
+
+**Current: open.**
+
+### CLA-02 — governing law and forum model
+
+Select and legally review governing law and, if used, forum/dispute terms. The choice should account for the Steward's actual legal form/location and the expected international contributor base.
+
+**Current: open.**
+
+### CLA-03 — qualified legal review
+
+Obtain independent qualified review of at least:
+
+- non-exclusive copyright grant and sublicensing language;
+- outbound-license constraint and successor-version mechanism;
+- moral-rights treatment, especially where non-waivable rights apply;
+- individual/entity ownership and employment issues;
+- no-patent-grant boundary and interaction with Apache-2.0/ECL/ECL-PL;
+- electronic acceptance/e-signature validity;
+- privacy/record retention;
+- successor-Steward transfer; and
+- enforcement/cooperation wording.
+
+For ECL 1.0, the result should be supplied to the qualified reviewers handling ECL `LAR-10`; this CLA review does not replace the rest of ECL's legal-review gate.
+
+**Current: open.**
+
+### CLA-04 — exact Project Schedule ratification
+
+Review every covered repository/material class against the actual outbound license and project governance. Resolve every `outbound unresolved` entry that would prevent knowing what rights the Steward may exercise.
+
+A repository can remain outside CLA coverage until its scope is ready.
+
+**Current: open.**
+
+### CLA-05 — privacy and records system
+
+Define the data controller/record custodian, collection purpose, data fields, access, retention, correction, security and contributor contact process appropriate to applicable privacy law.
+
+Public Git must not become the default store for signatures, addresses or identity documents.
+
+**Current: open.**
+
+### CLA-06 — acceptance/signature mechanism
+
+Choose and test a legally reviewed method (for example, an electronic-signature service or explicit authenticated clickwrap flow) that binds a human/entity to the exact immutable agreement and schedule.
+
+A mutable web page or unexplained checkbox is insufficient.
+
+**Current: open.**
+
+### CLA-07 — contributor-status automation
+
+If GitHub checks are automated, ensure the check:
+
+- resolves exact versions;
+- handles individual/entity coverage;
+- has an auditable override path;
+- fails without leaking private data; and
+- does not block ordinary issues/criticism that are not Contributions.
+
+Automation may launch after legal activation, but production repositories must not claim CLA enforcement is complete until checks are reliable.
+
+**Current: open.**
+
+### CLA-08 — legacy rights inventory
+
+Start the repository-by-repository migration in `LEGACY-CONTRIBUTIONS.md`, with ECL legal text/spec history prioritized for LAR-10.
+
+Legacy inventory need not necessarily be 100% complete before a prospective CLA starts accepting **new** Contributions, if qualified counsel agrees. It must not be falsely represented as retroactively cured by adoption.
+
+**Current: open.**
+
+## 3. Adoption artifact
+
+When the blockers are resolved, create an immutable adoption record containing at minimum:
+
+```yaml
+agreement_family: EC-CLA
+individual_version: EC-ICLA-1.0
+entity_version: EC-ECLA-1.0
+project_schedule_version: <exact version/hash>
+legal_steward:
+  legal_name: <exact>
+  legal_form: <exact>
+  jurisdiction: <exact>
+governing_law: <exact>
+forum: <exact or null>
+effective_date: <ISO-8601>
+acceptance_methods:
+  - <reviewed method>
+privacy_records_policy: <exact version/hash>
+legal_review_records:
+  - <immutable reference/hash>
+operative: true
+```
+
+The adopted CLA texts, Project Schedule and review inputs should be immutable/content-addressed. A convenience `current` pointer may exist but must not replace exact identity.
+
+## 4. Adoption decision
+
+Activation should occur through a dedicated PR whose sole substantive purpose is adoption. The PR must:
+
+- identify every completed blocker;
+- link immutable review evidence;
+- include the final exact legal text;
+- update machine-readable state;
+- state the effective date prospectively; and
+- explain transition rules for open PRs submitted before the effective date.
+
+## 5. No accidental activation
+
+None of the following makes the CLA operative:
+
+- merging this bootstrap package;
+- a maintainer saying `CLA required` in an issue;
+- adding a badge;
+- creating a GitHub branch named `stable`;
+- a bot assuming the newest file is effective; or
+- an organization rename/incorporation without a formal adoption record.
+
+Until the exact adoption artifact says otherwise, the CLA remains a legal-review candidate.

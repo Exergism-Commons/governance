@@ -1,0 +1,31 @@
+schema_version: 1
+policy: exergism-commons-contributor-license-agreement
+agreement_family: EC-CLA
+status: draft
+operative: false
+individual_version: EC-ICLA-1.0-DRAFT
+entity_version: EC-ECLA-1.0-DRAFT
+project_schedule_version: 0.1-DRAFT
+legal_steward: null
+governing_law: null
+forum: null
+effective_date: null
+acceptance_methods: []
+privacy_records_policy: null
+legal_review:
+  required: true
+  complete: false
+  records: []
+activation_blockers:
+  - CLA-01-legal-steward
+  - CLA-02-governing-law
+  - CLA-03-qualified-legal-review
+  - CLA-04-project-schedule-ratification
+  - CLA-05-privacy-records
+  - CLA-06-acceptance-mechanism
+  - CLA-07-contributor-status-automation
+  - CLA-08-legacy-rights-inventory
+notes:
+  - File presence does not imply legal effect.
+  - Automation must fail closed and must not infer an operative CLA from a mutable branch or latest pointer.
+  - The CLA itself grants no patent rights.

@@ -1,0 +1,80 @@
+schema_version: 1
+schedule_version: 0.1-DRAFT
+status: draft
+operative: false
+repositories:
+  - repository: Exergism-Commons/exergism
+    cla_coverage: proposed
+    material_classes:
+      - id: corpus-and-documentation
+        paths:
+          - content/**
+          - books/**
+          - formal/**
+          - examples/**
+          - assets/**
+          - ontology.owl
+          - manifest.json
+          - README.md
+          - CONTRIBUTING.md
+          - GOVERNANCE.md
+          - docs/**
+          - reviews/**
+        current_outbound: CC-BY-SA-4.0-unless-file-says-otherwise
+        cla_outbound_family: target-license-and-permitted-successors
+      - id: software-and-tooling
+        paths:
+          - scripts/**
+          - .github/**
+          - canonical_content_schema.json
+        current_outbound: Apache-2.0
+        cla_outbound_family: target-license-and-permitted-successors
+    cla_patent_grant: none
+    note: Any Apache-2.0 patent effect arises from Apache-2.0 itself, not the CLA.
+
+  - repository: Exergism-Commons/exergic-commons-license
+    cla_coverage: proposed
+    material_classes:
+      - id: ecl-project-lineage
+        paths:
+          - '**'
+        current_outbound: file-or-release-specific-and-not-normalized-here
+        existing_inbound: draft-CONTRIBUTING.md-contribution-rights-term
+        cla_outbound_family: ECL-project-purpose-family
+    cla_patent_grant: none
+    note: ECL 0.3-DRAFT expressly grants no patent license; LAR-10 requires contributor-rights review.
+
+  - repository: Exergism-Commons/ecl-patent-license
+    cla_coverage: proposed
+    material_classes:
+      - id: ecl-pl-project-lineage
+        paths:
+          - '**'
+        current_outbound: not-normalized-as-repository-wide-license
+        cla_outbound_family: ECL-PL-development-family
+    cla_patent_grant: none
+    note: Repository contribution must not itself create an ECL-PL patent grant.
+
+  - repository: Exergism-Commons/.github
+    cla_coverage: proposed-after-outbound-review
+    material_classes:
+      - id: organization-profile-and-community-health
+        paths:
+          - '**'
+        current_outbound: unresolved
+        cla_outbound_family: unresolved
+    cla_patent_grant: none
+
+  - repository: Exergism-Commons/governance
+    cla_coverage: bootstrap-not-retroactive
+    material_classes:
+      - id: organization-governance-and-legal-templates
+        paths:
+          - '**'
+        current_outbound: unresolved
+        cla_outbound_family: unresolved
+    cla_patent_grant: none
+
+non_retroactivity:
+  schedule_updates_may_expand_rights_for_prior_contributions: false
+  exception: only-if-prior-agreement-already-authorized-successor-category-or-contributor-separately-consents
