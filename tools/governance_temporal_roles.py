@@ -103,6 +103,42 @@ def validate_cla_steward_authority() -> None:
         core.require(signed_date <= authority_effective, "CLA Steward competent signature cannot postdate authority effective date")
 
 
+def validate_cla_activation_chronology() -> None:
+    status_text = (core.ROOT / "policy/cla-status.yaml").read_text(encoding="utf-8")
+    if core.yaml_scalar(status_text, "operative") is not True:
+        return
+    effective = core.parse_iso_date(core.yaml_scalar(status_text, "effective_date"), "CLA effective_date")
+
+    manifest_ref = {
+        "path": core.yaml_scalar(status_text, "legal_review_manifest_artifact"),
+        "sha256": core.yaml_scalar(status_text, "legal_review_manifest_sha256"),
+    }
+    manifest, _ = core.validate_content_ref(manifest_ref, "CLA legal review chronology manifest", "records/reviews")
+    completed = core.parse_iso_date(manifest.get("completed_date"), "CLA legal review completed_date")
+    core.require(completed <= effective, "CLA legal review must be completed no later than CLA effective_date")
+    reviewers = manifest.get("reviewers")
+    core.require(isinstance(reviewers, list) and reviewers, "CLA legal review chronology requires reviewers")
+    for index, reviewer in enumerate(reviewers):
+        sig, _ = core.validate_content_ref(reviewer.get("signature_evidence"), f"CLA reviewer chronology signature {index}", "records/evidence")
+        signed = core.parse_iso_date(sig.get("signed_date"), f"CLA reviewer signature {index}.signed_date")
+        core.require(signed <= completed <= effective, "CLA reviewer signature/review completion cannot postdate activation")
+
+    adoption_ref = {
+        "path": core.yaml_scalar(status_text, "adoption_record_artifact"),
+        "sha256": core.yaml_scalar(status_text, "adoption_record_sha256"),
+    }
+    adoption, _ = core.validate_content_ref(adoption_ref, "CLA adoption chronology record", "records/adoptions")
+    decision_date = core.parse_iso_date(adoption.get("decision_date"), "CLA adoption decision_date")
+    core.require(completed <= decision_date <= effective, "CLA adoption must follow completed legal review and precede/equal activation")
+    signatures = adoption.get("adopter_signatures")
+    core.require(isinstance(signatures, list) and signatures, "CLA adoption chronology requires adopter signatures")
+    for index, sig_ref in enumerate(signatures):
+        sig, _ = core.validate_content_ref(sig_ref, f"CLA adopter chronology signature {index}", "records/evidence")
+        signed = core.parse_iso_date(sig.get("signed_date"), f"CLA adopter signature {index}.signed_date")
+        core.require(signed <= effective, "CLA adopter signature cannot postdate CLA effective_date")
+
+
 def validate_cla_status() -> None:
     life.ORIG_VALIDATE_CLA_STATUS()
     validate_cla_steward_authority()
+    validate_cla_activation_chronology()
