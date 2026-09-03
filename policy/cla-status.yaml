@@ -1,4 +1,4 @@
-schema_version: 2
+schema_version: 3
 policy: exergism-commons-contributor-license-agreement
 agreement_family: EC-CLA
 status: draft
@@ -22,6 +22,10 @@ legal_review:
   required: true
   complete: false
   records: []
+legal_review_manifest_artifact: null
+legal_review_manifest_sha256: null
+adoption_record_artifact: null
+adoption_record_sha256: null
 activation_blockers:
   - CLA-01-legal-steward
   - CLA-02-governing-law
@@ -35,4 +39,5 @@ notes:
   - File presence does not imply legal effect.
   - Automation must fail closed and must not infer an operative CLA from a mutable branch or latest pointer.
   - Operative acceptance requires exact final agreement and Project Schedule bytes bound by SHA-256 in this record.
+  - Operative activation additionally requires a content-addressed qualified-legal-review manifest and CLA adoption record that bind those exact bytes.
   - The CLA itself grants no patent rights.
