@@ -16,6 +16,12 @@
     "type": "content-addressed-json",
     "required_fields": ["path", "sha256"]
   },
+  "maturity_evidence_chronology_contract": {
+    "evidence_as_of_date_must_equal_phase_effective_date": true,
+    "evidence_completed_no_later_than_phase_effective_date": true,
+    "supporting_evidence_captured_no_later_than_phase_effective_date": true,
+    "later_evidence_cannot_retroactively_establish_maturity": true
+  },
   "f1": {
     "minimum_active_members": 3,
     "independent_role_holder_present": false,
@@ -33,5 +39,5 @@
     "delegated_role_replacement_demonstrated": false,
     "role_replacement_evidence": null
   },
-  "notes": "Draft evidence contract only. A phase string cannot satisfy a transition gate. Operative F1 requires one content-addressed F0→F1 transition. Operative F2 requires both that validated prior F0→F1 record and a current F1→F2 record whose approved payload binds the prior transition digest, so F2 cannot be entered directly from F0. The prior F1 transition must itself have satisfied the F1 Active-Member, independent-role and effective treasury/domain/repository delegation criteria on its own effective date; later F2 maturity cannot retroactively cure an invalid F1 transition. Historical institutional authority for admissions and lifecycle actions is derived from these validated transition dates rather than trusted from a self-declared phase label."
+  "notes": "Draft evidence contract only. A phase string cannot satisfy a transition gate. Operative F1 requires one content-addressed F0→F1 transition. Operative F2 requires both that validated prior F0→F1 record and a current F1→F2 record whose approved payload binds the prior transition digest, so F2 cannot be entered directly from F0. The prior F1 transition must itself have satisfied the F1 Active-Member, independent-role and effective treasury/domain/repository delegation criteria on its own effective date; later F2 maturity cannot retroactively cure an invalid F1 transition. Current F1/F2 maturity evidence must bind the exact phase-effective date, be completed by that date, and rely only on supporting evidence captured by that date; later-created records cannot retroactively establish institutional maturity. Historical institutional authority for admissions and lifecycle actions is derived from these validated transition dates rather than trusted from a self-declared phase label."
 }
