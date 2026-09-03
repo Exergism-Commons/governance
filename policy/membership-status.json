@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "governance_version": "0.1-DRAFT",
+  "operative": false,
+  "registry_state": "bootstrap",
+  "one_person_one_vote": true,
+  "natural_person_voting_members_only": true,
+  "candidate_period_days": 30,
+  "voting_seasoning_days": {
+    "ordinary-approval": 30,
+    "qualified-approval": 90,
+    "constitutional-amendment": 90,
+    "mission-locked-amendment": 180
+  },
+  "members": [
+    {
+      "record_id": "ec-member-bootstrap-001",
+      "display_name": "Daniel Molinero Lucas",
+      "state": "designated-bootstrap",
+      "operative_membership": false,
+      "founding_steward": true,
+      "voting_eligible": false
+    }
+  ],
+  "notes": "Bootstrap projection only. This record does not create operative membership or voting authority."
+}
