@@ -9,8 +9,26 @@ def require_voting_window_contract(membership: dict) -> None:
     core.require(
         isinstance(contract, dict)
         and contract.get("eligibility_fixed_at_window_open") is True
-        and contract.get("content_addressed_open_record_required") is True,
+        and contract.get("content_addressed_open_record_required") is True
+        and contract.get("late_admissions_cannot_join_open_vote") is True,
         "Membership voting-window contract missing/weakened",
+    )
+    ballot = membership.get("ballot_authentication_contract")
+    core.require(
+        ballot == {
+            "content_addressed_authentication_required": True,
+            "member_signature_required": True,
+            "signature_context_type": "member-ballot",
+            "ballot_payload_fields": [
+                "decision_id",
+                "decision_class",
+                "voting_window_open_date",
+                "person_id",
+                "vote",
+            ],
+            "authentication_must_occur_within_voting_window": True,
+        },
+        "Membership ballot-authentication contract missing/weakened",
     )
 
 
@@ -57,13 +75,80 @@ def validate_voting_window_open_record(data, label, expected_decision_id, expect
     return opened
 
 
+def validate_ballot_authentication(ballot, label, index, expected_decision_id, expected_rule_id, status, opened, decision_date) -> None:
+    core.require(
+        isinstance(ballot, dict) and set(ballot) == {"person_id", "vote", "authentication_record"},
+        f"{label} ballot {index} must include person_id, vote and authentication_record",
+    )
+    person_id = ballot.get("person_id")
+    vote = ballot.get("vote")
+    core.require(isinstance(person_id, str) and person_id.strip(), f"{label} ballot {index} person_id required")
+    core.require(vote in {"for", "against", "abstain"}, f"{label} ballot {index} vote invalid")
+    payload = {
+        "decision_id": expected_decision_id,
+        "decision_class": expected_rule_id,
+        "voting_window_open_date": opened.isoformat(),
+        "person_id": person_id,
+        "vote": vote,
+    }
+    payload_hash = core.sha256_json(payload)
+    auth, _ = core.validate_content_ref(ballot.get("authentication_record"), f"{label} ballot {index} authentication", "records/evidence")
+    required = {
+        "record_type",
+        "status",
+        "governance_version",
+        "decision_id",
+        "decision_class",
+        "voting_window_open_date",
+        "person_id",
+        "vote",
+        "authenticated_date",
+        "ballot_payload_sha256",
+        "signature_evidence",
+    }
+    core.require(set(auth) == required, f"{label} ballot {index} authentication fields incomplete/unexpected")
+    core.require(auth["record_type"] == "ballot-authentication-evidence" and auth["status"] == "final", f"{label} ballot {index} authentication record invalid")
+    core.require(auth["governance_version"] == status["governance_version"], f"{label} ballot {index} authentication governance version mismatch")
+    core.require(auth["decision_id"] == expected_decision_id and auth["decision_class"] == expected_rule_id, f"{label} ballot {index} authentication decision mismatch")
+    core.require(auth["voting_window_open_date"] == opened.isoformat(), f"{label} ballot {index} authentication voting-window mismatch")
+    core.require(auth["person_id"] == person_id and auth["vote"] == vote, f"{label} ballot {index} authentication identity/vote mismatch")
+    core.require(auth["ballot_payload_sha256"] == payload_hash, f"{label} ballot {index} authentication payload hash mismatch")
+    authenticated = core.parse_iso_date(auth["authenticated_date"], f"{label} ballot {index}.authenticated_date")
+    core.require(opened <= authenticated <= decision_date, f"{label} ballot {index} authentication must occur within voting window")
+    signature = core.validate_signature_ref(
+        auth["signature_evidence"],
+        f"{label} ballot {index} member signature",
+        person_id,
+        expected_decision_id,
+        payload_hash,
+        "member-ballot",
+        status["governance_version"],
+        status["governance_version"],
+    )
+    core.require(signature.get("signed_date") == auth["authenticated_date"], f"{label} ballot {index} signature date must match authentication date")
+
+
 def validate_vote_approval(data, label, expected_decision_id, expected_rule_id, status, rules, membership, expected_artifact_bindings=None, expected_decision_date=None) -> None:
     opened = validate_voting_window_open_record(data, label, expected_decision_id, expected_rule_id, status, membership)
+    decision_date = core.parse_iso_date(data.get("decision_date"), f"{label}.decision_date")
+    ballots = data.get("ballots")
+    core.require(isinstance(ballots, list), f"{label} ballots must be a list")
+    for index, ballot in enumerate(ballots):
+        validate_ballot_authentication(ballot, label, index, expected_decision_id, expected_rule_id, status, opened, decision_date)
+
+    # The base arithmetic validator intentionally understands only the semantic
+    # voter/choice pair. Authentication references are validated above and then
+    # removed from this transient view; the immutable approval record retains them.
+    arithmetic_view = dict(data)
+    arithmetic_view["ballots"] = [
+        {"person_id": ballot["person_id"], "vote": ballot["vote"]}
+        for ballot in ballots
+    ]
     saved = core.active_members_as_of
     try:
         core.active_members_as_of = lambda membership_, _decision_date, rule_id_: life.historical_active_members_as_of(membership_, opened, rule_id_)
         life.ORIG_VALIDATE_VOTE_APPROVAL(
-            data,
+            arithmetic_view,
             label,
             expected_decision_id,
             expected_rule_id,
