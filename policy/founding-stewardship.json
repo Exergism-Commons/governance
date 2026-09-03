@@ -39,6 +39,8 @@
     "requires_evidence_record": true,
     "evidence_policy": "policy/phase-evidence.json",
     "approval_rule_must_be_explicit_in_decision_record": true,
+    "approval_rule_id": "qualified-approval",
+    "mission_veto_cannot_block_valid_maturity_transition": true,
     "f1_min_active_members": 3,
     "f2_min_active_members": 7,
     "f2_min_operational_months": 12
