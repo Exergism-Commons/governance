@@ -10,6 +10,10 @@ coverage_state_contract:
     - proposed
     - proposed-after-outbound-review
     - bootstrap-not-retroactive
+schedule_binding_contract:
+  authoritative_schedule_artifact: cla/PROJECT-SCHEDULE.md
+  exact_repository_set_required: true
+  exact_material_class_id_set_per_repository_required: true
 repositories:
   - repository: Exergism-Commons/exergism
     cla_coverage: proposed
