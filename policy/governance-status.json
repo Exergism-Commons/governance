@@ -10,5 +10,6 @@
   "ontology_iri": "https://id.exergism.org/ontology/commons",
   "vocabulary_namespace": "https://id.exergism.org/commons#",
   "adoption_record": null,
+  "integrated_architecture_pr": 2,
   "notes": "Draft architecture only. GitHub organization/repository state does not constitute legal adoption or institutional authority."
 }
