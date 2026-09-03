@@ -65,22 +65,60 @@ def parse_schedule_coverage(text: str) -> dict[str, set[str]]:
 
 
 def parse_projection_coverage(text: str) -> dict[str, set[str]]:
+    lines = text.splitlines()
+    repository_roots = [
+        index
+        for index, raw in enumerate(lines)
+        if raw == "repositories:"
+    ]
+    core.require(len(repository_roots) == 1, "covered-projects requires exactly one top-level repositories block")
+
     result: dict[str, set[str]] = {}
     current_repo: str | None = None
-    for raw in text.splitlines():
+    material_block_open = False
+    material_block_seen: set[str] = set()
+
+    for raw in lines[repository_roots[0] + 1 :]:
+        if not raw.strip():
+            continue
+        indent = len(raw) - len(raw.lstrip())
         stripped = raw.strip()
-        if stripped.startswith("- repository:"):
-            repository = stripped.split(":", 1)[1].strip()
+
+        # The top-level repositories mapping ends at the next top-level key.
+        if indent == 0:
+            break
+
+        if indent == 2 and stripped.startswith("- repository:"):
+            repository = stripped.split(":", 1)[1].strip().strip("'\"")
             core.require(repository and repository not in result, f"covered-projects duplicate/invalid repository: {repository}")
             current_repo = repository
             result[current_repo] = set()
+            material_block_open = False
             continue
-        if current_repo is not None and stripped.startswith("- id:"):
+
+        core.require(current_repo is not None, "covered-projects repositories block contains content before a repository entry")
+
+        if indent == 4 and stripped == "material_classes:":
+            core.require(current_repo not in material_block_seen, f"covered-projects duplicate material_classes block: {current_repo}")
+            material_block_seen.add(current_repo)
+            material_block_open = True
+            continue
+
+        # Any sibling field of material_classes closes the material-class list.
+        if indent <= 4:
+            material_block_open = False
+
+        if stripped.startswith("- id:"):
+            core.require(
+                material_block_open and indent == 6,
+                f"covered-projects material id must be a direct item of {current_repo}.material_classes",
+            )
             material_id = stripped.split(":", 1)[1].strip().strip("'\"")
             core.require(material_id and material_id not in result[current_repo], f"covered-projects duplicate/invalid material class: {current_repo}/{material_id}")
             result[current_repo].add(material_id)
 
     core.require(result, "covered-projects contains no repository coverage")
+    core.require(set(result) == material_block_seen, "every covered-projects repository requires exactly one material_classes block")
     for repository, material_ids in result.items():
         core.require(material_ids, f"covered-projects repository has no material classes: {repository}")
     return result
