@@ -175,11 +175,13 @@ No phase transition may be declared solely by changing a string or boolean in a 
 
 An operative F1 or F2 transition requires:
 
-1. the applicable institutional decision record;
+1. a **Qualified Approval** decision under the exact adopted decision rule and a content-addressed decision record binding that result;
 2. the objective Active-Member minimum derived from the operative Member Registry;
 3. non-null evidence references for each non-count criterion required by the target phase;
 4. for F2, at least 12 months between the recorded governance-operative date and the proposed phase-effective date; and
 5. successful validation of `policy/phase-evidence.json` against the canonical human criteria above.
+
+The Founding Steward or Mission Guardian does not acquire a separate veto over a maturity transition merely because that transition reduces founder power. The Mission Veto remains available only for an actual Mission Lock violation or protected irreversible action; it cannot be used to preserve founder executive primacy after the objective transition criteria and Qualified Approval are validly satisfied.
 
 The evidence registry is a projection and integrity gate, not a substitute for the underlying records. Unsupported booleans or a phase label cannot manufacture institutional maturity.
 
