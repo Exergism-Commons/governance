@@ -1,0 +1,36 @@
+@prefix ec: <https://id.exergism.org/commons#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Draft structural constraints. Legal/institutional validity remains external.
+
+ec:GovernanceDecisionShape a sh:NodeShape ;
+    sh:targetClass ec:GovernanceDecision ;
+    sh:property [
+        sh:path ec:decisionClass ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ec:operative ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:boolean
+    ] ;
+    sh:property [
+        sh:path ec:governanceVersion ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ec:DelegationShape a sh:NodeShape ;
+    sh:targetClass ec:Delegation ;
+    sh:or (
+      [ sh:property [ sh:path ec:delegatedTo ; sh:minCount 1 ] ]
+      [ sh:property [ sh:path ec:delegatedRole ; sh:minCount 1 ] ]
+    ) .
+
+# Policy-sensitive constraints such as threshold arithmetic, bootstrap operativity,
+# conflict-recusal arithmetic, Endowment principal withdrawal and domain-transfer
+# approval are additionally checked by deterministic code because their validity
+# depends on versioned policy state rather than graph shape alone.
