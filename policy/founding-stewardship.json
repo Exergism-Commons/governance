@@ -53,7 +53,9 @@
     "f2_requires_assignment_effective_by_phase_date": true,
     "succession_mode_requires_validated_founding_steward_cessation": true,
     "succession_assignment_must_not_predate_cessation": true,
-    "succession_evidence_must_bind_cessation_digest": true
+    "succession_evidence_must_bind_cessation_digest": true,
+    "succession_process_completed_no_later_than_assignment_decision": true,
+    "succession_supporting_evidence_captured_no_later_than_completion": true
   },
   "mission_lock": {
     "operative": false,
