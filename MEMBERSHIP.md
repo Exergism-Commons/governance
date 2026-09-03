@@ -39,7 +39,7 @@ Admission should require at least:
 3. acceptance of conflict-of-interest and records/privacy rules;
 4. evidence of meaningful good-faith participation in EC or an EC project;
 5. no known unresolved conduct or rights-provenance issue incompatible with institutional participation; and
-6. completion of the Candidate period.
+6. completion of the Candidate period where that period is applicable.
 
 No payment, donation or purchase is required to become a Member.
 
@@ -53,17 +53,36 @@ The Candidate period exists to make admission observable and contestable rather 
 
 A Candidate may contribute, participate in discussion and receive delegated technical roles, but Candidate status itself carries no institutional vote.
 
+The Candidate period applies to every **post-formation** admission. Initial natural-person Members expressly identified in the legally competent constitutive adoption are a formation exception because no operative Member body exists before the institution is constituted. That exception cannot be reused after initial governance adoption and cannot be created later by relabelling an admission as “initial”.
+
 ## 6. Admission authority during institutional phases
+
+### Initial constitutive registry
+
+The first operative Member Registry may seat only the initial natural persons expressly identified by the legally competent governance-adoption record. Their membership effective date must equal the constitutive effective date, and the admission record must resolve to that exact content-addressed adoption record.
+
+This formation mechanism is not an ordinary admission power. Once governance is operative, every additional Member follows the phase-specific process below.
 
 ### F0 — founder-led bootstrap
 
-During F0, the Founding Steward may admit initial Members who satisfy the admission criteria.
+During operative F0, the Founding Steward may admit an additional Member who satisfies the admission criteria and has completed the Candidate period.
 
-Each admission must be individually recorded with reasons and effective date. Batch admission for the purpose of controlling a known vote is prohibited.
+Each such admission must be individually recorded with:
+
+- stable admission and person identifiers;
+- Candidate start date and effective Active-Membership date;
+- reasons and evidence addressing the admission criteria;
+- the exact operative Founding Steward identity and authority used;
+- a signature/acceptance record bound to the exact admission payload; and
+- an immutable content-addressed decision record.
+
+Batch admission for the purpose of controlling a known vote is prohibited.
 
 ### F1 and later
 
 At F1 and later, admission requires Ordinary Approval of eligible non-conflicted Members after the Candidate period.
+
+The admission decision must bind the Candidate start date, effective date, person identity and exact approval evidence. The approval evidence must be evaluated against the electorate that existed for that decision; the person being admitted cannot become part of that electorate merely because the same change also writes their future Active-Membership row.
 
 The Founding Steward may raise a documented Mission Lock or integrity objection during the Founding Period. Such an objection must state specific grounds; it may not be based merely on disagreement with a Candidate's lawful position on an ordinary policy question.
 
@@ -80,7 +99,7 @@ Unless a stricter domain rule applies:
 
 This rule reduces the risk of capture through rapid mass admission immediately before a consequential vote.
 
-The relevant eligibility date is fixed when the formal voting window opens. Later admissions do not retroactively join that vote.
+The relevant eligibility date is fixed when the formal voting window opens. Later admissions do not retroactively join that vote. `active_since` must be the effective date proved by the admission record; it cannot be independently backdated to manufacture seasoning.
 
 ## 8. Activity and inactivity
 
@@ -95,11 +114,15 @@ Inactive status:
 - may be reversed through a documented reactivation process; and
 - must not be used selectively to manipulate a pending vote.
 
+Historical decision validation must use the Member state effective at the decision date rather than silently applying a later state change retroactively.
+
 ## 9. Conflicts and voting eligibility
 
 Membership alone does not guarantee eligibility on every decision.
 
-A Member is excluded from the effective eligible denominator when the applicable conflict policy requires recusal, including decisions primarily determining that Member's own compensation, direct contract, sanction, claim or uniquely preferential private benefit.
+A Member is excluded from the effective eligible denominator only when the applicable conflict policy requires recusal, including decisions primarily determining that Member's own compensation, direct contract, sanction, claim or uniquely preferential private benefit.
+
+Every machine-readable recusal used to change a voting denominator must resolve to a content-addressed conflict determination for the same person and decision. A vote envelope cannot manufacture a recusal merely by listing an opponent's identifier.
 
 Recusal does not terminate membership.
 
@@ -138,9 +161,9 @@ Reasonable privacy-preserving verification may be used. Full identity evidence s
 
 The proposed initial Founding Steward, Daniel Molinero Lucas, is the initial designated Member for bootstrap design purposes.
 
-This designation is **not operative membership** until a legally competent adoption record creates the initial Member Registry.
+This designation is **not operative membership** until a legally competent adoption record creates the initial Member Registry and identifies the initial Member(s) expressly.
 
-The first operative registry must record each initial Member individually rather than treating all repository collaborators or organization members as Members.
+The first operative registry must record each initial Member individually rather than treating all repository collaborators or organization members as Members. The constitutive exception in Section 5 ends with that initial adoption.
 
 ## 13. Membership and roles are separate
 
@@ -163,15 +186,18 @@ The canonical private Member Registry may contain identity evidence that is not 
 
 A public or repository-safe projection should expose only what is needed for governance audit, such as:
 
-- stable Member record ID;
+- stable Member record ID and stable natural-person identity key;
 - membership state;
-- effective dates;
-- voting-eligibility dates by class;
+- Candidate and Active-Membership effective dates;
+- admission mode and immutable admission record;
+- voting-eligibility dates by class derived from `active_since`;
 - role references where public;
 - inactivity/suspension state; and
 - hashes or references to controlled evidence rather than unnecessary personal data.
 
 Automation may compute eligibility from adopted records. It must not infer membership from GitHub organization membership, repository permissions, funding records or CLA status.
+
+A mutable current registry is not itself the authority for a historical change. Each admission, suspension, reactivation or termination must be supported by its own immutable decision record so the constitutional adoption record does not need to be rewritten whenever membership evolves.
 
 ## 15. Review and change
 
