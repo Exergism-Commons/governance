@@ -1,5 +1,5 @@
 {
-  "schema_version": 4,
+  "schema_version": 5,
   "governance_version": "0.1-DRAFT",
   "operative": false,
   "institutional_state": "bootstrap",
@@ -49,5 +49,5 @@
   "succession_process_adopted": false,
   "qualified_legal_review_complete": false,
   "integrated_architecture_pr": 2,
-  "notes": "Draft architecture only. GitHub organization/repository state does not constitute legal adoption or institutional authority. Operative state requires adopted non-draft human artifacts bound by SHA-256, a committed content-addressed governance-adoption record, and content-addressed implementation/legal-review evidence for every activation flag."
+  "notes": "Draft architecture only. Canonical governance artifact paths are fixed to CONSTITUTION.md, MEMBERSHIP.md and FOUNDING-STEWARDSHIP.md. Operative legal_entity must be a structured identity containing legal name, jurisdiction, registration basis, governing instrument, relationship to the public project and competent signatories with evidence; an arbitrary entity label is insufficient."
 }
