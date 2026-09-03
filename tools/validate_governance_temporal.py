@@ -6,6 +6,7 @@ import validate_governance_lifecycle as life
 import governance_temporal_phase as phase
 import governance_temporal_evidence as evidence
 import governance_temporal_roles as roles
+import governance_delegation_lifecycle as delegation_lifecycle
 
 
 def validate_membership_registry(*args, **kwargs):
@@ -25,6 +26,8 @@ def main() -> None:
     core.validate_conflict_determination = evidence.validate_conflict_determination
     core.validate_vote_approval = evidence.validate_vote_approval
     core.validate_membership_registry = validate_membership_registry
+    core.validate_delegations = delegation_lifecycle.validate_delegations
+    core.delegation_active_on = delegation_lifecycle.delegation_active_on
     core.validate_adoption_record = life.validate_adoption_record_historical
     core.validate_phase_evidence = phase.validate_phase_evidence
     core.validate_cla_status = roles.validate_cla_status
