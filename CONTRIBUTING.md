@@ -9,11 +9,14 @@ Classify a proposal as one of:
 1. **Editorial** — wording, links, formatting or metadata with no policy effect.
 2. **Descriptive architecture** — documents an existing boundary without changing rights or authority.
 3. **Policy** — changes an organization-level process or requirement.
-4. **Constitutional** — changes membership, voting thresholds, institutional roles, conflicts, delegation boundaries, persistent-infrastructure authority or amendment rules.
-5. **Legal instrument** — changes CLA text, entity terms, succession, grants, representations, governing law, signature mechanics or another legally consequential term.
-6. **Adoption state** — changes whether constitutional governance or a legal instrument is operative, its legal entity/steward, effective date or accepted version.
+4. **Constitutional** — changes membership, voting thresholds, institutional roles, conflicts, delegation boundaries, persistent-infrastructure authority, founder phase-transition rules or amendment rules.
+5. **Mission-locked constitutional** — changes a protected Mission Lock invariant, the scope of the Mission Veto, the requirement for Founding Steward/Mission Guardian concurrence, or a rule whose primary effect is to weaken the protected identity of EC.
+6. **Legal instrument** — changes CLA text, entity terms, succession, grants, representations, governing law, signature mechanics or another legally consequential term.
+7. **Adoption state** — changes whether constitutional governance, Membership, Founding Stewardship or a legal instrument is operative, its legal entity/steward, effective date or accepted version.
 
 When reasonable reviewers disagree, use the higher class.
+
+A proposal cannot avoid the Mission-Locked Amendment process merely by describing itself as a normal Constitutional change.
 
 ## Pull-request requirements
 
@@ -22,12 +25,12 @@ A substantive PR should state:
 - the exact problem being solved;
 - affected documents and repositories;
 - change class;
-- whether membership, voting, delegation, contributor rights, outbound licensing, patent separation, stewardship, treasury, persistent infrastructure or privacy are affected;
+- whether Mission Lock, Founding Stewardship, Membership, voting, delegation, contributor rights, outbound licensing, patent separation, treasury, persistent infrastructure or privacy are affected;
 - backward-compatibility/non-retroactivity consequences;
 - known objections or alternative designs; and
 - whether machine-readable policy projections also need to change.
 
-Constitutional, legal-instrument and adoption-state changes must not be hidden inside refactors or bulk formatting.
+Constitutional, mission-locked, legal-instrument and adoption-state changes must not be hidden inside refactors or bulk formatting.
 
 ## Human and machine layers change together
 
@@ -46,16 +49,34 @@ A merge here does not automatically:
 - create an ECL designation;
 - create or modify an ECL-PL patent grant;
 - change a Funding domain fact or opportunity record;
-- relicense material in another repository; or
+- relicense material in another repository;
+- make a GitHub collaborator an EC Member;
+- create an operative Founding Steward assignment; or
 - make a draft constitutional or legal instrument operative.
 
-Those changes must occur through the canonical process of the affected project.
+Those changes must occur through the canonical process of the affected project or exact EC adoption process.
 
 ## Bootstrap governance rule
 
-Until `policy/governance-status.json` records `operative: true` through a valid adoption change, no record may represent a draft EC decision or delegation as legally operative merely because it was merged, approved on GitHub or validated by CI.
+Until `policy/governance-status.json` records `operative: true` through a valid adoption change, no record may represent a draft EC decision, Member, Founding Steward assignment or delegation as legally operative merely because it was merged, approved on GitHub or validated by CI.
 
-An adoption-state PR must be isolated enough for reviewers to see exactly what changes operativity. It must identify the legal entity, governing law, effective date and immutable adoption record required by the Constitution.
+An adoption-state PR must be isolated enough for reviewers to see exactly what changes operativity. It must identify the legal entity, governing law, effective date and immutable adoption record required by the Constitution, plus the aligned Member Registry, founding/mission-protection record, conflicts, records/privacy, treasury controls, succession process and legal-review state.
+
+## Membership changes
+
+Changes to admission, Candidate duration, voting seasoning, inactivity, suspension, termination, one-person-one-vote or natural-person voting eligibility are substantive governance changes.
+
+A proposal that materially weakens anti-capture seasoning or permits money/property-based voting must not be treated as editorial maintenance.
+
+Membership must never be inferred from GitHub organization membership, repository access, contribution count, CLA acceptance, employment or funding.
+
+## Founding Stewardship and Mission Lock
+
+Founder authority must remain explicit rather than hidden in technical credentials.
+
+Changes to F0/F1/F2 criteria, founder executive powers, Mission Veto scope, founder economic prohibitions, succession or Mission Guardian authority require corresponding updates to `FOUNDING-STEWARDSHIP.md`, `policy/founding-stewardship.json` and any affected constitutional/machine rules.
+
+The Founding Steward's ordinary Member vote and founder constitutional authority are separate concepts. Do not encode founder authority as weighted voting.
 
 ## CLA bootstrap rule
 
@@ -75,6 +96,8 @@ A contributor reviewing a proposal is not automatically conflicted merely becaus
 
 A conflicted person should disclose and recuse in accordance with the applicable adopted rule.
 
+Founder status does not override recusal.
+
 ## Legal review
 
-Community, maintainer, automated or AI review can improve these documents but does not substitute for qualified legal review where `CONSTITUTION.md` or `cla/ADOPTION.md` requires it.
+Community, maintainer, automated or AI review can improve these documents but does not substitute for qualified legal review where `CONSTITUTION.md`, `FOUNDING-STEWARDSHIP.md` or `cla/ADOPTION.md` requires it.
