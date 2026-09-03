@@ -41,18 +41,19 @@ The Mission Lock protects institutional identity. It does **not** freeze every p
 
 ### 3.2 Mission-Locked Amendment
 
-A proposal whose primary effect is to alter a Mission Lock invariant is a **Mission-Locked Amendment**, not an Ordinary Approval or ordinary Constitutional Amendment.
+A proposal is a **Mission-Locked Amendment** whenever **any operative effect** of the proposal would alter, weaken, remove, create an exception to, bypass, or materially narrow a Mission Lock invariant.
+
+Classification depends on effect, not title or drafting technique. A protected effect remains mission-locked when it is bundled with unrelated changes, described as secondary or incidental, implemented indirectly through another policy, or presented as part of an ordinary Constitutional Amendment. If reasonable reviewers disagree whether an operative effect reaches a protected invariant, the proposal must use the stricter Mission-Locked Amendment path unless and until the ambiguity is resolved through the applicable governance process.
 
 During the Founding Period, a Mission-Locked Amendment requires all of:
 
 - at least 90% approval among valid for/against votes;
 - at least 75% quorum of non-conflicted members eligible for mission-locked voting;
+- at least one valid affirmative vote and a non-zero `for + against` denominator in each protected ballot;
 - two successful votes separated by at least 60 days;
 - a written compatibility and consequences analysis;
 - qualified independent review appropriate to the subject; and
 - affirmative consent of the Founding Steward or the valid successor Mission Guardian.
-
-After the Founding Period, founder consent may be replaced only by an adopted Mission Guardian succession mechanism that preserves the negative, mission-protection character of the role.
 
 Mandatory law prevails where an internal lock cannot lawfully prevent a required change.
 
@@ -120,6 +121,19 @@ These actions require their applicable protected approval path even during the F
 
 Founder authority should reduce as institutional capacity becomes real rather than according to a fictional calendar deadline.
 
+### 8.1 Exact Founding Period boundary
+
+For this framework, the **Founding Period** begins only when EC organization governance first becomes operative in `F0-founder-led-bootstrap` and includes both:
+
+- `F0-founder-led-bootstrap`; and
+- `F1-early-institution`.
+
+The Founding Period ends **only** upon a valid, evidence-backed and recorded transition to `F2-distributed-institution` that satisfies every F2 transition criterion below and the machine-readable evidence gate in `policy/phase-evidence.json`.
+
+Merely editing a phase string, reaching a calendar date, creating a legal entity, entering F1, or vacating the Founding Steward office does not end the Founding Period. If the Founding Steward dies, becomes incapacitated, resigns or is otherwise unavailable before a valid F2 transition, the applicable successor Mission Guardian may exercise only the mission-protection function provided by the adopted succession mechanism; the Founding Period itself continues until the F2 gate is validly satisfied.
+
+Consequently, the guardian-consent requirement for Mission-Locked Amendments applies throughout F0 and F1. After a valid transition to F2, any continuing guardian-concurrence requirement must come from the adopted post-Founding-Period succession/mission-protection rule rather than being inferred from founder status.
+
 ### Phase F0 — founder-led bootstrap
 
 Expected characteristics:
@@ -132,7 +146,7 @@ Founder executive authority is broad, subject to the prohibitions above.
 
 ### Phase F1 — early institution
 
-Transition criteria should include at least:
+Transition criteria include at least:
 
 - legally competent EC entity identified;
 - at least 3 Active Members other than purely nominal accounts;
@@ -145,19 +159,29 @@ At F1, ordinary institutional decisions move to the Member/role processes define
 
 ### Phase F2 — distributed institution
 
-Transition criteria should include at least:
+Transition criteria include at least:
 
 - at least 7 Active Members with meaningful participation;
-- at least 12 months of operative governance records;
+- at least 12 months of operative governance records measured from the recorded governance-operative date;
 - no single individual holding unilateral operational control over Treasury, persistent-domain recovery and all canonical repositories simultaneously;
 - independent audit/review capacity; and
 - demonstrated ability to replace delegated role holders without founder intervention.
 
-At F2, the Founding Steward no longer has general executive primacy. The role becomes principally a **Mission Guardian** unless a separately adopted succession instrument provides otherwise.
+At F2, the Founding Steward no longer has general executive primacy. Any continuing mission-protection authority must be the narrower Mission Guardian function defined by the adopted succession mechanism.
 
-### Transition integrity
+### Transition integrity and evidence
 
-No phase transition may be declared solely by changing a string in a JSON file. The transition requires the applicable decision record and evidence that the criteria are satisfied.
+No phase transition may be declared solely by changing a string or boolean in a machine-readable file.
+
+An operative F1 or F2 transition requires:
+
+1. the applicable institutional decision record;
+2. the objective Active-Member minimum derived from the operative Member Registry;
+3. non-null evidence references for each non-count criterion required by the target phase;
+4. for F2, at least 12 months between the recorded governance-operative date and the proposed phase-effective date; and
+5. successful validation of `policy/phase-evidence.json` against the canonical human criteria above.
+
+The evidence registry is a projection and integrity gate, not a substitute for the underlying records. Unsupported booleans or a phase label cannot manufacture institutional maturity.
 
 A phase may not be artificially prevented merely to preserve founder executive power. Once an objective criterion is defined by adopted policy, machine-readable records should expose whether it is satisfied.
 
