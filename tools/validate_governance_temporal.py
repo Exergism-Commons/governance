@@ -7,6 +7,7 @@ import governance_temporal_phase as phase
 import governance_temporal_evidence as evidence
 import governance_temporal_roles as roles
 import governance_delegation_lifecycle as delegation_lifecycle
+import governance_founding_authority as founding_authority
 
 
 def validate_membership_registry(*args, **kwargs):
@@ -22,7 +23,7 @@ def main() -> None:
     life.validate_cla_steward_authority = roles.validate_cla_steward_authority
 
     core.active_members_as_of = life.historical_active_members_as_of
-    core.validate_member_admission_record = phase.validate_member_admission_record
+    core.validate_member_admission_record = founding_authority.validate_member_admission_record
     core.validate_conflict_determination = evidence.validate_conflict_determination
     core.validate_vote_approval = evidence.validate_vote_approval
     core.validate_membership_registry = validate_membership_registry
@@ -39,6 +40,7 @@ def main() -> None:
     membership = core.load_json("policy/membership-status.json")
     founding = core.load_json("policy/founding-stewardship.json")
     phase_evidence = core.load_json("policy/phase-evidence.json")
+    founding_authority.validate_f0_signed_membership_actions(status, founding, rules, membership)
     roles.validate_mission_guardian_assignment(status, founding, rules, membership, phase_evidence)
     print("Exergism Commons temporal authority integrity: PASS")
 
