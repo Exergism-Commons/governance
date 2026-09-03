@@ -18,7 +18,23 @@
     "person_id": "ec-person-dml-001",
     "display_name": "Daniel Molinero Lucas",
     "github_identity": "Papishushi",
-    "operative_assignment": false
+    "operative_assignment": false,
+    "assignment_effective_date": null,
+    "assignment_authority_record": null,
+    "cessation_record": null
+  },
+  "founding_steward_lifecycle_contract": {
+    "initial_assignment_authority": "governance-adoption",
+    "assignment_effective_date_equals_governance_effective_date": true,
+    "content_addressed_cessation_required": true,
+    "registry_edit_alone_cannot_end_or_restore_authority": true,
+    "historical_authority_must_be_reconstructable": true,
+    "reactivation_after_cessation_prohibited": true,
+    "allowed_cessation_authority_modes": [
+      "self-resignation",
+      "succession-process",
+      "qualified-approval"
+    ]
   },
   "mission_guardian": {
     "record_id": null,
