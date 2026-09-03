@@ -1,11 +1,15 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "governance_version": "0.1-DRAFT",
   "operative": false,
   "current_phase": "F0-founder-led-bootstrap",
   "governance_operative_since": null,
   "phase_effective_date": null,
   "transition_decision_record": null,
+  "evidence_reference_contract": {
+    "type": "content-addressed-json",
+    "required_fields": ["path", "sha256"]
+  },
   "f1": {
     "minimum_active_members": 3,
     "independent_role_holder_present": false,
@@ -23,5 +27,5 @@
     "delegated_role_replacement_demonstrated": false,
     "role_replacement_evidence": null
   },
-  "notes": "Draft evidence contract only. A phase string cannot satisfy a transition gate. Operative F1/F2 transitions require the decision record, objective member/time criteria and non-null evidence references enforced by CI."
+  "notes": "Draft evidence contract only. A phase string cannot satisfy a transition gate. Operative F1/F2 transitions require committed JSON evidence referenced by path+SHA-256, a content-addressed transition decision, objective distinct-member/time criteria, and actual operative delegations cross-checked by CI."
 }
