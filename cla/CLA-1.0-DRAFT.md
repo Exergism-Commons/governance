@@ -29,6 +29,8 @@ Contribution does **not** include:
 
 **Submit** means sending a Contribution through a pull request, commit, patch, code-review system or other project channel for the purpose of having the material incorporated into a Covered Project, or otherwise expressly identifying material as a Contribution for that purpose.
 
+**Accepted Contribution** means a Contribution that the Steward has merged, incorporated into canonical project material or a release, or otherwise expressly accepted for project use through the Covered Project's documented acceptance process. Public submission, review, CI execution or temporary storage alone is not acceptance.
+
 **Target Material** means the file, corpus, codebase, specification, legal text, documentation set or other project material into which a Contribution is proposed to be incorporated.
 
 **Outbound Terms** means the license or licensing family that the Project Schedule authorizes the Steward to use for the relevant Target Material and Contribution.
@@ -41,23 +43,31 @@ Contribution does **not** include:
 
 You retain all copyright and related rights that You own in Your Contribution. This Agreement is a license, **not an assignment of copyright**. You remain free to use, modify, publish, license or assign Your own Contribution independently, subject to rights You may have separately granted to others.
 
-### 2.2 Copyright and related-rights license to the Steward
+### 2.2 Rights while a proposal is under review
 
-Subject to Section 2.3, You grant the Steward a **perpetual, worldwide, royalty-free, non-exclusive and irrevocable** license under copyright and other licensable rights protecting works of authorship that You own or control in the Contribution, with the right to sublicense as permitted by this Agreement, to:
+Before a Contribution becomes an Accepted Contribution, You grant the Steward only the non-exclusive, royalty-free rights reasonably necessary to receive, store, reproduce, display, test, review and discuss the proposed Contribution for project evaluation, and to preserve the public contribution/review record.
 
-- reproduce and store the Contribution;
+Those pre-acceptance rights do **not** authorize the Steward to incorporate the proposal into a release, sublicense it as project material, or use it in future project versions merely because it was Submitted.
+
+If You withdraw an unaccepted proposal, the project-consideration portion of this pre-acceptance permission ends. The Steward may continue to preserve already-public commits, pull-request text, review history, diffs and equivalent archival material to the limited extent reasonably necessary to maintain the historical public record.
+
+### 2.3 Copyright and related-rights license for Accepted Contributions
+
+When a Contribution becomes an Accepted Contribution, and not before, You grant the Steward a **perpetual, worldwide, royalty-free, non-exclusive and irrevocable** license under copyright and other licensable rights protecting works of authorship that You own or control in that Accepted Contribution, with the right to sublicense as permitted by this Agreement, to:
+
+- reproduce and store the Accepted Contribution;
 - prepare adaptations, translations, arrangements and derivative works;
-- combine the Contribution with other material;
+- combine the Accepted Contribution with other material;
 - publicly display, publicly perform, communicate and make it available;
 - publish and distribute it in source, object, rendered, data, documentation or other relevant forms;
 - use it in current and future versions, releases, archives, validation systems and derived representations of the Covered Project; and
-- exercise equivalent rights necessary to maintain, review, preserve, release and distribute the Covered Project.
+- exercise equivalent rights necessary to maintain, preserve, release and distribute the Covered Project.
 
 This grant includes the technical transformations reasonably necessary for reproducible builds, schema/format migration, semantic projections, indexing, archival, accessibility and validation.
 
-### 2.3 Outbound-license constraint
+### 2.4 Outbound-license constraint
 
-The Steward may publicly sublicense or distribute the Contribution only under:
+The Steward may publicly sublicense or distribute an Accepted Contribution only under:
 
 1. the license(s) governing the Target Material when the Contribution was Submitted;
 2. a later version of those same license(s) where the applicable license or the Project Schedule in force at submission expressly permitted use of such later versions;
@@ -70,13 +80,13 @@ A later Project Schedule **must not retroactively add a new outbound licensing o
 
 Nothing in this Section prevents public preservation of historical versions under the terms that actually governed them.
 
-### 2.4 Moral rights and similar non-economic rights
+### 2.5 Moral rights and similar non-economic rights
 
 To the extent applicable law permits, You consent to the editing, modification, translation, combination, technical transformation and publication authorized by this Agreement and agree not to assert waivable moral or similar rights solely to prevent those authorized acts.
 
 This Agreement does not purport to waive or transfer a moral right that applicable law makes non-waivable or non-transferable. Attribution remains subject to the applicable Outbound Terms and project policy.
 
-### 2.5 No patent license under this CLA
+### 2.6 No patent license under this CLA
 
 **This Agreement grants no patent rights.**
 
@@ -84,11 +94,11 @@ Signing or accepting this Agreement does not make You a Patent Licensor under EC
 
 Patent rights may arise independently under a license already governing Target Material (for example, a software license with its own contributor patent clause) or under a separate express patent instrument. Any such patent grant is governed only by its own terms.
 
-### 2.6 No trademark or endorsement grant
+### 2.7 No trademark or endorsement grant
 
 Except for factual attribution and preservation of project history, this Agreement grants no trademark, trade-name, logo, certification or endorsement right.
 
-### 2.7 Administration and enforcement cooperation
+### 2.8 Administration and enforcement cooperation
 
 You authorize the Steward to administer the sublicenses and Outbound Terms that the Steward is legally entitled to grant under this Agreement and, to the extent applicable law recognizes such authority, to take reasonable action concerning compliance with those grants.
 
@@ -132,9 +142,11 @@ The Steward may retain the CLA acceptance and identity/authority evidence reason
 
 Once this Agreement is operative and accepted by You, it applies to Contributions You Submit to Covered Projects while this Agreement/version covers them.
 
-The license in Section 2 for a submitted Contribution is irrevocable once granted, except to the extent a mandatory law requires otherwise. You may stop making future Contributions at any time.
+For a proposal that has not become an Accepted Contribution, only the limited pre-acceptance rights in Section 2.2 apply. You may withdraw such a proposal from project consideration at any time, subject to the limited archival preservation described there.
 
-You may withdraw an unaccepted proposal from project consideration, but public archival copies and the limited rights necessary to preserve the historical review record may remain. Withdrawal does not revoke rights already granted in a Contribution that was incorporated into a project release or otherwise validly sublicensed.
+The full license in Section 2.3 vests only when the Contribution becomes an Accepted Contribution. Once vested, that license is irrevocable except to the extent mandatory law requires otherwise. You may stop making future Contributions at any time.
+
+Withdrawal does not revoke rights already vested in an Accepted Contribution or rights already validly sublicensed under the applicable Outbound Terms.
 
 ## 8. Earlier contributions
 
