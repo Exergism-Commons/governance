@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "governance_version": "0.1-DRAFT",
+  "operative": false,
+  "institutional_state": "bootstrap",
+  "legal_entity": null,
+  "governing_law": null,
+  "effective_date": null,
+  "constitution": "CONSTITUTION.md",
+  "ontology_iri": "https://id.exergism.org/ontology/commons",
+  "vocabulary_namespace": "https://id.exergism.org/commons#",
+  "adoption_record": null,
+  "notes": "Draft architecture only. GitHub organization/repository state does not constitute legal adoption or institutional authority."
+}
