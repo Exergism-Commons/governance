@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "governance_version": "0.1-DRAFT",
   "operative": false,
   "registry_state": "bootstrap",
@@ -15,6 +15,7 @@
   "members": [
     {
       "record_id": "ec-member-bootstrap-001",
+      "person_id": "ec-person-dml-001",
       "display_name": "Daniel Molinero Lucas",
       "state": "designated-bootstrap",
       "operative_membership": false,
@@ -22,5 +23,5 @@
       "voting_eligible": false
     }
   ],
-  "notes": "Bootstrap projection only. This record does not create operative membership or voting authority."
+  "notes": "Bootstrap projection only. This record does not create operative membership or voting authority. record_id and person_id are unique in the current registry; phase thresholds count distinct person_id values, never duplicate rows."
 }
