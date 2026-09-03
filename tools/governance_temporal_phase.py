@@ -105,6 +105,12 @@ def validate_state_transition_history(item, membership, status, rules, founding)
                 core.validate_signature_ref(data.get("signature_evidence"), f"member {person_id} F0 termination signature", founder_id, decision_id, payload_hash, "membership-state-transition", status["governance_version"], status["governance_version"])
             else:
                 core.require(data.get("decision_class") == "qualified-approval", f"member {person_id} F1+ termination requires Qualified Approval")
+                approval, _ = core.validate_content_ref(data.get("approval_evidence"), f"member {person_id} termination approval envelope", "records/evidence")
+                opened = core.parse_iso_date(approval.get("voting_window_open_date"), f"member {person_id} termination voting_window_open_date")
+                core.require(
+                    effective > opened,
+                    f"member {person_id} approval-backed termination must become effective after its frozen electorate snapshot",
+                )
                 core.validate_approval_evidence(data.get("approval_evidence"), f"member {person_id} termination approval", decision_id, status, rules, membership, expected_rule_id="qualified-approval", expected_artifact_bindings={"transition_payload_sha256": payload_hash}, expected_decision_date=decision_date_text)
         else:
             raise SystemExit(f"governance integrity failure: member {person_id} unsupported transition_type: {transition_type}")
