@@ -6,6 +6,7 @@
   "governance_operative_since": null,
   "phase_effective_date": null,
   "transition_decision_record": null,
+  "prior_transition_decision_record": null,
   "evidence_reference_contract": {
     "type": "content-addressed-json",
     "required_fields": ["path", "sha256"]
@@ -27,5 +28,5 @@
     "delegated_role_replacement_demonstrated": false,
     "role_replacement_evidence": null
   },
-  "notes": "Draft evidence contract only. A phase string cannot satisfy a transition gate. Operative F1/F2 transitions require committed JSON evidence referenced by path+SHA-256, a content-addressed transition decision, objective distinct-member/time criteria, and actual operative delegations cross-checked by CI."
+  "notes": "Draft evidence contract only. A phase string cannot satisfy a transition gate. Operative F1 requires one content-addressed F0→F1 transition. Operative F2 requires both that validated prior F0→F1 record and a current F1→F2 record whose approved payload binds the prior transition digest, so F2 cannot be entered directly from F0. Active-Member thresholds are evaluated from reconstructable Membership history as of the target phase-effective date, while delegation gates count only delegations effective and unexpired on that date."
 }
