@@ -145,6 +145,8 @@ Activation should occur through a dedicated PR whose sole substantive purpose is
 - state the effective date prospectively; and
 - explain transition rules for open PRs submitted before the effective date.
 
+The legal review and adoption must be complete **before or on** the declared effective date. The legal-review manifest must record its completion date; every qualified-reviewer signature must be dated no later than that completion/effective date. The CLA adoption record must record its decision date after completed legal review and no later than the effective date, and every adopter signature must likewise exist no later than activation. An effective date cannot be backdated to make later review, adoption or signatures appear prospectively authoritative.
+
 The adoption record and legal-review manifest must bind the same exact legal Steward identity, Steward-authority digest, governing law, forum, privacy policy, acceptance methods and legal-artifact hashes. They cannot cure an unproven Steward merely by repeating the same string.
 
 ## 5. No accidental activation
