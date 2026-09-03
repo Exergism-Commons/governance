@@ -1,4 +1,4 @@
-schema_version: 4
+schema_version: 5
 policy: exergism-commons-contributor-license-agreement
 agreement_family: EC-CLA
 status: draft
@@ -15,6 +15,8 @@ project_schedule_sha256: null
 covered_projects_artifact: policy/covered-projects.yaml
 covered_projects_sha256: null
 legal_steward: null
+legal_steward_authority_artifact: null
+legal_steward_authority_sha256: null
 governing_law: null
 forum: null
 effective_date: null
@@ -42,6 +44,8 @@ activation_blockers:
 notes:
   - File presence does not imply legal effect.
   - Automation must fail closed and must not infer an operative CLA from a mutable branch or latest pointer.
-  - Operative acceptance requires exact final agreement, Project Schedule, covered-project projection and privacy-policy bytes bound by SHA-256.
-  - Qualified legal review and the CLA adoption record must bind the same Steward, governing law, forum, privacy policy, acceptance methods, versions and exact artifact hashes.
+  - Operative acceptance requires exact final agreement, Project Schedule, covered-project projection and privacy/records-policy bytes bound by SHA-256 in this record.
+  - The legal Steward identifier must resolve to a content-addressed authority record proving the receiving party/role and scope for the same operative terms.
+  - Qualified legal review must bind the same Steward, Steward-authority record, governing law, forum, privacy policy, acceptance methods and exact legal artifacts; reviewer signatures must bind the exact review payload.
+  - CLA adoption must bind those same terms and exact bytes, the approving legal-review manifest and adopter signatures over the exact adoption payload.
   - The CLA itself grants no patent rights.
