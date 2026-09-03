@@ -7,9 +7,15 @@ The CLA is intentionally not repository-agnostic. This Schedule records how the 
 
 A machine-readable projection is maintained at `../policy/covered-projects.yaml`.
 
+For deterministic integrity checking, every scheduled repository declares explicit **Schedule material class IDs**. These IDs are part of the Schedule-to-projection binding contract: an operative `covered-projects.yaml` must contain exactly the same repository set and, for every repository, exactly the same material-class ID set. A projection may not silently omit a scheduled repository or scheduled material class merely by recomputing its own hash.
+
 ## 1. Exergism
 
 Repository: `Exergism-Commons/exergism`
+
+Schedule material classes:
+- `corpus-and-documentation`
+- `software-and-tooling`
 
 | Material class | Current target/outbound rule | CLA outbound family |
 | --- | --- | --- |
@@ -24,6 +30,9 @@ Patent effect: **none from the CLA**. Any patent license that arises for Apache-
 ## 2. Exergic Commons License (ECL)
 
 Repository: `Exergism-Commons/exergic-commons-license`
+
+Schedule material classes:
+- `ecl-project-lineage`
 
 Current state relevant to inbound rights:
 
@@ -43,6 +52,9 @@ Patent effect: **none from the CLA**. ECL 0.3-DRAFT itself expressly grants no p
 
 Repository: `Exergism-Commons/ecl-patent-license`
 
+Schedule material classes:
+- `ecl-pl-project-lineage`
+
 Proposed CLA outbound family:
 
 > **ECL-PL development family** — incorporation, modification, publication and distribution as part of current/future ECL-PL architecture, specifications, schemas, compatibility analyses, legal-drafting candidates, validation tooling, evidence/provenance records and historical archives within the ECL-PL project lineage, plus any explicit file-level license already governing Target Material.
@@ -55,6 +67,9 @@ A future ECL-PL patent grant must use an independently authorized patent instrum
 
 Repository: `Exergism-Commons/.github`
 
+Schedule material classes:
+- `organization-profile-and-community-health`
+
 Current repository-wide outbound content license: **not established by this Schedule**.
 
 Proposed CLA coverage, once operative, is limited to organization profile/community-health material intentionally submitted for inclusion. Until a separate outbound policy is adopted, this Schedule must not be read to create one by inference.
@@ -62,6 +77,9 @@ Proposed CLA coverage, once operative, is limited to organization profile/commun
 ## 5. Organization `governance`
 
 Repository: `Exergism-Commons/governance`
+
+Schedule material classes:
+- `organization-governance-and-legal-templates`
 
 Current repository-wide outbound content license: **not established by this bootstrap**.
 
@@ -80,6 +98,8 @@ Adding another repository requires a versioned Schedule update that identifies:
 - patent effect;
 - known third-party/IP constraints; and
 - effective date for **future** submissions.
+
+The Schedule material-class IDs for the repository must be updated in the same adopted Schedule version. The machine projection must match those IDs exactly; a missing or extra repository/material class is an integrity failure rather than an editorial difference.
 
 Adding a project does not retroactively expand rights in older Contributions.
 
