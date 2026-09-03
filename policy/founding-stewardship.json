@@ -9,6 +9,11 @@
     "github_identity": "Papishushi",
     "operative_assignment": false
   },
+  "mission_guardian": {
+    "record_id": null,
+    "display_name": null,
+    "operative_assignment": false
+  },
   "mission_lock": {
     "operative": false,
     "amendment_rule_id": "mission-locked-amendment",
