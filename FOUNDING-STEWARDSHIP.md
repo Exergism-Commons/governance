@@ -128,7 +128,7 @@ For this framework, the **Founding Period** begins only when EC organization gov
 - `F0-founder-led-bootstrap`; and
 - `F1-early-institution`.
 
-The Founding Period ends **only** upon a valid, evidence-backed and recorded transition to `F2-distributed-institution` that satisfies every F2 transition criterion below and the machine-readable evidence gate in `policy/phase-evidence.json`.
+The Founding Period ends only upon a valid, evidence-backed and recorded transition to `F2-distributed-institution` that satisfies every F2 transition criterion below and the machine-readable evidence gate in `policy/phase-evidence.json`.
 
 Merely editing a phase string, reaching a calendar date, creating a legal entity, entering F1, or vacating the Founding Steward office does not end the Founding Period. If the Founding Steward dies, becomes incapacitated, resigns or is otherwise unavailable before a valid F2 transition, the applicable successor Mission Guardian may exercise only the mission-protection function provided by the adopted succession mechanism; the Founding Period itself continues until the F2 gate is validly satisfied.
 
