@@ -136,8 +136,30 @@ def validate_founding_steward_lifecycle(status: dict, founding: dict, rules: dic
             f"founding-steward-cessation:{founder['person_id']}",
         )
         core.require(process.get("decision_id") == decision_id, "Founding Steward succession evidence decision mismatch")
+        core.require(process.get("decision_date") == decision_date_text, "Founding Steward succession evidence decision date mismatch")
         core.require(process.get("cessation_payload_sha256") == payload_hash, "Founding Steward succession evidence does not bind exact cessation")
         core.require(process.get("effective_date") == record["effective_date"] and process.get("cessation_type") == record["cessation_type"], "Founding Steward succession evidence chronology/type mismatch")
+        completed = core.parse_iso_date(process.get("completed_date"), "Founding Steward succession evidence completed_date")
+        core.require(
+            assignment_effective <= completed <= decision_date <= effective,
+            "Founding Steward succession evidence must be complete no later than the cessation decision/effective boundary",
+        )
+        supporting = process.get("supporting_evidence")
+        core.require(isinstance(supporting, list) and supporting, "Founding Steward succession evidence requires supporting evidence")
+        for index, support_ref in enumerate(supporting):
+            support = core.validate_supporting_evidence_ref(
+                support_ref,
+                f"Founding Steward succession supporting evidence {index}",
+                status["governance_version"],
+            )
+            captured = core.parse_iso_date(
+                support.get("captured_date"),
+                f"Founding Steward succession supporting evidence {index}.captured_date",
+            )
+            core.require(
+                assignment_effective <= captured <= completed,
+                "Founding Steward succession supporting evidence cannot be captured after process completion",
+            )
     else:
         core.require(record["cessation_type"] == "removal-for-cause", "Qualified cessation must be removal-for-cause")
         core.require(record["decision_class"] == "qualified-approval", "Founding Steward removal requires Qualified Approval")
