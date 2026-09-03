@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "governance_version": "0.1-DRAFT",
   "operative": false,
   "registry_state": "bootstrap",
@@ -7,6 +7,7 @@
   "natural_person_voting_members_only": true,
   "candidate_period_days": 30,
   "voting_seasoning_days": {
+    "founding-adoption": 0,
     "ordinary-approval": 30,
     "qualified-approval": 90,
     "constitutional-amendment": 90,
@@ -19,9 +20,11 @@
       "display_name": "Daniel Molinero Lucas",
       "state": "designated-bootstrap",
       "operative_membership": false,
-      "founding_steward": true,
-      "voting_eligible": false
+      "active_since": null,
+      "admission_basis": "bootstrap-designation",
+      "admission_record": null,
+      "founding_steward": true
     }
   ],
-  "notes": "Bootstrap projection only. This record does not create operative membership or voting authority. record_id and person_id are unique in the current registry; phase thresholds count distinct person_id values, never duplicate rows."
+  "notes": "Bootstrap projection only. Operative voting eligibility is derived from unique stable person_id, active membership, active_since, rule-specific seasoning and recorded conflicts; it is not accepted as a free-standing boolean. Initial founding-adoption voters use the adopted initial registry with zero seasoning."
 }
