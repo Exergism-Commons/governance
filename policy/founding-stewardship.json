@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "governance_version": "0.1-DRAFT",
   "operative": false,
   "phase": "F0-founder-led-bootstrap",
@@ -15,12 +15,14 @@
   },
   "founding_steward": {
     "record_id": "ec-founding-steward-001",
+    "person_id": "ec-person-dml-001",
     "display_name": "Daniel Molinero Lucas",
     "github_identity": "Papishushi",
     "operative_assignment": false
   },
   "mission_guardian": {
     "record_id": null,
+    "person_id": null,
     "display_name": null,
     "operative_assignment": false
   },
