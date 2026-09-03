@@ -16,6 +16,20 @@ Every item below must be complete before `policy/cla-status.yaml` may set `opera
 
 Record the exact legal person/entity that receives the CLA grant, including enough identity information to avoid confusion with the GitHub namespace.
 
+The authority record must identify at least:
+
+- exact legal name;
+- legal form;
+- jurisdiction;
+- registration identity where applicable;
+- relationship to Exergism Commons;
+- competent signatories;
+- immutable registration/identity evidence;
+- the exact institutional decision establishing CLA-receiving/administration authority; and
+- competent-signatory evidence bound to the exact authority payload.
+
+For an operative EC governance regime, appointment/removal of the legal Steward is a protected institutional decision and the CLA authority record must resolve to the corresponding valid Qualified Approval. Repeating a Steward name in `cla-status.yaml`, a legal-review manifest or an adoption record is not itself evidence that the receiving party exists or has authority.
+
 The record must explain the Steward's relationship to Exergism Commons and authority to steward the Covered Projects.
 
 **Current: open.**
@@ -100,9 +114,13 @@ individual_version: EC-ICLA-1.0
 entity_version: EC-ECLA-1.0
 project_schedule_version: <exact version/hash>
 legal_steward:
+  stable_id: <exact>
   legal_name: <exact>
   legal_form: <exact>
   jurisdiction: <exact>
+  registration_identity: <exact>
+  relationship_to_exergism_commons: <exact>
+legal_steward_authority: <content-addressed record/hash>
 governing_law: <exact>
 forum: <exact or null>
 effective_date: <ISO-8601>
@@ -114,7 +132,7 @@ legal_review_records:
 operative: true
 ```
 
-The adopted CLA texts, Project Schedule and review inputs should be immutable/content-addressed. A convenience `current` pointer may exist but must not replace exact identity.
+The Steward authority, adopted CLA texts, Project Schedule and review inputs should be immutable/content-addressed. A convenience `current` pointer may exist but must not replace exact identity.
 
 ## 4. Adoption decision
 
@@ -126,6 +144,8 @@ Activation should occur through a dedicated PR whose sole substantive purpose is
 - update machine-readable state;
 - state the effective date prospectively; and
 - explain transition rules for open PRs submitted before the effective date.
+
+The adoption record and legal-review manifest must bind the same exact legal Steward identity, Steward-authority digest, governing law, forum, privacy policy, acceptance methods and legal-artifact hashes. They cannot cure an unproven Steward merely by repeating the same string.
 
 ## 5. No accidental activation
 
