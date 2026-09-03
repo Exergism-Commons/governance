@@ -1,8 +1,18 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "governance_version": "0.1-DRAFT",
   "operative": false,
   "phase": "F0-founder-led-bootstrap",
+  "founding_period": {
+    "applies_in_phases": [
+      "F0-founder-led-bootstrap",
+      "F1-early-institution"
+    ],
+    "ends_only_on_valid_transition_to_phase": "F2-distributed-institution",
+    "valid_transition_requires_phase_evidence": true,
+    "founder_vacancy_does_not_end_period": true,
+    "mission_guardian_succeeds_protection_if_founder_unavailable": true
+  },
   "founding_steward": {
     "record_id": "ec-founding-steward-001",
     "display_name": "Daniel Molinero Lucas",
@@ -17,13 +27,15 @@
   "mission_lock": {
     "operative": false,
     "amendment_rule_id": "mission-locked-amendment",
-    "founder_consent_required_during_founding_period": true,
+    "guardian_consent_required_during_founding_period": true,
     "negative_veto_only": true,
     "founder_economic_privilege": false
   },
   "phase_transition": {
     "self_declared_by_founder_prohibited": true,
     "requires_decision_record": true,
+    "requires_evidence_record": true,
+    "evidence_policy": "policy/phase-evidence.json",
     "f1_min_active_members": 3,
     "f2_min_active_members": 7,
     "f2_min_operational_months": 12
