@@ -32,15 +32,26 @@ def require_voting_window_contract(membership: dict) -> None:
     )
 
 
+def _validate_conflict_signature_date(signature: dict, label: str, status: dict, determination_date, decision_date) -> None:
+    signed = core.parse_iso_date(signature.get("signed_date"), f"{label}.signed_date")
+    governance_effective = core.parse_iso_date(status["effective_date"], "governance effective_date")
+    core.require(
+        governance_effective <= signed <= determination_date <= decision_date,
+        f"{label} chronology invalid; conflict signature must exist no later than determination/decision",
+    )
+
+
 def validate_conflict_determination(ref, label, status, expected_decision_id, expected_person_id, decision_date):
     data = life.ORIG_VALIDATE_CONFLICT_DETERMINATION(ref, label, status, expected_decision_id, expected_person_id, decision_date)
+    determination_date = core.parse_iso_date(data.get("determination_date"), f"{label}.determination_date")
+    core.require(determination_date <= decision_date, f"{label} determination cannot postdate decision")
     method = data.get("determination_method")
     if method == "self-recusal":
         core.require(expected_person_id in data.get("determined_by_person_ids", []), f"{label} self-recusal must be determined by the recused person")
         payload = {k: v for k, v in data.items() if k not in {"signature_evidence", "determination_payload_sha256"}}
         payload_hash = core.sha256_json(payload)
         core.require(data.get("determination_payload_sha256") == payload_hash, f"{label} self-recusal payload hash mismatch")
-        core.validate_signature_ref(
+        signature = core.validate_signature_ref(
             data.get("signature_evidence"),
             f"{label} self-recusal signature",
             expected_person_id,
@@ -50,6 +61,7 @@ def validate_conflict_determination(ref, label, status, expected_decision_id, ex
             status["governance_version"],
             status["governance_version"],
         )
+        _validate_conflict_signature_date(signature, f"{label} self-recusal signature", status, determination_date, decision_date)
         return data
 
     core.require(method == "independent-conflict-determination", f"{label} unsupported determination method")
@@ -61,7 +73,6 @@ def validate_conflict_determination(ref, label, status, expected_decision_id, ex
         and expected_person_id not in determiners,
         f"{label} independent determiners must be distinct from recused person",
     )
-    determination_date = core.parse_iso_date(data.get("determination_date"), f"{label}.determination_date")
     membership = core.load_json("policy/membership-status.json")
     active = life.active_members_on(membership, determination_date)
     core.require(set(determiners).issubset(active), f"{label} independent determiners must be Active Members on determination date")
@@ -87,7 +98,7 @@ def validate_conflict_determination(ref, label, status, expected_decision_id, ex
         sig_data, _ = core.validate_content_ref(sig_ref, f"{label} determiner signature envelope {index}", "records/evidence")
         signer = sig_data.get("person_id")
         core.require(signer in determiners and signer not in signed, f"{label} independent determiner signature identity mismatch")
-        core.validate_signature_ref(
+        signature = core.validate_signature_ref(
             sig_ref,
             f"{label} independent determiner signature {index}",
             signer,
@@ -97,6 +108,7 @@ def validate_conflict_determination(ref, label, status, expected_decision_id, ex
             status["governance_version"],
             status["governance_version"],
         )
+        _validate_conflict_signature_date(signature, f"{label} independent determiner signature {index}", status, determination_date, decision_date)
         signed.add(signer)
     core.require(signed == set(determiners), f"{label} missing authenticated independent determiner")
     return data
