@@ -62,12 +62,15 @@ The Mission Lock protects **what EC is**, not every current implementation, road
 
 ### 4.2 Mission-Locked Amendment
 
-A proposal whose primary effect is to alter a Mission Lock invariant is a **Mission-Locked Amendment**.
+A proposal is a **Mission-Locked Amendment** whenever **any operative effect** would alter, weaken, remove, create an exception to, bypass, or materially narrow a Mission Lock invariant.
+
+Classification follows operative effect rather than title, stated primary purpose or drafting technique. A protected effect remains mission-locked when bundled with unrelated amendments, described as secondary or incidental, implemented indirectly through another policy, or included inside a broader Constitutional Amendment. When reasonable reviewers disagree whether an effect reaches a protected invariant, the stricter Mission-Locked Amendment path applies unless and until that classification dispute is validly resolved.
 
 During the Founding Period it requires, at minimum:
 
 - quorum of at least three quarters of non-conflicted Members eligible for mission-locked voting;
 - at least 90% approval among valid votes cast for/against;
+- at least one valid affirmative vote and a non-zero `for + against` denominator in each protected ballot;
 - two successful votes separated by at least 60 days;
 - written compatibility and consequences analysis;
 - qualified independent review appropriate to the subject; and
@@ -110,6 +113,14 @@ Founding status does not permit the Founding Steward to:
 - use the Mission Veto merely to override lawful ordinary-policy disagreement within the protected mission.
 
 Founder authority is designed to reduce as institutional capacity becomes demonstrably distributed.
+
+### 5.4 Exact Founding Period boundary
+
+The **Founding Period** begins when organization governance first becomes operative in `F0-founder-led-bootstrap`, includes both F0 and `F1-early-institution`, and ends **only** upon a valid, evidence-backed transition to `F2-distributed-institution` satisfying every F2 criterion in `FOUNDING-STEWARDSHIP.md` and `policy/phase-evidence.json`.
+
+Entering F1, reaching a date, creating the legal entity, changing a phase string, or vacancy of the Founding Steward does not end the Founding Period. If the Founding Steward becomes unavailable before F2, the valid successor Mission Guardian may carry the narrow mission-protection function under the adopted succession mechanism, but the Founding Period continues until the F2 gate is actually satisfied.
+
+The guardian-consent requirement for Mission-Locked Amendments therefore applies throughout F0 and F1. Any continuing guardian-concurrence rule after F2 must arise from the adopted post-Founding-Period succession/mission-protection framework rather than being inferred from founder status.
 
 ## 6. Membership
 
@@ -155,6 +166,8 @@ The constitutional vocabulary distinguishes at least:
 One person may hold multiple roles only where conflicts and concentration rules allow it. Role assignments are revocable governance delegations, not personal property.
 
 ## 8. Decision classes
+
+For every decision whose approval rule is expressed as a fraction of valid `for/against` votes, an empty `for + against` denominator is an automatic failure, not a vacuous success. At least one affirmative vote is required. Abstentions may satisfy quorum only where the applicable rule allows them to count toward participation; they never manufacture approval.
 
 ### 8.1 Delegated action
 
@@ -293,6 +306,8 @@ Repository permissions and infrastructure credentials SHOULD be reconciled again
 
 Founder executive authority is expected to reduce through the F0 → F1 → F2 maturity process in `FOUNDING-STEWARDSHIP.md`. Phase transitions require evidence and valid institutional records; they cannot be fabricated by editing machine state.
 
+An operative F1/F2 state MUST be supported by `policy/phase-evidence.json`. F1 requires the objective Member minimum plus evidence of independent institutional capacity and documented delegations. F2 additionally requires the seven-Member minimum, twelve months of operative governance, separation of cross-domain unilateral control, independent audit/review capacity and demonstrated delegated-role replacement. Machine flags without the referenced evidence records do not satisfy these criteria.
+
 Legal or technical succession must preserve the mission, contributor-rights constraints, persistent-identifier commitments and project authority boundaries.
 
 A change in GitHub ownership, domain registrar account, hosting provider, corporate control or maintainer personnel does not by itself rewrite EC governance or contributor grants.
@@ -306,6 +321,8 @@ The canonical human constitutional text controls its machine-readable projection
 The `commons#` vocabulary, JSON-LD governance records and SHACL/CI constraints may encode a reviewable subset of these rules. If prose and executable constraints diverge, the divergence must fail visibly and be resolved through governance; code does not silently overrule the Constitution.
 
 Automation must not infer membership or founder authority from GitHub access, funding, employment, contributions or graph connectivity.
+
+An operative machine state must identify the adopted non-draft Constitution, Membership Policy and Founding Stewardship Policy and bind their exact bytes by cryptographic digest. A mutable status flag cannot overrule draft/non-operative human text.
 
 See `spec/MACHINE-READABLE-GOVERNANCE.md`.
 
