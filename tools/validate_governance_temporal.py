@@ -3,11 +3,32 @@
 
 import validate_governance as core
 import validate_governance_lifecycle as life
+
+# Capture every base callback before importing/installing temporal wrappers.
+# Operative-only branches rely on these saved implementations; the bootstrap
+# snapshot must still prove that the callback chain is complete.
+life.ORIG_VALIDATE_MEMBER_ADMISSION_RECORD = core.validate_member_admission_record
+life.ORIG_VALIDATE_CONFLICT_DETERMINATION = core.validate_conflict_determination
+life.ORIG_VALIDATE_VOTE_APPROVAL = core.validate_vote_approval
+
 import governance_temporal_phase as phase
 import governance_temporal_evidence as evidence
 import governance_temporal_roles as roles
 import governance_delegation_lifecycle as delegation_lifecycle
 import governance_founding_authority as founding_authority
+
+
+def validate_saved_base_callbacks() -> None:
+    callbacks = {
+        "member admission": getattr(life, "ORIG_VALIDATE_MEMBER_ADMISSION_RECORD", None),
+        "conflict determination": getattr(life, "ORIG_VALIDATE_CONFLICT_DETERMINATION", None),
+        "vote approval": getattr(life, "ORIG_VALIDATE_VOTE_APPROVAL", None),
+        "adoption record": getattr(life, "ORIG_VALIDATE_ADOPTION_RECORD", None),
+        "phase evidence": getattr(life, "ORIG_VALIDATE_PHASE_EVIDENCE", None),
+        "CLA status": getattr(life, "ORIG_VALIDATE_CLA_STATUS", None),
+    }
+    for label, callback in callbacks.items():
+        core.require(callable(callback), f"saved base validator missing/not callable: {label}")
 
 
 def validate_membership_registry(*args, **kwargs):
@@ -17,6 +38,8 @@ def validate_membership_registry(*args, **kwargs):
 
 
 def main() -> None:
+    validate_saved_base_callbacks()
+
     life.validate_state_transition_history = phase.validate_state_transition_history
     life.validate_member_admission_record_historical = phase.validate_member_admission_record
     life.validate_mission_guardian_assignment = roles.validate_mission_guardian_assignment
