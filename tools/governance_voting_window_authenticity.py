@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import validate_governance as core
 import validate_governance_lifecycle as life
-import governance_temporal_evidence as evidence
+import governance_ballot_proposal_binding as ballot_binding
 
 
 def validate_opening_record(data, label: str, expected_decision_id: str, expected_rule_id: str, status: dict, membership: dict) -> None:
@@ -86,7 +86,7 @@ def validate_opening_record(data, label: str, expected_decision_id: str, expecte
 
 def validate_vote_approval(data, label, expected_decision_id, expected_rule_id, status, rules, membership, expected_artifact_bindings=None, expected_decision_date=None) -> None:
     validate_opening_record(data, label, expected_decision_id, expected_rule_id, status, membership)
-    evidence.validate_vote_approval(
+    ballot_binding.validate_vote_approval(
         data,
         label,
         expected_decision_id,
