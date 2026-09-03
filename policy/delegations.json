@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "governance_version": "0.1-DRAFT",
+  "operative": false,
+  "delegations": [],
+  "reserved_non_delegable_actions": [
+    "constitutional-amendment",
+    "membership-economic-distribution",
+    "organization-wide-exclusive-ip-transfer",
+    "endowment-principal-withdrawal-without-qualified-approval",
+    "persistent-domain-transfer-without-qualified-approval",
+    "identifier-authority-transfer-without-qualified-approval"
+  ],
+  "notes": "No operative institutional delegations exist in this bootstrap record. Technical repository permissions are not delegations."
+}
