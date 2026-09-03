@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "governance_version": "0.1-DRAFT",
+  "operative": false,
+  "rules": [
+    {
+      "id": "ordinary-approval",
+      "iri": "https://id.exergism.org/commons#OrdinaryApproval",
+      "name": "Ordinary Approval",
+      "quorum": {"type": "fraction_of_effective_eligible", "operator": ">", "value": 0.5},
+      "approval": {"type": "votes_for_vs_against", "operator": ">"},
+      "abstentions_count_toward_approval": false
+    },
+    {
+      "id": "qualified-approval",
+      "iri": "https://id.exergism.org/commons#QualifiedApproval",
+      "name": "Qualified Approval",
+      "quorum": {"type": "fraction_of_effective_eligible", "operator": ">=", "value": 0.6666666667},
+      "approval": {"type": "fraction_of_valid_for_against", "operator": ">=", "value": 0.6666666667},
+      "abstentions_count_toward_approval": false
+    },
+    {
+      "id": "constitutional-amendment",
+      "iri": "https://id.exergism.org/commons#ConstitutionalAmendment",
+      "name": "Constitutional Amendment",
+      "quorum": {"type": "fraction_of_effective_eligible", "operator": ">=", "value": 0.6666666667},
+      "approval": {"type": "fraction_of_valid_for_against", "operator": ">=", "value": 0.75},
+      "abstentions_count_toward_approval": false
+    }
+  ],
+  "mandatory_qualified_subjects": [
+    "endowment-principal-withdrawal",
+    "persistent-domain-transfer",
+    "identifier-authority-transfer",
+    "legal-steward-appointment-or-removal",
+    "organization-wide-exclusive-ip-transfer",
+    "institutional-merger-dissolution-or-succession"
+  ],
+  "conflict_rules": {
+    "self_compensation_recusal_required": true,
+    "self_contract_approval_prohibited": true,
+    "conflicted_voters_excluded_from_effective_eligible_denominator": true,
+    "funding_does_not_create_governance_rights": true
+  }
+}
