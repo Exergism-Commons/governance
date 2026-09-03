@@ -1,7 +1,15 @@
-schema_version: 1
+schema_version: 2
 schedule_version: 0.1-DRAFT
 status: draft
 operative: false
+coverage_state_contract:
+  final_states:
+    - covered
+    - excluded
+  provisional_states:
+    - proposed
+    - proposed-after-outbound-review
+    - bootstrap-not-retroactive
 repositories:
   - repository: Exergism-Commons/exergism
     cla_coverage: proposed
