@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "governance_version": "0.1-DRAFT",
+  "operative": false,
+  "current_phase": "F0-founder-led-bootstrap",
+  "governance_operative_since": null,
+  "phase_effective_date": null,
+  "transition_decision_record": null,
+  "f1": {
+    "minimum_active_members": 3,
+    "independent_role_holder_present": false,
+    "independent_role_holder_evidence": null,
+    "documented_treasury_domain_repository_delegations": false,
+    "delegation_evidence": null
+  },
+  "f2": {
+    "minimum_active_members": 7,
+    "minimum_operational_months": 12,
+    "single_person_cross_domain_control_removed": false,
+    "control_separation_evidence": null,
+    "independent_audit_review_capacity": false,
+    "audit_review_evidence": null,
+    "delegated_role_replacement_demonstrated": false,
+    "role_replacement_evidence": null
+  },
+  "notes": "Draft evidence contract only. A phase string cannot satisfy a transition gate. Operative F1/F2 transitions require the decision record, objective member/time criteria and non-null evidence references enforced by CI."
+}
