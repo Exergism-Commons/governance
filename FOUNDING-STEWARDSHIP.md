@@ -169,6 +169,8 @@ Transition criteria include at least:
 
 At F2, the Founding Steward no longer has general executive primacy. Any continuing mission-protection authority must be the narrower Mission Guardian function defined by the adopted succession mechanism.
 
+A Mission Guardian is not created by a boolean. An operative Guardian must identify the holder and resolve to a content-addressed adopted assignment record. That record must establish the authority mode, effective date and exact assignment payload and must be supported either by the applicable qualified appointment decision or by the adopted succession process. If F2 requires an operative Guardian, that assignment must already be effective on the F2 phase-effective date.
+
 ### Transition integrity and evidence
 
 No phase transition may be declared solely by changing a string or boolean in a machine-readable file.
@@ -176,10 +178,13 @@ No phase transition may be declared solely by changing a string or boolean in a 
 An operative F1 or F2 transition requires:
 
 1. a **Qualified Approval** decision under the exact adopted decision rule and a content-addressed decision record binding that result;
-2. the objective Active-Member minimum derived from the operative Member Registry;
+2. the objective Active-Member minimum reconstructed from valid Membership history **as of the target phase-effective date**;
 3. non-null evidence references for each non-count criterion required by the target phase;
-4. for F2, at least 12 months between the recorded governance-operative date and the proposed phase-effective date; and
-5. successful validation of `policy/phase-evidence.json` against the canonical human criteria above.
+4. only delegations actually effective and unexpired on the target phase date may satisfy role/delegation criteria;
+5. for F2, at least 12 months between the recorded governance-operative date and the proposed phase-effective date; and
+6. successful validation of `policy/phase-evidence.json` against the canonical human criteria above.
+
+F2 additionally requires a verifiable transition chain. The institution must first have a valid content-addressed F0→F1 transition. The later F1→F2 decision must bind the digest of that exact prior transition in its approved payload. A repository cannot jump directly from F0 to F2 by writing a single record that merely labels its `from_phase` as F1.
 
 The Founding Steward or Mission Guardian does not acquire a separate veto over a maturity transition merely because that transition reduces founder power. The Mission Veto remains available only for an actual Mission Lock violation or protected irreversible action; it cannot be used to preserve founder executive primacy after the objective transition criteria and Qualified Approval are validly satisfied.
 
@@ -194,6 +199,8 @@ EC must be capable of surviving its founder.
 The operative framework must therefore define a succession path for death, incapacity, prolonged unavailability or voluntary retirement of the Founding Steward.
 
 The successor mission-protection function should be narrower than founder-led bootstrap authority. It may eventually be held by a Mission Guardian or plural Guardian body, but it must not acquire ownership of EC through succession.
+
+Any Mission Guardian assignment must remain attributable to an adopted source of authority; vacancy, technical access or a mutable role flag does not appoint a Guardian.
 
 Emergency succession cannot be used to rewrite historical contributor rights, repurpose persistent identifiers or distribute institutional assets.
 
