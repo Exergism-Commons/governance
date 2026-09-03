@@ -14,21 +14,31 @@ This Agreement is for a company, association, university, foundation or other le
 
 **Authorized Contributor** means an individual whom You have identified through the operative records process as authorized to submit Contributions covered by this Agreement.
 
+**Accepted Contribution** means a Contribution that has been merged into, incorporated into, or otherwise expressly accepted for inclusion in a Covered Project through the applicable project process. Submission for review alone does not make a proposal an Accepted Contribution.
+
 ## 2. Ownership
 
 You retain all copyright and related rights that You own in Your Contributions. This is a non-exclusive license, not an assignment of copyright or ownership of employee inventions.
 
 This Agreement does not claim rights that belong personally to an employee, contractor, client or other third party and that You do not own or control.
 
-## 3. Copyright and related-rights grant
+## 3. Review rights and accepted-contribution grant
 
-Subject to the outbound constraint below, You grant the Steward a perpetual, worldwide, royalty-free, non-exclusive and irrevocable license under copyright and other licensable rights protecting works of authorship that You own or control in each covered Contribution, with the right to sublicense as permitted by this Agreement, to reproduce, modify, adapt, translate, combine, publicly display, publicly perform, communicate, make available, publish, distribute, archive, validate and otherwise use the Contribution as reasonably necessary for the Covered Project.
+### 3.1 Limited pre-acceptance review rights
+
+For a Contribution submitted for possible inclusion but not yet accepted, You grant the Steward only the non-exclusive rights reasonably necessary to receive, store, reproduce, display, test, review and discuss the proposal through the project contribution process and to preserve the public review/provenance record.
+
+These limited pre-acceptance rights do not authorize incorporation into project releases or unrelated reuse.
+
+### 3.2 Full grant upon acceptance
+
+Subject to the outbound constraint below, for each **Accepted Contribution** You grant the Steward a perpetual, worldwide, royalty-free, non-exclusive and irrevocable license under copyright and other licensable rights protecting works of authorship that You own or control in that Accepted Contribution, with the right to sublicense as permitted by this Agreement, to reproduce, modify, adapt, translate, combine, publicly display, publicly perform, communicate, make available, publish, distribute, archive, validate and otherwise use the Contribution as reasonably necessary for the Covered Project.
 
 The grant includes equivalent rights necessary for format/schema migration, reproducible builds, semantic projections, indexing, accessibility and archival preservation.
 
 ## 4. Outbound-license constraint
 
-The Steward may publicly sublicense or distribute a Contribution only under:
+The Steward may publicly sublicense or distribute an Accepted Contribution only under:
 
 1. the license(s) governing the Target Material when submitted;
 2. later versions expressly permitted by those license(s) or the Project Schedule then in force;
@@ -64,7 +74,7 @@ You represent that:
 
 You must maintain or approve the list of Authorized Contributors through the operative records process and promptly notify the Steward when an individual's authority materially changes.
 
-Removal from the authorized list stops that individual from creating new Entity Contributions under this Agreement after the recorded change. It does not revoke rights already granted for earlier Contributions.
+Removal from the authorized list stops that individual from creating new Entity Contributions under this Agreement after the recorded change. It does not revoke rights already granted for earlier Accepted Contributions.
 
 An individual's personal Contribution is not converted into an Entity Contribution merely because that individual works for You.
 
@@ -78,11 +88,15 @@ Material not owned or controlled by You is outside this grant unless the actual 
 
 Public contribution history may be retained indefinitely as part of project provenance. Non-public corporate authority documents, signatures, addresses and contact records should remain in the controlled agreement-record system rather than the public repository unless publication is necessary and authorized.
 
-## 11. Term, legacy material and termination of authority
+## 11. Term, withdrawal, legacy material and termination of authority
 
 This Agreement applies prospectively to covered Contributions submitted after effective acceptance, unless You separately confirm identified legacy Contributions.
 
-The rights granted for a Contribution are irrevocable once granted, except to the extent mandatory law requires otherwise. You may terminate coverage for future Contributions by notice through the operative process.
+Before a Contribution is accepted, You may withdraw it from project consideration. On withdrawal, the Steward's Section 3.1 rights terminate except for the limited rights necessary to preserve already-public review, provenance and archival records.
+
+For an Accepted Contribution, the full rights granted under Section 3.2 are irrevocable once granted, except to the extent mandatory law requires otherwise.
+
+You may terminate coverage for future Contributions by notice through the operative process. Termination does not revoke rights already granted for Accepted Contributions.
 
 ## 12. Successor Steward and Agreement changes
 
