@@ -8,6 +8,23 @@ import validate_governance as core
 BASE_VALIDATE_COVERED_PROJECTS = core.validate_covered_projects
 
 
+def nested_yaml_scalar(text: str, key: str):
+    pattern = re.compile(rf"^\s*{re.escape(key)}:\s*(.*?)\s*$")
+    for raw in text.splitlines():
+        match = pattern.match(raw)
+        if not match:
+            continue
+        value = match.group(1)
+        if value == "true":
+            return True
+        if value == "false":
+            return False
+        if value in {"null", "~"}:
+            return None
+        return value.strip("'\"")
+    raise SystemExit(f"governance integrity failure: YAML missing nested key: {key}")
+
+
 def parse_schedule_coverage(text: str) -> dict[str, set[str]]:
     result: dict[str, set[str]] = {}
     current_repo: str | None = None
@@ -85,10 +102,10 @@ def validate_schedule_projection_manifest(status_text: str | None = None, projec
             f"covered-projects material-class set does not match Project Schedule for {repository}",
         )
 
-    contract = core.yaml_scalar(projects_text, "authoritative_schedule_artifact")
+    contract = nested_yaml_scalar(projects_text, "authoritative_schedule_artifact")
     core.require(contract == schedule_artifact, "covered-projects schedule binding points to wrong artifact")
-    core.require(core.yaml_scalar(projects_text, "exact_repository_set_required") is True, "covered-projects exact repository-set binding disabled")
-    core.require(core.yaml_scalar(projects_text, "exact_material_class_id_set_per_repository_required") is True, "covered-projects exact material-class binding disabled")
+    core.require(nested_yaml_scalar(projects_text, "exact_repository_set_required") is True, "covered-projects exact repository-set binding disabled")
+    core.require(nested_yaml_scalar(projects_text, "exact_material_class_id_set_per_repository_required") is True, "covered-projects exact material-class binding disabled")
 
 
 def validate_covered_projects(status_text: str, projects_text: str) -> str:
