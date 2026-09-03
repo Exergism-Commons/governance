@@ -17,6 +17,7 @@ import governance_temporal_roles as roles
 import governance_delegation_lifecycle as delegation_lifecycle
 import governance_founding_authority as founding_authority
 import governance_cla_schedule_binding as cla_schedule_binding
+import governance_phase_maturity_chronology as maturity_chronology
 
 
 def validate_saved_base_callbacks() -> None:
@@ -68,6 +69,7 @@ def main() -> None:
     membership = core.load_json("policy/membership-status.json")
     founding = core.load_json("policy/founding-stewardship.json")
     phase_evidence = core.load_json("policy/phase-evidence.json")
+    maturity_chronology.validate_phase_maturity_chronology(status, phase_evidence)
     founding_authority.validate_f0_signed_membership_actions(status, founding, rules, membership)
     roles.validate_mission_guardian_assignment(status, founding, rules, membership, phase_evidence)
     print("Exergism Commons temporal authority integrity: PASS")
