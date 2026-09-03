@@ -18,6 +18,12 @@
     ],
     "constitutional_basis": "CONSTITUTION.md#15"
   },
+  "lifecycle_contract": {
+    "content_addressed_revocation_required": true,
+    "registry_edit_alone_cannot_deactivate": true,
+    "historical_effective_period_must_be_reconstructable": true,
+    "revoked_delegations_remain_in_registry": true
+  },
   "delegations": [],
   "reserved_non_delegable_actions": [
     "constitutional-amendment",
@@ -27,5 +33,5 @@
     "persistent-domain-transfer-without-qualified-approval",
     "identifier-authority-transfer-without-qualified-approval"
   ],
-  "notes": "No operative institutional delegations exist in this bootstrap record. Technical repository permissions are not delegations. An operative delegation must identify a unique delegation_id, holder_person_id, a structured source authority resolving to the adopted decision that creates the delegation, exact scope types and resources, allowed actions, explicit prohibitions, governing rule version, effective/expiry dates, revocation contract and a content-addressed decision record. Maturity gates count only delegations actually effective and unexpired on the target phase-effective date."
+  "notes": "No operative institutional delegations exist in this bootstrap record. Technical repository permissions are not delegations. An operative delegation must identify a unique delegation_id, holder_person_id, a structured source authority resolving to the adopted decision that creates the delegation, exact scope types and resources, allowed actions, explicit prohibitions, governing rule version, effective/expiry dates, a revocation contract, decision_record and revocation_record. Active delegations set revocation_record to null. A delegation may become operative=false only through a content-addressed adopted delegation-revocation decision using the declared governance approval authority; editing the registry flag alone is invalid. Revoked delegations remain in the registry so their historical effective interval remains reconstructable. Maturity gates count a delegation only when its creation date has passed, its expiry has not passed, and no revocation was yet effective on the target phase-effective date."
 }
