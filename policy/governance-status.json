@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "governance_version": "0.1-DRAFT",
   "operative": false,
   "institutional_state": "bootstrap",
@@ -42,5 +42,5 @@
   "succession_process_adopted": false,
   "qualified_legal_review_complete": false,
   "integrated_architecture_pr": 2,
-  "notes": "Draft architecture only. GitHub organization/repository state does not constitute legal adoption or institutional authority. Operative state requires adopted non-draft human artifacts whose exact bytes are bound by SHA-256."
+  "notes": "Draft architecture only. GitHub organization/repository state does not constitute legal adoption or institutional authority. Operative state requires adopted non-draft human artifacts whose exact bytes are bound by SHA-256 and a committed content-addressed governance-adoption record whose metadata and artifact bindings are validated by CI."
 }
