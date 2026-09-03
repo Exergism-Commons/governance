@@ -57,6 +57,15 @@
     "succession_process_completed_no_later_than_assignment_decision": true,
     "succession_supporting_evidence_captured_no_later_than_completion": true
   },
+  "succession_authentication_contract": {
+    "adopted_process_reference": "policy/governance-status.json#activation_evidence.succession_process",
+    "adopted_process_requires_authenticated_authorized_reviewers": true,
+    "cessation_event_must_bind_exact_adopted_process": true,
+    "guardian_assignment_event_must_bind_exact_adopted_process": true,
+    "event_reviewers_must_be_authorized_by_adopted_process": true,
+    "event_requires_signature_from_every_participating_reviewer": true,
+    "event_signatures_bind_exact_process_payload": true
+  },
   "mission_lock": {
     "operative": false,
     "amendment_rule_id": "mission-locked-amendment",
