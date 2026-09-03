@@ -23,6 +23,7 @@ import governance_strict_yaml as strict_yaml
 import governance_signature_chronology as signature_chronology
 import governance_membership_process_chronology as process_chronology
 import governance_voting_window_authenticity as voting_window_authenticity
+import governance_ballot_proposal_binding as ballot_binding
 
 
 def validate_saved_base_callbacks() -> None:
@@ -41,6 +42,7 @@ def validate_saved_base_callbacks() -> None:
 def validate_membership_registry(*args, **kwargs):
     membership = args[0]
     evidence.require_voting_window_contract(membership)
+    ballot_binding.require_ballot_proposal_binding_contract(membership)
     return life.validate_membership_registry_lifecycle(*args, **kwargs)
 
 
