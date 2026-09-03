@@ -13,7 +13,9 @@ def validate_mission_guardian_assignment(status, founding, rules, membership, ph
     core.require(
         contract.get("succession_mode_requires_validated_founding_steward_cessation") is True
         and contract.get("succession_assignment_must_not_predate_cessation") is True
-        and contract.get("succession_evidence_must_bind_cessation_digest") is True,
+        and contract.get("succession_evidence_must_bind_cessation_digest") is True
+        and contract.get("succession_process_completed_no_later_than_assignment_decision") is True
+        and contract.get("succession_supporting_evidence_captured_no_later_than_completion") is True,
         "Mission Guardian succession/cessation binding contract missing/weakened",
     )
     if guardian.get("operative_assignment") is not True:
@@ -28,8 +30,10 @@ def validate_mission_guardian_assignment(status, founding, rules, membership, ph
     core.require(record.get("guardian_person_id") == person_id and record.get("guardian_record_id") == record_id, "Mission Guardian assignment identity mismatch")
     decision_id = record.get("decision_id")
     decision_date_text = record.get("decision_date")
+    decision_date = core.parse_iso_date(decision_date_text, "Mission Guardian assignment decision_date")
     effective = core.parse_iso_date(record.get("effective_date"), "Mission Guardian assignment effective_date")
-    core.require(core.parse_iso_date(decision_date_text, "Mission Guardian assignment decision_date") <= effective, "Mission Guardian assignment decision postdates effective date")
+    governance_effective = core.parse_iso_date(status["effective_date"], "governance effective_date")
+    core.require(governance_effective <= decision_date <= effective, "Mission Guardian assignment decision postdates effective date")
     if status["institutional_phase"] == "F2-distributed-institution":
         core.require(effective <= core.parse_iso_date(phase_evidence["phase_effective_date"], "phase_effective_date"), "F2 Mission Guardian must be assigned by F2 effective date")
     payload = {k: v for k, v in record.items() if k not in {"approval_evidence", "process_evidence", "assignment_payload_sha256"}}
@@ -70,12 +74,34 @@ def validate_mission_guardian_assignment(status, founding, rules, membership, ph
             f"mission-guardian-assignment:{person_id}",
         )
         core.require(process.get("decision_id") == decision_id, "Mission Guardian succession evidence decision mismatch")
+        core.require(process.get("decision_date") == decision_date_text, "Mission Guardian succession evidence decision date mismatch")
         core.require(process.get("assignment_payload_sha256") == payload_hash, "Mission Guardian succession evidence does not bind exact assignment payload")
         core.require(process.get("guardian_person_id") == person_id and process.get("guardian_record_id") == record_id, "Mission Guardian succession evidence identity mismatch")
         core.require(process.get("effective_date") == record.get("effective_date"), "Mission Guardian succession evidence effective date mismatch")
         core.require(process.get("founding_steward_person_id") == founder.get("person_id"), "Mission Guardian succession evidence founder identity mismatch")
         core.require(process.get("founding_steward_cessation_sha256") == cessation_ref.get("sha256"), "Mission Guardian succession evidence must bind exact founder cessation digest")
         core.require(process.get("founding_steward_cessation_effective_date") == cessation.get("effective_date"), "Mission Guardian succession evidence cessation chronology mismatch")
+        completed = core.parse_iso_date(process.get("completed_date"), "Mission Guardian succession evidence completed_date")
+        core.require(
+            governance_effective <= cessation_effective <= completed <= decision_date <= effective,
+            "Mission Guardian succession process must be complete after founder cessation and no later than assignment decision/effective date",
+        )
+        supporting = process.get("supporting_evidence")
+        core.require(isinstance(supporting, list) and supporting, "Mission Guardian succession evidence requires supporting evidence")
+        for index, support_ref in enumerate(supporting):
+            support = core.validate_supporting_evidence_ref(
+                support_ref,
+                f"Mission Guardian succession supporting evidence {index}",
+                status["governance_version"],
+            )
+            captured = core.parse_iso_date(
+                support.get("captured_date"),
+                f"Mission Guardian succession supporting evidence {index}.captured_date",
+            )
+            core.require(
+                governance_effective <= captured <= completed,
+                "Mission Guardian succession supporting evidence cannot be captured after process completion",
+            )
     else:
         raise SystemExit("governance integrity failure: Mission Guardian authority_mode unsupported")
 
