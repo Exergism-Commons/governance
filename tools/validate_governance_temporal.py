@@ -18,6 +18,8 @@ import governance_delegation_lifecycle as delegation_lifecycle
 import governance_founding_authority as founding_authority
 import governance_cla_schedule_binding as cla_schedule_binding
 import governance_phase_maturity_chronology as maturity_chronology
+import governance_adoption_chronology as adoption_chronology
+import governance_strict_yaml as strict_yaml
 
 
 def validate_saved_base_callbacks() -> None:
@@ -41,6 +43,10 @@ def validate_membership_registry(*args, **kwargs):
 
 def main() -> None:
     validate_saved_base_callbacks()
+    # All generic YAML lookups used by the final gate must resolve one unique
+    # top-level key. Nested decoy keys cannot shadow authoritative CLA state.
+    strict_yaml.install()
+
     # Schedule/projection consistency is checked even in the current draft state,
     # so CI exercises this integrity surface before CLA activation.
     cla_schedule_binding.validate_schedule_projection_manifest()
@@ -69,6 +75,7 @@ def main() -> None:
     membership = core.load_json("policy/membership-status.json")
     founding = core.load_json("policy/founding-stewardship.json")
     phase_evidence = core.load_json("policy/phase-evidence.json")
+    adoption_chronology.validate_governance_adoption_chronology(status)
     maturity_chronology.validate_phase_maturity_chronology(status, phase_evidence)
     founding_authority.validate_f0_signed_membership_actions(status, founding, rules, membership)
     roles.validate_mission_guardian_assignment(status, founding, rules, membership, phase_evidence)
