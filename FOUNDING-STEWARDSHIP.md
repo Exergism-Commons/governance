@@ -18,7 +18,26 @@ The proposed initial **Founding Steward** is **Daniel Molinero Lucas**.
 
 The Founding Steward is a constitutional bootstrap role, not an equity position, transferable property interest, hereditary office or claim on EC assets.
 
-Technical control of GitHub, domains, hosting or repositories is not itself the source of this role. If this framework becomes operative, the role must be recorded in an adopted institutional record.
+Technical control of GitHub, domains, hosting or repositories is not itself the source of this role. If this framework becomes operative, the initial assignment is created only by the exact legally competent governance-adoption record and begins on that record's governance effective date.
+
+### 2.1 Assignment lifecycle and historical authority
+
+Founding Steward authority is an **interval of institutional authority**, not a mutable boolean.
+
+The machine-readable projection must preserve enough evidence to reconstruct whether the assignment was operative on the date of any act that relies on founder authority. In particular:
+
+- the initial assignment must resolve to the exact content-addressed governance-adoption record;
+- the assignment effective date must equal the governance effective date;
+- resignation, death, incapacity, prolonged unavailability, voluntary retirement or valid removal must resolve to a content-addressed cessation record;
+- that cessation record must bind the exact initial assignment and the exact cessation payload, decision/effective dates and source of authority;
+- a self-resignation requires the Founding Steward's signature;
+- a succession-triggered cessation requires the adopted succession process and evidence bound to the exact cessation;
+- removal for cause requires Qualified Approval under the applicable Member rule; and
+- merely editing `operative_assignment`, deleting a role reference, appointing a Guardian or retaining the founder's identity in the projection cannot end, restore or extend authority.
+
+Once a valid cessation becomes effective, the former Founding Steward cannot regain bootstrap authority through a registry edit. Any future role would require a separately adopted constitutional mechanism rather than silently reviving the original founding assignment.
+
+Consequently, an F0 admission, termination or other act that depends on Founding Steward authority is valid only if the Steward assignment was still operative on that act's **decision date**. A signature made after cessation cannot be converted into valid founder authority by backdating the act or by keeping EC in F0.
 
 ## 3. Mission Lock
 
@@ -69,7 +88,7 @@ While EC is in `founder-led-bootstrap`, the Founding Steward may direct routine 
 - representing the bootstrap project publicly without falsely claiming nonexistent legal status; and
 - taking reversible technical actions reasonably necessary to preserve EC infrastructure.
 
-These powers exist to make EC capable of becoming an institution. They are not unlimited executive sovereignty.
+These powers exist to make EC capable of becoming an institution. They are not unlimited executive sovereignty. Every act that relies on this authority must fall inside the validated Founding Steward assignment interval described in Section 2.1.
 
 ## 5. Founder Mission Veto
 
@@ -142,7 +161,7 @@ Expected characteristics:
 - material infrastructure still depends on the founder;
 - governance records and independent controls are incomplete.
 
-Founder executive authority is broad, subject to the prohibitions above.
+Founder executive authority is broad, subject to the prohibitions above and to the continuing validity of the Founding Steward assignment itself.
 
 ### Phase F1 — early institution
 
@@ -199,6 +218,8 @@ EC must be capable of surviving its founder.
 The operative framework must therefore define a succession path for death, incapacity, prolonged unavailability or voluntary retirement of the Founding Steward.
 
 The successor mission-protection function should be narrower than founder-led bootstrap authority. It may eventually be held by a Mission Guardian or plural Guardian body, but it must not acquire ownership of EC through succession.
+
+Any succession event that ends the Founding Steward assignment must leave a content-addressed cessation record under the Section 2.1 lifecycle contract. A Mission Guardian assignment does not retroactively rewrite the founder's authority interval and must not coexist as a supposed succession replacement while the machine layer still treats the replaced founder as holding unrestricted bootstrap authority.
 
 Any Mission Guardian assignment must remain attributable to an adopted source of authority; vacancy, technical access or a mutable role flag does not appoint a Guardian.
 
