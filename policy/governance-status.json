@@ -34,6 +34,23 @@
   "ontology_iri": "https://id.exergism.org/ontology/commons",
   "vocabulary_namespace": "https://id.exergism.org/commons#",
   "adoption_record": null,
+  "governance_release_contract": {
+    "initial_operative_version": "1.0",
+    "current_release_sequence": 0,
+    "current_release_kind": "draft",
+    "founding_adoption_record": null,
+    "previous_adoption_record": null,
+    "constitutive_adoption_reserved_for_initial_release": true,
+    "later_release_classes": [
+      "constitutional-amendment",
+      "mission-locked-amendment"
+    ],
+    "later_release_requires_predecessor": true,
+    "amendment_classification_requires_independent_signed_review": true,
+    "mission_locked_requires_two_successful_votes": true,
+    "mission_locked_requires_minimum_vote_separation_days": 60,
+    "mission_locked_requires_guardian_consent_during_founding_period": true
+  },
   "adoption_binding_contract": {
     "immutable_normative_machine_paths": [
       "policy/decision-rules.json"
@@ -68,5 +85,5 @@
   "succession_process_adopted": false,
   "qualified_legal_review_complete": false,
   "integrated_architecture_pr": 2,
-  "notes": "Draft architecture only. GitHub organization/repository state does not constitute legal adoption or institutional authority. Operative state requires adopted non-draft human artifacts bound by SHA-256, a committed content-addressed governance-adoption record, structured legal identity, constitutive signatures bound to the exact adoption payload, and content-addressed implementation/legal-review evidence. Governance activation is prospective: legal review, competent adoption, constitutive signatures and all activation evidence must be complete no later than the recorded effective date. The immutable adoption record binds normative authority and the initial constitutive assertions; it does not freeze mutable Member, delegation or phase state forever. Every later mutable state transition must instead prove its own adopted decision record."
+  "notes": "Draft architecture only. GitHub organization/repository state does not constitute legal adoption or institutional authority. Operative state requires adopted non-draft human artifacts bound by SHA-256, a committed content-addressed governance-adoption record, structured legal identity, constitutive signatures bound to the exact founding-adoption payload, and content-addressed implementation/legal-review evidence. Constitutive adoption is reserved permanently for release #1 (version 1.0). Every later governance release must form a contiguous content-addressed predecessor chain and use either Constitutional Amendment or Mission-Locked Amendment authority; Mission-Locked releases additionally require two successful votes separated by at least 60 days, signed independent classification/review, and Founding-Period guardian consent. Governance activation is prospective. The immutable founding adoption anchors initial constitutive authority; later mutable state transitions and later governance releases must prove their own adopted authority."
 }
