@@ -3,8 +3,13 @@ name: Governance integrity
 on:
   push:
     paths:
+      - 'README.md'
+      - 'ARCHITECTURE.md'
       - 'CONSTITUTION.md'
+      - 'CONTRIBUTING.md'
+      - 'IP-POLICY.md'
       - 'architecture/**'
+      - 'cla/**'
       - 'policy/**'
       - 'spec/**'
       - 'ontology/**'
@@ -12,8 +17,13 @@ on:
       - '.github/workflows/governance-integrity.yml'
   pull_request:
     paths:
+      - 'README.md'
+      - 'ARCHITECTURE.md'
       - 'CONSTITUTION.md'
+      - 'CONTRIBUTING.md'
+      - 'IP-POLICY.md'
       - 'architecture/**'
+      - 'cla/**'
       - 'policy/**'
       - 'spec/**'
       - 'ontology/**'
