@@ -36,7 +36,9 @@
     "independent_determination_requires_adopted_conflict_process": true,
     "independent_determiners_must_be_active_members": true,
     "independent_determiners_must_exclude_subject": true,
-    "independent_determiners_must_sign_exact_payload": true
+    "independent_determiners_must_sign_exact_payload": true,
+    "signatures_must_not_postdate_determination": true,
+    "determination_must_not_postdate_decision": true
   },
   "admission_modes": {
     "constitutive-initial-member": {
@@ -62,6 +64,7 @@
     "historical_state_must_be_reconstructable": true,
     "historical_phase_authority_required": true,
     "process_evidence_must_bind_exact_transition_payload": true,
+    "approval_backed_removal_effective_after_voting_window_open": true,
     "supported_transition_types": [
       "resignation",
       "inactivity",
@@ -87,5 +90,5 @@
       "founding_steward": true
     }
   ],
-  "notes": "Bootstrap projection only. This record does not create operative membership or voting authority. Operative admission and lifecycle authority are derived from the validated institutional phase timeline at the decision date; a record cannot obtain obsolete F0 authority by self-labeling its phase. Initial formation Members may arise only from the exact competent constitutive adoption; later F0 admissions require a signed, then-operative Founding Steward act after the Candidate period; F1+ admissions require Ordinary Approval. Every later change that removes, suspends, inactivates, restores or terminates voting state must be represented by a content-addressed lifecycle decision/evidence record bound to the exact transition payload; editing the registry row alone is never authority. Historical Member state must remain reconstructable so prior electorates, constitutive membership and phase-transition counts are evaluated as of their actual effective dates. Voting eligibility is frozen when the formal voting window opens through a content-addressed opening record; later admissions or seasoning cannot retroactively join that vote. Every recorded Member ballot must additionally resolve to content-addressed authentication and a Member signature binding the exact decision, decision class, voting-window opening date, person identity and vote value; a bare person_id/vote pair is never sufficient authority for a tally. Every recusal that changes a denominator is content-addressed: self-recusal requires the subject's signature, while an independent determination must bind the adopted conflict process, use Active Member determiners distinct from the subject, and carry each determiner's signature over the exact conflict-determination payload."
+  "notes": "Bootstrap projection only. This record does not create operative membership or voting authority. Operative admission and lifecycle authority are derived from the validated institutional phase timeline at the decision date; a record cannot obtain obsolete F0 authority by self-labeling its phase. Initial formation Members may arise only from the exact competent constitutive adoption; later F0 admissions require a signed, then-operative Founding Steward act after the Candidate period; F1+ admissions require Ordinary Approval. Every later change that removes, suspends, inactivates, restores or terminates voting state must be represented by a content-addressed lifecycle decision/evidence record bound to the exact transition payload; editing the registry row alone is never authority. Historical Member state must remain reconstructable so prior electorates, constitutive membership and phase-transition counts are evaluated as of their actual effective dates. Voting eligibility is frozen when the formal voting window opens through a content-addressed opening record; later admissions or seasoning cannot retroactively join that vote. An F1+ approval-backed termination/removal cannot take effect on or before its own voting-window opening date, so the transition being authorized cannot shrink the electorate snapshot that authorizes it. Every recorded Member ballot must additionally resolve to content-addressed authentication and a Member signature binding the exact decision, decision class, voting-window opening date, person identity and vote value; a bare person_id/vote pair is never sufficient authority for a tally. Every recusal that changes a denominator is content-addressed: self-recusal requires the subject's signature, while an independent determination must bind the adopted conflict process, use Active Member determiners distinct from the subject, and carry each determiner's signature over the exact conflict-determination payload. Those signatures must exist no later than the determination date, and the determination itself cannot postdate the decision whose denominator it changes."
 }
