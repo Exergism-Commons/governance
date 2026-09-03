@@ -114,7 +114,7 @@ Inactive status:
 - may be reversed through a documented reactivation process; and
 - must not be used selectively to manipulate a pending vote.
 
-Historical decision validation must use the Member state effective at the decision date rather than silently applying a later state change retroactively.
+An inactivity or reactivation entry in the mutable registry is not sufficient by itself. The transition must resolve to a content-addressed process record that identifies the Member, prior and resulting state, decision/effective dates, reason and supporting evidence. Historical decision validation must use the Member state effective at the decision date rather than silently applying a later state change retroactively.
 
 ## 9. Conflicts and voting eligibility
 
@@ -128,9 +128,9 @@ Recusal does not terminate membership.
 
 ## 10. Resignation, suspension and termination
 
-A Member may resign at any time.
+A Member may resign at any time. A machine-readable resignation must be backed by a content-addressed record signed by that Member and bound to the exact transition payload.
 
-Temporary suspension may be used only for a documented integrity, safety, legal, provenance or process risk where delay would create material harm. Emergency suspension must be narrow, time-limited and reviewable.
+Temporary suspension may be used only for a documented integrity, safety, legal, provenance or process risk where delay would create material harm. Emergency suspension must be narrow, time-limited and reviewable. Suspension must likewise resolve to a content-addressed process record; changing `state` or `operative_membership` alone has no authority.
 
 Termination for cause requires:
 
@@ -140,7 +140,9 @@ Termination for cause requires:
 - Qualified Approval by non-conflicted eligible Members once F1 is operative; and
 - a route to contest material factual errors.
 
-During F0, the Founding Steward may terminate an initial membership only for documented cause and must preserve the record for later institutional review. Founder disagreement with ordinary policy preferences is not cause.
+During F0, the Founding Steward may terminate an initial membership only for documented cause and must preserve a signed content-addressed decision record for later institutional review. Founder disagreement with ordinary policy preferences is not cause.
+
+Every post-admission lifecycle change is append-only in authority terms: later state may change, but the admission and prior transitions remain historical facts. A current inactive, suspended or former Member therefore remains part of the historical constitutive/admission record and of any past electorate in which that person was validly active.
 
 ## 11. Anti-Sybil and anti-capture controls
 
@@ -164,6 +166,8 @@ The proposed initial Founding Steward, Daniel Molinero Lucas, is the initial des
 This designation is **not operative membership** until a legally competent adoption record creates the initial Member Registry and identifies the initial Member(s) expressly.
 
 The first operative registry must record each initial Member individually rather than treating all repository collaborators or organization members as Members. The constitutive exception in Section 5 ends with that initial adoption.
+
+The immutable governance-adoption record identifies the historical constitutive Member set. A later valid resignation, inactivity, suspension or termination changes current status but does not rewrite or invalidate the fact that the person was a constitutive Member at adoption.
 
 ## 13. Membership and roles are separate
 
@@ -190,14 +194,15 @@ A public or repository-safe projection should expose only what is needed for gov
 - membership state;
 - Candidate and Active-Membership effective dates;
 - admission mode and immutable admission record;
-- voting-eligibility dates by class derived from `active_since`;
+- an ordered list of content-addressed lifecycle-transition records;
+- voting-eligibility dates by class derived from historical state and `active_since`;
 - role references where public;
 - inactivity/suspension state; and
 - hashes or references to controlled evidence rather than unnecessary personal data.
 
 Automation may compute eligibility from adopted records. It must not infer membership from GitHub organization membership, repository permissions, funding records or CLA status.
 
-A mutable current registry is not itself the authority for a historical change. Each admission, suspension, reactivation or termination must be supported by its own immutable decision record so the constitutional adoption record does not need to be rewritten whenever membership evolves.
+A mutable current registry is not itself the authority for a historical change. Each admission, resignation, inactivity, suspension, reactivation or termination must be supported by its own immutable authority/evidence record. Electorates and phase Member-count gates must be reconstructed **as of the relevant decision or phase-effective date**, not from whatever the registry happens to say today.
 
 ## 15. Review and change
 
