@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "governance_version": "0.1-DRAFT",
   "operative": false,
   "rules": [
@@ -9,7 +9,9 @@
       "name": "Ordinary Approval",
       "quorum": {"type": "fraction_of_effective_eligible", "comparison": "strictly_greater_than", "numerator": 1, "denominator": 2},
       "approval": {"type": "votes_for_vs_against", "comparison": "strictly_greater_than"},
-      "abstentions_count_toward_approval": false
+      "abstentions_count_toward_approval": false,
+      "zero_valid_for_against_result": "fail",
+      "minimum_affirmative_votes": 1
     },
     {
       "id": "qualified-approval",
@@ -17,7 +19,9 @@
       "name": "Qualified Approval",
       "quorum": {"type": "fraction_of_effective_eligible", "comparison": "at_least", "numerator": 2, "denominator": 3},
       "approval": {"type": "fraction_of_valid_for_against", "comparison": "at_least", "numerator": 2, "denominator": 3},
-      "abstentions_count_toward_approval": false
+      "abstentions_count_toward_approval": false,
+      "zero_valid_for_against_result": "fail",
+      "minimum_affirmative_votes": 1
     },
     {
       "id": "constitutional-amendment",
@@ -25,18 +29,31 @@
       "name": "Constitutional Amendment",
       "quorum": {"type": "fraction_of_effective_eligible", "comparison": "at_least", "numerator": 2, "denominator": 3},
       "approval": {"type": "fraction_of_valid_for_against", "comparison": "at_least", "numerator": 3, "denominator": 4},
-      "abstentions_count_toward_approval": false
+      "abstentions_count_toward_approval": false,
+      "zero_valid_for_against_result": "fail",
+      "minimum_affirmative_votes": 1
     },
     {
       "id": "mission-locked-amendment",
       "iri": "https://id.exergism.org/commons#MissionLockedAmendment",
       "name": "Mission-Locked Amendment",
+      "classification": {
+        "trigger": "any_operative_effect_alters_weakens_removes_excepts_or_bypasses_mission_lock_invariant",
+        "bundled_or_secondary_effects_included": true,
+        "proposal_label_cannot_downgrade": true
+      },
       "quorum": {"type": "fraction_of_effective_eligible", "comparison": "at_least", "numerator": 3, "denominator": 4},
       "approval": {"type": "fraction_of_valid_for_against", "comparison": "at_least", "numerator": 9, "denominator": 10},
       "abstentions_count_toward_approval": false,
+      "zero_valid_for_against_result": "fail",
+      "minimum_affirmative_votes": 1,
       "minimum_days_between_successful_votes": 60,
       "successful_votes_required": 2,
-      "founding_period_guardian_consent_required": true,
+      "guardian_consent_required_in_phases": [
+        "F0-founder-led-bootstrap",
+        "F1-early-institution"
+      ],
+      "founding_period_ends_on_valid_transition_to_phase": "F2-distributed-institution",
       "independent_review_required": true
     }
   ],
