@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "governance_version": "0.1-DRAFT",
   "operative": false,
   "registry_state": "bootstrap",
@@ -12,6 +12,24 @@
     "constitutional-amendment": 90,
     "mission-locked-amendment": 180
   },
+  "admission_modes": {
+    "constitutive-initial-member": {
+      "allowed_only_at_initial_governance_adoption": true,
+      "candidate_period_applies": false,
+      "authority": "competent-constitutive-adoption"
+    },
+    "f0-founding-steward-admission": {
+      "candidate_period_applies": true,
+      "authority": "operative-founding-steward",
+      "signed_decision_required": true
+    },
+    "member-ordinary-approval": {
+      "candidate_period_applies": true,
+      "authority": "ordinary-approval",
+      "approval_evidence_required": true,
+      "allowed_from_phase": "F1-early-institution"
+    }
+  },
   "members": [
     {
       "record_id": "ec-member-bootstrap-001",
@@ -19,11 +37,12 @@
       "display_name": "Daniel Molinero Lucas",
       "state": "designated-bootstrap",
       "operative_membership": false,
+      "candidate_since": null,
       "active_since": null,
-      "admission_basis": "bootstrap-designation",
+      "admission_mode": "bootstrap-designation",
       "admission_record": null,
       "founding_steward": true
     }
   ],
-  "notes": "Bootstrap projection only. Operative voting eligibility is derived from unique stable person_id, active membership, active_since, rule-specific seasoning and recorded conflicts; it is not accepted as a free-standing boolean. Initial legally competent adoption evidence is validated against the initial registry and its documented adoption process rather than a machine-invented decision class."
+  "notes": "Bootstrap projection only. This record does not create operative membership or voting authority. Operative admission must identify a unique person, effective date, candidate provenance where applicable, and a content-addressed decision whose authority is validated for the institutional phase. Initial formation Members may arise only from the exact competent constitutive adoption; later F0 admissions require a signed Founding Steward act after the Candidate period; F1+ admissions require Ordinary Approval. Voting eligibility is derived from historical effective dates, seasoning and conflict records, never from a free-standing boolean."
 }
