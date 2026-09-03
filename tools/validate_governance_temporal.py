@@ -16,6 +16,7 @@ import governance_temporal_evidence as evidence
 import governance_temporal_roles as roles
 import governance_delegation_lifecycle as delegation_lifecycle
 import governance_founding_authority as founding_authority
+import governance_cla_schedule_binding as cla_schedule_binding
 
 
 def validate_saved_base_callbacks() -> None:
@@ -39,6 +40,9 @@ def validate_membership_registry(*args, **kwargs):
 
 def main() -> None:
     validate_saved_base_callbacks()
+    # Schedule/projection consistency is checked even in the current draft state,
+    # so CI exercises this integrity surface before CLA activation.
+    cla_schedule_binding.validate_schedule_projection_manifest()
 
     life.validate_state_transition_history = phase.validate_state_transition_history
     life.validate_member_admission_record_historical = phase.validate_member_admission_record
@@ -54,6 +58,7 @@ def main() -> None:
     core.delegation_active_on = delegation_lifecycle.delegation_active_on
     core.validate_adoption_record = life.validate_adoption_record_historical
     core.validate_phase_evidence = phase.validate_phase_evidence
+    core.validate_covered_projects = cla_schedule_binding.validate_covered_projects
     core.validate_cla_status = roles.validate_cla_status
 
     core.main()
