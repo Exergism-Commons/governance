@@ -17,6 +17,19 @@
     "content_addressed_open_record_required": true,
     "late_admissions_cannot_join_open_vote": true
   },
+  "ballot_authentication_contract": {
+    "content_addressed_authentication_required": true,
+    "member_signature_required": true,
+    "signature_context_type": "member-ballot",
+    "ballot_payload_fields": [
+      "decision_id",
+      "decision_class",
+      "voting_window_open_date",
+      "person_id",
+      "vote"
+    ],
+    "authentication_must_occur_within_voting_window": true
+  },
   "admission_modes": {
     "constitutive-initial-member": {
       "allowed_only_at_initial_governance_adoption": true,
@@ -66,5 +79,5 @@
       "founding_steward": true
     }
   ],
-  "notes": "Bootstrap projection only. This record does not create operative membership or voting authority. Operative admission and lifecycle authority are derived from the validated institutional phase timeline at the decision date; a record cannot obtain obsolete F0 authority by self-labeling its phase. Initial formation Members may arise only from the exact competent constitutive adoption; later F0 admissions require a signed Founding Steward act after the Candidate period; F1+ admissions require Ordinary Approval. Every later change that removes, suspends, inactivates, restores or terminates voting state must be represented by a content-addressed lifecycle decision/evidence record bound to the exact transition payload; editing the registry row alone is never authority. Historical Member state must remain reconstructable so prior electorates, constitutive membership and phase-transition counts are evaluated as of their actual effective dates. Voting eligibility is frozen when the formal voting window opens through a content-addressed opening record; later admissions or seasoning cannot retroactively join that vote."
+  "notes": "Bootstrap projection only. This record does not create operative membership or voting authority. Operative admission and lifecycle authority are derived from the validated institutional phase timeline at the decision date; a record cannot obtain obsolete F0 authority by self-labeling its phase. Initial formation Members may arise only from the exact competent constitutive adoption; later F0 admissions require a signed, then-operative Founding Steward act after the Candidate period; F1+ admissions require Ordinary Approval. Every later change that removes, suspends, inactivates, restores or terminates voting state must be represented by a content-addressed lifecycle decision/evidence record bound to the exact transition payload; editing the registry row alone is never authority. Historical Member state must remain reconstructable so prior electorates, constitutive membership and phase-transition counts are evaluated as of their actual effective dates. Voting eligibility is frozen when the formal voting window opens through a content-addressed opening record; later admissions or seasoning cannot retroactively join that vote. Every recorded Member ballot must additionally resolve to content-addressed authentication and a Member signature binding the exact decision, decision class, voting-window opening date, person identity and vote value; a bare person_id/vote pair is never sufficient authority for a tally."
 }
