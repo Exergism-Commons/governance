@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "governance_version": "0.1-DRAFT",
+  "operative": false,
+  "phase": "F0-founder-led-bootstrap",
+  "founding_steward": {
+    "record_id": "ec-founding-steward-001",
+    "display_name": "Daniel Molinero Lucas",
+    "github_identity": "Papishushi",
+    "operative_assignment": false
+  },
+  "mission_lock": {
+    "operative": false,
+    "amendment_rule_id": "mission-locked-amendment",
+    "founder_consent_required_during_founding_period": true,
+    "negative_veto_only": true,
+    "founder_economic_privilege": false
+  },
+  "phase_transition": {
+    "self_declared_by_founder_prohibited": true,
+    "requires_decision_record": true,
+    "f1_min_active_members": 3,
+    "f2_min_active_members": 7,
+    "f2_min_operational_months": 12
+  },
+  "source": "FOUNDING-STEWARDSHIP.md"
+}
