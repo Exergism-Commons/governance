@@ -1,0 +1,51 @@
+@prefix ec: <https://id.exergism.org/commons#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://id.exergism.org/ontology/commons> a owl:Ontology ;
+    rdfs:label "Exergism Commons organization governance ontology"@en ;
+    owl:versionInfo "0.1-DRAFT" .
+
+ec:GovernanceRule a owl:Class .
+ec:GovernanceDecision a owl:Class .
+ec:DecisionClass a owl:Class .
+ec:Delegation a owl:Class .
+ec:Role a owl:Class .
+ec:Member a owl:Class .
+ec:ConflictDeclaration a owl:Class .
+ec:InstitutionalAsset a owl:Class .
+ec:PersistentIdentifierAuthority a owl:Class .
+
+ec:OrdinaryApproval a ec:DecisionClass ; rdfs:label "Ordinary Approval"@en .
+ec:QualifiedApproval a ec:DecisionClass ; rdfs:label "Qualified Approval"@en .
+ec:ConstitutionalAmendment a ec:DecisionClass ; rdfs:label "Constitutional Amendment"@en .
+ec:EmergencyAction a ec:DecisionClass ; rdfs:label "Emergency Action"@en .
+
+ec:Steward a ec:Role ; rdfs:label "Steward"@en .
+ec:Treasurer a ec:Role ; rdfs:label "Treasurer"@en .
+ec:DomainCustodian a ec:Role ; rdfs:label "Domain Custodian"@en .
+ec:RepositoryMaintainer a ec:Role ; rdfs:label "Repository Maintainer"@en .
+ec:Auditor a ec:Role ; rdfs:label "Auditor / Reviewer"@en .
+
+ec:decisionClass a owl:ObjectProperty ; rdfs:domain ec:GovernanceDecision ; rdfs:range ec:DecisionClass .
+ec:authorizedBy a owl:ObjectProperty .
+ec:requiresApprovalClass a owl:ObjectProperty ; rdfs:range ec:DecisionClass .
+ec:delegatedTo a owl:ObjectProperty ; rdfs:domain ec:Delegation .
+ec:delegatedRole a owl:ObjectProperty ; rdfs:domain ec:Delegation ; rdfs:range ec:Role .
+ec:hasConflictDeclaration a owl:ObjectProperty ; rdfs:domain ec:GovernanceDecision ; rdfs:range ec:ConflictDeclaration .
+
+ec:operative a owl:DatatypeProperty ; rdfs:range xsd:boolean .
+ec:governanceVersion a owl:DatatypeProperty ; rdfs:range xsd:string .
+ec:decisionId a owl:DatatypeProperty ; rdfs:range xsd:string .
+ec:effectiveDate a owl:DatatypeProperty ; rdfs:range xsd:dateTime .
+ec:quorumEligible a owl:DatatypeProperty ; rdfs:range xsd:nonNegativeInteger .
+ec:votesFor a owl:DatatypeProperty ; rdfs:range xsd:nonNegativeInteger .
+ec:votesAgainst a owl:DatatypeProperty ; rdfs:range xsd:nonNegativeInteger .
+ec:abstentions a owl:DatatypeProperty ; rdfs:range xsd:nonNegativeInteger .
+ec:recused a owl:DatatypeProperty ; rdfs:range xsd:nonNegativeInteger .
+
+# Intentionally absent: property chains or inference rules that manufacture
+# institutional authority from membership, repository permissions, funding,
+# employment, contribution, graph reachability, or shared project identity.
