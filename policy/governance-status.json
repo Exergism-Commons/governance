@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "governance_version": "0.1-DRAFT",
   "operative": false,
   "institutional_state": "bootstrap",
@@ -10,6 +10,27 @@
   "constitution": "CONSTITUTION.md",
   "membership_policy": "MEMBERSHIP.md",
   "founding_stewardship_policy": "FOUNDING-STEWARDSHIP.md",
+  "phase_evidence": "policy/phase-evidence.json",
+  "governance_artifacts": {
+    "constitution": {
+      "path": "CONSTITUTION.md",
+      "version": "0.1-DRAFT",
+      "status": "draft",
+      "sha256": null
+    },
+    "membership_policy": {
+      "path": "MEMBERSHIP.md",
+      "version": "0.1-DRAFT",
+      "status": "draft",
+      "sha256": null
+    },
+    "founding_stewardship_policy": {
+      "path": "FOUNDING-STEWARDSHIP.md",
+      "version": "0.1-DRAFT",
+      "status": "draft",
+      "sha256": null
+    }
+  },
   "ontology_iri": "https://id.exergism.org/ontology/commons",
   "vocabulary_namespace": "https://id.exergism.org/commons#",
   "adoption_record": null,
@@ -21,5 +42,5 @@
   "succession_process_adopted": false,
   "qualified_legal_review_complete": false,
   "integrated_architecture_pr": 2,
-  "notes": "Draft architecture only. GitHub organization/repository state does not constitute legal adoption or institutional authority."
+  "notes": "Draft architecture only. GitHub organization/repository state does not constitute legal adoption or institutional authority. Operative state requires adopted non-draft human artifacts whose exact bytes are bound by SHA-256."
 }
