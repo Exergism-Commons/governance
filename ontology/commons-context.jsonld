@@ -9,14 +9,20 @@
     "requiresApprovalClass": {"@id": "ec:requiresApprovalClass", "@type": "@id"},
     "delegatedTo": {"@id": "ec:delegatedTo", "@type": "@id"},
     "delegatedRole": {"@id": "ec:delegatedRole", "@type": "@id"},
+    "membershipSubject": {"@id": "ec:membershipSubject", "@type": "@id"},
+    "foundingPhase": {"@id": "ec:foundingPhase", "@type": "@id"},
+    "missionGuardian": {"@id": "ec:missionGuardian", "@type": "@id"},
     "operative": {"@id": "ec:operative", "@type": "xsd:boolean"},
     "governanceVersion": "ec:governanceVersion",
     "decisionId": "ec:decisionId",
+    "memberRecordId": "ec:memberRecordId",
     "effectiveDate": {"@id": "ec:effectiveDate", "@type": "xsd:dateTime"},
+    "votingEligibleFrom": {"@id": "ec:votingEligibleFrom", "@type": "xsd:dateTime"},
     "quorumEligible": {"@id": "ec:quorumEligible", "@type": "xsd:nonNegativeInteger"},
     "votesFor": {"@id": "ec:votesFor", "@type": "xsd:nonNegativeInteger"},
     "votesAgainst": {"@id": "ec:votesAgainst", "@type": "xsd:nonNegativeInteger"},
     "abstentions": {"@id": "ec:abstentions", "@type": "xsd:nonNegativeInteger"},
-    "recused": {"@id": "ec:recused", "@type": "xsd:nonNegativeInteger"}
+    "recused": {"@id": "ec:recused", "@type": "xsd:nonNegativeInteger"},
+    "missionVetoExercised": {"@id": "ec:missionVetoExercised", "@type": "xsd:boolean"}
   }
 }
