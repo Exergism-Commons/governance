@@ -7,6 +7,11 @@
   "phase_effective_date": null,
   "transition_decision_record": null,
   "prior_transition_decision_record": null,
+  "historical_transition_contract": {
+    "phase_authority_derived_from_transition_dates": true,
+    "f2_requires_validated_prior_f1_maturity": true,
+    "prior_f1_member_and_delegation_criteria_evaluated_at_f1_effective_date": true
+  },
   "evidence_reference_contract": {
     "type": "content-addressed-json",
     "required_fields": ["path", "sha256"]
@@ -28,5 +33,5 @@
     "delegated_role_replacement_demonstrated": false,
     "role_replacement_evidence": null
   },
-  "notes": "Draft evidence contract only. A phase string cannot satisfy a transition gate. Operative F1 requires one content-addressed F0→F1 transition. Operative F2 requires both that validated prior F0→F1 record and a current F1→F2 record whose approved payload binds the prior transition digest, so F2 cannot be entered directly from F0. Active-Member thresholds are evaluated from reconstructable Membership history as of the target phase-effective date, while delegation gates count only delegations effective and unexpired on that date."
+  "notes": "Draft evidence contract only. A phase string cannot satisfy a transition gate. Operative F1 requires one content-addressed F0→F1 transition. Operative F2 requires both that validated prior F0→F1 record and a current F1→F2 record whose approved payload binds the prior transition digest, so F2 cannot be entered directly from F0. The prior F1 transition must itself have satisfied the F1 Active-Member, independent-role and effective treasury/domain/repository delegation criteria on its own effective date; later F2 maturity cannot retroactively cure an invalid F1 transition. Historical institutional authority for admissions and lifecycle actions is derived from these validated transition dates rather than trusted from a self-declared phase label."
 }
