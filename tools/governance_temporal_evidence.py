@@ -34,22 +34,71 @@ def require_voting_window_contract(membership: dict) -> None:
 
 def validate_conflict_determination(ref, label, status, expected_decision_id, expected_person_id, decision_date):
     data = life.ORIG_VALIDATE_CONFLICT_DETERMINATION(ref, label, status, expected_decision_id, expected_person_id, decision_date)
-    if data.get("determination_method") != "self-recusal":
+    method = data.get("determination_method")
+    if method == "self-recusal":
+        core.require(expected_person_id in data.get("determined_by_person_ids", []), f"{label} self-recusal must be determined by the recused person")
+        payload = {k: v for k, v in data.items() if k not in {"signature_evidence", "determination_payload_sha256"}}
+        payload_hash = core.sha256_json(payload)
+        core.require(data.get("determination_payload_sha256") == payload_hash, f"{label} self-recusal payload hash mismatch")
+        core.validate_signature_ref(
+            data.get("signature_evidence"),
+            f"{label} self-recusal signature",
+            expected_person_id,
+            expected_decision_id,
+            payload_hash,
+            "conflict-determination",
+            status["governance_version"],
+            status["governance_version"],
+        )
         return data
-    core.require(expected_person_id in data.get("determined_by_person_ids", []), f"{label} self-recusal must be determined by the recused person")
-    payload = {k: v for k, v in data.items() if k not in {"signature_evidence", "determination_payload_sha256"}}
-    payload_hash = core.sha256_json(payload)
-    core.require(data.get("determination_payload_sha256") == payload_hash, f"{label} self-recusal payload hash mismatch")
-    core.validate_signature_ref(
-        data.get("signature_evidence"),
-        f"{label} self-recusal signature",
-        expected_person_id,
-        expected_decision_id,
-        payload_hash,
-        "conflict-determination",
-        status["governance_version"],
-        status["governance_version"],
+
+    core.require(method == "independent-conflict-determination", f"{label} unsupported determination method")
+    determiners = data.get("determined_by_person_ids")
+    core.require(
+        isinstance(determiners, list)
+        and determiners
+        and len(determiners) == len(set(determiners))
+        and expected_person_id not in determiners,
+        f"{label} independent determiners must be distinct from recused person",
     )
+    determination_date = core.parse_iso_date(data.get("determination_date"), f"{label}.determination_date")
+    membership = core.load_json("policy/membership-status.json")
+    active = life.active_members_on(membership, determination_date)
+    core.require(set(determiners).issubset(active), f"{label} independent determiners must be Active Members on determination date")
+
+    conflict_process_ref = status.get("activation_evidence", {}).get("conflict_process")
+    core.require(isinstance(conflict_process_ref, dict), f"{label} requires adopted conflict-process authority")
+    core.require(
+        data.get("source_conflict_process_sha256") == conflict_process_ref.get("sha256"),
+        f"{label} independent determination must bind adopted conflict process",
+    )
+
+    payload = {
+        k: v
+        for k, v in data.items()
+        if k not in {"determiner_signature_evidence", "determination_payload_sha256"}
+    }
+    payload_hash = core.sha256_json(payload)
+    core.require(data.get("determination_payload_sha256") == payload_hash, f"{label} independent determination payload hash mismatch")
+    signatures = data.get("determiner_signature_evidence")
+    core.require(isinstance(signatures, list) and len(signatures) == len(determiners), f"{label} independent determiner signatures incomplete")
+    signed: set[str] = set()
+    for index, sig_ref in enumerate(signatures):
+        sig_data, _ = core.validate_content_ref(sig_ref, f"{label} determiner signature envelope {index}", "records/evidence")
+        signer = sig_data.get("person_id")
+        core.require(signer in determiners and signer not in signed, f"{label} independent determiner signature identity mismatch")
+        core.validate_signature_ref(
+            sig_ref,
+            f"{label} independent determiner signature {index}",
+            signer,
+            expected_decision_id,
+            payload_hash,
+            "conflict-determination",
+            status["governance_version"],
+            status["governance_version"],
+        )
+        signed.add(signer)
+    core.require(signed == set(determiners), f"{label} missing authenticated independent determiner")
     return data
 
 
