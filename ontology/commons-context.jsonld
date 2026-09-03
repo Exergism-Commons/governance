@@ -1,0 +1,22 @@
+{
+  "@context": {
+    "ec": "https://id.exergism.org/commons#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "id": "@id",
+    "type": "@type",
+    "decisionClass": {"@id": "ec:decisionClass", "@type": "@id"},
+    "authorizedBy": {"@id": "ec:authorizedBy", "@type": "@id"},
+    "requiresApprovalClass": {"@id": "ec:requiresApprovalClass", "@type": "@id"},
+    "delegatedTo": {"@id": "ec:delegatedTo", "@type": "@id"},
+    "delegatedRole": {"@id": "ec:delegatedRole", "@type": "@id"},
+    "operative": {"@id": "ec:operative", "@type": "xsd:boolean"},
+    "governanceVersion": "ec:governanceVersion",
+    "decisionId": "ec:decisionId",
+    "effectiveDate": {"@id": "ec:effectiveDate", "@type": "xsd:dateTime"},
+    "quorumEligible": {"@id": "ec:quorumEligible", "@type": "xsd:nonNegativeInteger"},
+    "votesFor": {"@id": "ec:votesFor", "@type": "xsd:nonNegativeInteger"},
+    "votesAgainst": {"@id": "ec:votesAgainst", "@type": "xsd:nonNegativeInteger"},
+    "abstentions": {"@id": "ec:abstentions", "@type": "xsd:nonNegativeInteger"},
+    "recused": {"@id": "ec:recused", "@type": "xsd:nonNegativeInteger"}
+  }
+}
