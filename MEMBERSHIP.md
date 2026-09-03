@@ -65,7 +65,9 @@ This formation mechanism is not an ordinary admission power. Once governance is 
 
 ### F0 — founder-led bootstrap
 
-During operative F0, the Founding Steward may admit an additional Member who satisfies the admission criteria and has completed the Candidate period.
+During operative F0, the Founding Steward may admit an additional Member who satisfies the admission criteria and has completed the Candidate period **only while the Founding Steward assignment itself is operative on the admission decision date**.
+
+The initial Founding Steward assignment is established by the exact governance-adoption record and begins on the governance effective date. Resignation, incapacity, succession, retirement or valid removal must be represented by a content-addressed cessation record. After the cessation effective date, the former Steward's signature cannot authorize new admissions merely because the mutable projection still names that person or because the institution remains in F0.
 
 Each such admission must be individually recorded with:
 
@@ -86,7 +88,7 @@ The admission decision must bind the Candidate start date, effective date, perso
 
 The Founding Steward may raise a documented Mission Lock or integrity objection during the Founding Period. Such an objection must state specific grounds; it may not be based merely on disagreement with a Candidate's lawful position on an ordinary policy question.
 
-## 7. Voting seasoning
+## 7. Voting seasoning and ballot authenticity
 
 Admission does not immediately unlock every voting class.
 
@@ -100,6 +102,16 @@ Unless a stricter domain rule applies:
 This rule reduces the risk of capture through rapid mass admission immediately before a consequential vote.
 
 The relevant eligibility date is fixed when the formal voting window opens. Later admissions do not retroactively join that vote. `active_since` must be the effective date proved by the admission record; it cannot be independently backdated to manufacture seasoning.
+
+A machine-readable tally may count a Member ballot only if that ballot resolves to **content-addressed authentication evidence** binding the exact:
+
+- decision ID;
+- decision class;
+- voting-window opening date;
+- Member person ID; and
+- vote value (`for`, `against` or `abstain`).
+
+For this draft framework the authentication evidence must include that Member's signature over the exact ballot payload digest and a verification record. The signature/authentication date must fall within the validated voting window. A bare `{person_id, vote}` pair, a tally authored by another participant, or a rehashed approval envelope is not evidence that the Member cast that choice.
 
 ## 8. Activity and inactivity
 
@@ -140,7 +152,7 @@ Termination for cause requires:
 - Qualified Approval by non-conflicted eligible Members once F1 is operative; and
 - a route to contest material factual errors.
 
-During F0, the Founding Steward may terminate an initial membership only for documented cause and must preserve a signed content-addressed decision record for later institutional review. Founder disagreement with ordinary policy preferences is not cause.
+During F0, the **then-operative** Founding Steward may terminate an initial membership only for documented cause and must preserve a signed content-addressed decision record for later institutional review. A Steward whose cessation is already effective has no residual F0 termination power. Founder disagreement with ordinary policy preferences is not cause.
 
 Every post-admission lifecycle change is append-only in authority terms: later state may change, but the admission and prior transitions remain historical facts. A current inactive, suspended or former Member therefore remains part of the historical constitutive/admission record and of any past electorate in which that person was validly active.
 
@@ -202,7 +214,7 @@ A public or repository-safe projection should expose only what is needed for gov
 
 Automation may compute eligibility from adopted records. It must not infer membership from GitHub organization membership, repository permissions, funding records or CLA status.
 
-A mutable current registry is not itself the authority for a historical change. Each admission, resignation, inactivity, suspension, reactivation or termination must be supported by its own immutable authority/evidence record. Electorates and phase Member-count gates must be reconstructed **as of the relevant decision or phase-effective date**, not from whatever the registry happens to say today.
+A mutable current registry is not itself the authority for a historical change. Each admission, resignation, inactivity, suspension, reactivation or termination must be supported by its own immutable authority/evidence record. Electorates and phase Member-count gates must be reconstructed **as of the relevant decision or phase-effective date**, not from whatever the registry happens to say today. The same rule applies to Founding Steward authority: a machine validator must reconstruct whether that office was actually operative on the date of any F0 action that relies on it.
 
 ## 15. Review and change
 
