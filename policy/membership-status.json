@@ -30,6 +30,20 @@
       "allowed_from_phase": "F1-early-institution"
     }
   },
+  "state_transition_contract": {
+    "content_addressed_records_required": true,
+    "registry_edit_alone_cannot_change_voting_state": true,
+    "historical_state_must_be_reconstructable": true,
+    "supported_transition_types": [
+      "resignation",
+      "inactivity",
+      "suspension",
+      "reactivation",
+      "termination"
+    ],
+    "f1_plus_termination_authority": "qualified-approval",
+    "f0_termination_authority": "founding-steward-signed-decision"
+  },
   "members": [
     {
       "record_id": "ec-member-bootstrap-001",
@@ -41,8 +55,9 @@
       "active_since": null,
       "admission_mode": "bootstrap-designation",
       "admission_record": null,
+      "state_transition_records": [],
       "founding_steward": true
     }
   ],
-  "notes": "Bootstrap projection only. This record does not create operative membership or voting authority. Operative admission must identify a unique person, effective date, candidate provenance where applicable, and a content-addressed decision whose authority is validated for the institutional phase. Initial formation Members may arise only from the exact competent constitutive adoption; later F0 admissions require a signed Founding Steward act after the Candidate period; F1+ admissions require Ordinary Approval. Voting eligibility is derived from historical effective dates, seasoning and conflict records, never from a free-standing boolean."
+  "notes": "Bootstrap projection only. This record does not create operative membership or voting authority. Operative admission must identify a unique person, effective date, candidate provenance where applicable, and a content-addressed decision whose authority is validated for the institutional phase. Initial formation Members may arise only from the exact competent constitutive adoption; later F0 admissions require a signed Founding Steward act after the Candidate period; F1+ admissions require Ordinary Approval. Every later change that removes, suspends, inactivates, restores or terminates voting state must be represented by a content-addressed lifecycle decision/evidence record; editing the registry row alone is never authority. Historical Member state must remain reconstructable so prior electorates, constitutive membership and phase-transition counts are evaluated as of their actual effective dates rather than from current status."
 }
