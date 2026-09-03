@@ -4,17 +4,6 @@
   "operative": false,
   "rules": [
     {
-      "id": "founding-adoption",
-      "iri": "https://id.exergism.org/commons#FoundingAdoption",
-      "name": "Founding Adoption",
-      "scope": "initial-transition-from-non-operative-bootstrap-only",
-      "quorum": {"type": "fraction_of_effective_eligible", "comparison": "at_least", "numerator": 1, "denominator": 1},
-      "approval": {"type": "fraction_of_valid_for_against", "comparison": "at_least", "numerator": 1, "denominator": 1},
-      "abstentions_count_toward_approval": false,
-      "zero_valid_for_against_result": "fail",
-      "minimum_affirmative_votes": 1
-    },
-    {
       "id": "ordinary-approval",
       "iri": "https://id.exergism.org/commons#OrdinaryApproval",
       "name": "Ordinary Approval",
