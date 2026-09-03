@@ -46,6 +46,13 @@
     ],
     "mutable_state_must_be_authorized_by_own_decision_records": true
   },
+  "adoption_chronology_contract": {
+    "prospective_effect_required": true,
+    "legal_review_completed_no_later_than_adoption_decision": true,
+    "all_activation_evidence_completed_no_later_than_effective_date": true,
+    "all_reviewer_and_adopter_signatures_no_later_than_effective_date": true,
+    "adoption_decision_no_later_than_effective_date": true
+  },
   "activation_evidence": {
     "conflict_process": null,
     "records_privacy_process": null,
@@ -61,5 +68,5 @@
   "succession_process_adopted": false,
   "qualified_legal_review_complete": false,
   "integrated_architecture_pr": 2,
-  "notes": "Draft architecture only. GitHub organization/repository state does not constitute legal adoption or institutional authority. Operative state requires adopted non-draft human artifacts bound by SHA-256, a committed content-addressed governance-adoption record, structured legal identity, constitutive signatures bound to the exact adoption payload, and content-addressed implementation/legal-review evidence. The immutable adoption record binds normative authority and the initial constitutive assertions; it does not freeze mutable Member, delegation or phase state forever. Every later mutable state transition must instead prove its own adopted decision record."
+  "notes": "Draft architecture only. GitHub organization/repository state does not constitute legal adoption or institutional authority. Operative state requires adopted non-draft human artifacts bound by SHA-256, a committed content-addressed governance-adoption record, structured legal identity, constitutive signatures bound to the exact adoption payload, and content-addressed implementation/legal-review evidence. Governance activation is prospective: legal review, competent adoption, constitutive signatures and all activation evidence must be complete no later than the recorded effective date. The immutable adoption record binds normative authority and the initial constitutive assertions; it does not freeze mutable Member, delegation or phase state forever. Every later mutable state transition must instead prove its own adopted decision record."
 }
