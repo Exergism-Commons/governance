@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "governance_version": "0.1-DRAFT",
   "operative": false,
   "scope_vocabulary": [
@@ -9,15 +9,23 @@
     "audit-review",
     "other"
   ],
+  "source_authority_contract": {
+    "type": "governance-decision",
+    "required_fields": [
+      "type",
+      "decision_id",
+      "constitutional_basis"
+    ],
+    "constitutional_basis": "CONSTITUTION.md#15"
+  },
   "delegations": [],
   "reserved_non_delegable_actions": [
     "constitutional-amendment",
-    "mission-locked-amendment",
     "membership-economic-distribution",
     "organization-wide-exclusive-ip-transfer",
     "endowment-principal-withdrawal-without-qualified-approval",
     "persistent-domain-transfer-without-qualified-approval",
     "identifier-authority-transfer-without-qualified-approval"
   ],
-  "notes": "No operative institutional delegations exist in bootstrap. An operative delegation must identify delegation_id, holder_person_id, explicit source_authority, scope_types plus exact scope_resources, allowed_actions, material prohibited_actions, governing_rule_version, effective_date, expiry state, revocation mechanism and a content-addressed adopted decision record carrying the same fields and valid approval evidence. Reserved non-delegable actions may never appear in allowed_actions."
+  "notes": "No operative institutional delegations exist in this bootstrap record. Technical repository permissions are not delegations. An operative delegation must identify a unique delegation_id, holder_person_id, a structured source authority resolving to the adopted decision that creates the delegation, exact scope types and resources, allowed actions, explicit prohibitions, governing rule version, effective/expiry dates, revocation contract and a content-addressed decision record. Maturity gates count only delegations actually effective and unexpired on the target phase-effective date."
 }
