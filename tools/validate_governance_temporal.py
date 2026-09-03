@@ -20,6 +20,9 @@ import governance_cla_schedule_binding as cla_schedule_binding
 import governance_phase_maturity_chronology as maturity_chronology
 import governance_adoption_chronology as adoption_chronology
 import governance_strict_yaml as strict_yaml
+import governance_signature_chronology as signature_chronology
+import governance_membership_process_chronology as process_chronology
+import governance_voting_window_authenticity as voting_window_authenticity
 
 
 def validate_saved_base_callbacks() -> None:
@@ -46,12 +49,15 @@ def main() -> None:
     # All generic YAML lookups used by the final gate must resolve one unique
     # top-level key. Nested decoy keys cannot shadow authoritative CLA state.
     strict_yaml.install()
+    # Every signature used by the final validator must be dated, and its
+    # verification evidence must already exist by the signature date.
+    signature_chronology.install()
 
     # Schedule/projection consistency is checked even in the current draft state,
     # so CI exercises this integrity surface before CLA activation.
     cla_schedule_binding.validate_schedule_projection_manifest()
 
-    life.validate_state_transition_history = phase.validate_state_transition_history
+    life.validate_state_transition_history = process_chronology.validate_state_transition_history
     life.validate_member_admission_record_historical = phase.validate_member_admission_record
     life.validate_mission_guardian_assignment = roles.validate_mission_guardian_assignment
     life.validate_cla_steward_authority = roles.validate_cla_steward_authority
@@ -59,7 +65,7 @@ def main() -> None:
     core.active_members_as_of = life.historical_active_members_as_of
     core.validate_member_admission_record = founding_authority.validate_member_admission_record
     core.validate_conflict_determination = evidence.validate_conflict_determination
-    core.validate_vote_approval = evidence.validate_vote_approval
+    core.validate_vote_approval = voting_window_authenticity.validate_vote_approval
     core.validate_membership_registry = validate_membership_registry
     core.validate_delegations = delegation_lifecycle.validate_delegations
     core.delegation_active_on = delegation_lifecycle.delegation_active_on
