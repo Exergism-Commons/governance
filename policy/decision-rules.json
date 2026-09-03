@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "governance_version": "0.1-DRAFT",
   "operative": false,
   "rules": [
@@ -7,25 +7,37 @@
       "id": "ordinary-approval",
       "iri": "https://id.exergism.org/commons#OrdinaryApproval",
       "name": "Ordinary Approval",
-      "quorum": {"type": "fraction_of_effective_eligible", "operator": ">", "value": 0.5},
-      "approval": {"type": "votes_for_vs_against", "operator": ">"},
+      "quorum": {"type": "fraction_of_effective_eligible", "comparison": "strictly_greater_than", "numerator": 1, "denominator": 2},
+      "approval": {"type": "votes_for_vs_against", "comparison": "strictly_greater_than"},
       "abstentions_count_toward_approval": false
     },
     {
       "id": "qualified-approval",
       "iri": "https://id.exergism.org/commons#QualifiedApproval",
       "name": "Qualified Approval",
-      "quorum": {"type": "fraction_of_effective_eligible", "operator": ">=", "value": 0.6666666667},
-      "approval": {"type": "fraction_of_valid_for_against", "operator": ">=", "value": 0.6666666667},
+      "quorum": {"type": "fraction_of_effective_eligible", "comparison": "at_least", "numerator": 2, "denominator": 3},
+      "approval": {"type": "fraction_of_valid_for_against", "comparison": "at_least", "numerator": 2, "denominator": 3},
       "abstentions_count_toward_approval": false
     },
     {
       "id": "constitutional-amendment",
       "iri": "https://id.exergism.org/commons#ConstitutionalAmendment",
       "name": "Constitutional Amendment",
-      "quorum": {"type": "fraction_of_effective_eligible", "operator": ">=", "value": 0.6666666667},
-      "approval": {"type": "fraction_of_valid_for_against", "operator": ">=", "value": 0.75},
+      "quorum": {"type": "fraction_of_effective_eligible", "comparison": "at_least", "numerator": 2, "denominator": 3},
+      "approval": {"type": "fraction_of_valid_for_against", "comparison": "at_least", "numerator": 3, "denominator": 4},
       "abstentions_count_toward_approval": false
+    },
+    {
+      "id": "mission-locked-amendment",
+      "iri": "https://id.exergism.org/commons#MissionLockedAmendment",
+      "name": "Mission-Locked Amendment",
+      "quorum": {"type": "fraction_of_effective_eligible", "comparison": "at_least", "numerator": 3, "denominator": 4},
+      "approval": {"type": "fraction_of_valid_for_against", "comparison": "at_least", "numerator": 9, "denominator": 10},
+      "abstentions_count_toward_approval": false,
+      "minimum_days_between_successful_votes": 60,
+      "successful_votes_required": 2,
+      "founding_period_guardian_consent_required": true,
+      "independent_review_required": true
     }
   ],
   "mandatory_qualified_subjects": [
@@ -36,10 +48,20 @@
     "organization-wide-exclusive-ip-transfer",
     "institutional-merger-dissolution-or-succession"
   ],
+  "mission_locked_subjects": [
+    "repurpose-exergism-commons-away-from-exergism",
+    "remove-project-authority-separation",
+    "create-membership-economic-ownership",
+    "permit-funding-to-purchase-organization-governance",
+    "permit-retroactive-fabrication-of-contributor-rights",
+    "permit-silent-persistent-identifier-repurposing",
+    "remove-structural-contestability-or-anti-capture-commitment"
+  ],
   "conflict_rules": {
     "self_compensation_recusal_required": true,
     "self_contract_approval_prohibited": true,
     "conflicted_voters_excluded_from_effective_eligible_denominator": true,
-    "funding_does_not_create_governance_rights": true
+    "funding_does_not_create_governance_rights": true,
+    "founder_status_does_not_override_conflict_recusal": true
   }
 }
