@@ -24,7 +24,17 @@
     "record_id": null,
     "person_id": null,
     "display_name": null,
-    "operative_assignment": false
+    "operative_assignment": false,
+    "assignment_record": null
+  },
+  "mission_guardian_assignment_contract": {
+    "identified_holder_required": true,
+    "content_addressed_assignment_record_required": true,
+    "allowed_authority_modes": [
+      "qualified-approval",
+      "succession-process"
+    ],
+    "f2_requires_assignment_effective_by_phase_date": true
   },
   "mission_lock": {
     "operative": false,
