@@ -30,6 +30,26 @@ def require_voting_window_contract(membership: dict) -> None:
         },
         "Membership ballot-authentication contract missing/weakened",
     )
+    conflict = membership.get("conflict_determination_contract")
+    core.require(
+        conflict == {
+            "content_addressed_record_required": True,
+            "self_recusal_requires_subject_signature": True,
+            "independent_determination_requires_adopted_conflict_process": True,
+            "independent_determiners_must_be_active_members": True,
+            "independent_determiners_must_exclude_subject": True,
+            "independent_determiners_must_sign_exact_payload": True,
+            "signatures_must_not_postdate_determination": True,
+            "determination_must_not_postdate_decision": True,
+        },
+        "Membership conflict-determination contract missing/weakened",
+    )
+    lifecycle = membership.get("state_transition_contract")
+    core.require(
+        isinstance(lifecycle, dict)
+        and lifecycle.get("approval_backed_removal_effective_after_voting_window_open") is True,
+        "Membership approval-backed removal timing contract missing/weakened",
+    )
 
 
 def _validate_conflict_signature_date(signature: dict, label: str, status: dict, determination_date, decision_date) -> None:
