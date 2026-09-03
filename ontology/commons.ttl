@@ -14,20 +14,36 @@ ec:DecisionClass a owl:Class .
 ec:Delegation a owl:Class .
 ec:Role a owl:Class .
 ec:Member a owl:Class .
+ec:MembershipRecord a owl:Class .
 ec:ConflictDeclaration a owl:Class .
 ec:InstitutionalAsset a owl:Class .
 ec:PersistentIdentifierAuthority a owl:Class .
+ec:MissionLock a owl:Class .
+ec:FoundingPhase a owl:Class .
 
 ec:OrdinaryApproval a ec:DecisionClass ; rdfs:label "Ordinary Approval"@en .
 ec:QualifiedApproval a ec:DecisionClass ; rdfs:label "Qualified Approval"@en .
 ec:ConstitutionalAmendment a ec:DecisionClass ; rdfs:label "Constitutional Amendment"@en .
+ec:MissionLockedAmendment a ec:DecisionClass ; rdfs:label "Mission-Locked Amendment"@en .
 ec:EmergencyAction a ec:DecisionClass ; rdfs:label "Emergency Action"@en .
 
+ec:FoundingSteward a ec:Role ; rdfs:label "Founding Steward"@en .
+ec:MissionGuardian a ec:Role ; rdfs:label "Mission Guardian"@en .
 ec:Steward a ec:Role ; rdfs:label "Steward"@en .
 ec:Treasurer a ec:Role ; rdfs:label "Treasurer"@en .
 ec:DomainCustodian a ec:Role ; rdfs:label "Domain Custodian"@en .
 ec:RepositoryMaintainer a ec:Role ; rdfs:label "Repository Maintainer"@en .
 ec:Auditor a ec:Role ; rdfs:label "Auditor / Reviewer"@en .
+
+ec:CandidateMember a owl:Class ; rdfs:subClassOf ec:Member .
+ec:ActiveMember a owl:Class ; rdfs:subClassOf ec:Member .
+ec:InactiveMember a owl:Class ; rdfs:subClassOf ec:Member .
+ec:SuspendedMember a owl:Class ; rdfs:subClassOf ec:Member .
+ec:FormerMember a owl:Class ; rdfs:subClassOf ec:Member .
+
+ec:F0FounderLedBootstrap a ec:FoundingPhase ; rdfs:label "F0 founder-led bootstrap"@en .
+ec:F1EarlyInstitution a ec:FoundingPhase ; rdfs:label "F1 early institution"@en .
+ec:F2DistributedInstitution a ec:FoundingPhase ; rdfs:label "F2 distributed institution"@en .
 
 ec:decisionClass a owl:ObjectProperty ; rdfs:domain ec:GovernanceDecision ; rdfs:range ec:DecisionClass .
 ec:authorizedBy a owl:ObjectProperty .
@@ -35,17 +51,24 @@ ec:requiresApprovalClass a owl:ObjectProperty ; rdfs:range ec:DecisionClass .
 ec:delegatedTo a owl:ObjectProperty ; rdfs:domain ec:Delegation .
 ec:delegatedRole a owl:ObjectProperty ; rdfs:domain ec:Delegation ; rdfs:range ec:Role .
 ec:hasConflictDeclaration a owl:ObjectProperty ; rdfs:domain ec:GovernanceDecision ; rdfs:range ec:ConflictDeclaration .
+ec:membershipSubject a owl:ObjectProperty ; rdfs:domain ec:MembershipRecord ; rdfs:range ec:Member .
+ec:foundingPhase a owl:ObjectProperty ; rdfs:range ec:FoundingPhase .
+ec:missionGuardian a owl:ObjectProperty ; rdfs:range ec:Role .
 
 ec:operative a owl:DatatypeProperty ; rdfs:range xsd:boolean .
 ec:governanceVersion a owl:DatatypeProperty ; rdfs:range xsd:string .
 ec:decisionId a owl:DatatypeProperty ; rdfs:range xsd:string .
+ec:memberRecordId a owl:DatatypeProperty ; rdfs:range xsd:string .
 ec:effectiveDate a owl:DatatypeProperty ; rdfs:range xsd:dateTime .
 ec:quorumEligible a owl:DatatypeProperty ; rdfs:range xsd:nonNegativeInteger .
 ec:votesFor a owl:DatatypeProperty ; rdfs:range xsd:nonNegativeInteger .
 ec:votesAgainst a owl:DatatypeProperty ; rdfs:range xsd:nonNegativeInteger .
 ec:abstentions a owl:DatatypeProperty ; rdfs:range xsd:nonNegativeInteger .
 ec:recused a owl:DatatypeProperty ; rdfs:range xsd:nonNegativeInteger .
+ec:votingEligibleFrom a owl:DatatypeProperty ; rdfs:range xsd:dateTime .
+ec:missionVetoExercised a owl:DatatypeProperty ; rdfs:range xsd:boolean .
 
 # Intentionally absent: property chains or inference rules that manufacture
-# institutional authority from membership, repository permissions, funding,
-# employment, contribution, graph reachability, or shared project identity.
+# institutional authority, membership, founder status, voting eligibility or
+# mission-protection authority from repository permissions, funding, employment,
+# contribution, graph reachability, shared project identity, or GitHub membership.
