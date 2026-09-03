@@ -1,11 +1,17 @@
-schema_version: 1
+schema_version: 2
 policy: exergism-commons-contributor-license-agreement
 agreement_family: EC-CLA
 status: draft
 operative: false
 individual_version: EC-ICLA-1.0-DRAFT
+individual_artifact: cla/CLA-1.0-DRAFT.md
+individual_sha256: null
 entity_version: EC-ECLA-1.0-DRAFT
+entity_artifact: cla/ENTITY-CLA-1.0-DRAFT.md
+entity_sha256: null
 project_schedule_version: 0.1-DRAFT
+project_schedule_artifact: cla/PROJECT-SCHEDULE.md
+project_schedule_sha256: null
 legal_steward: null
 governing_law: null
 forum: null
@@ -28,4 +34,5 @@ activation_blockers:
 notes:
   - File presence does not imply legal effect.
   - Automation must fail closed and must not infer an operative CLA from a mutable branch or latest pointer.
+  - Operative acceptance requires exact final agreement and Project Schedule bytes bound by SHA-256 in this record.
   - The CLA itself grants no patent rights.
