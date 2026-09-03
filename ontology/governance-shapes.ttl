@@ -30,7 +30,22 @@ ec:DelegationShape a sh:NodeShape ;
       [ sh:property [ sh:path ec:delegatedRole ; sh:minCount 1 ] ]
     ) .
 
-# Policy-sensitive constraints such as threshold arithmetic, bootstrap operativity,
-# conflict-recusal arithmetic, Endowment principal withdrawal and domain-transfer
+ec:MembershipRecordShape a sh:NodeShape ;
+    sh:targetClass ec:MembershipRecord ;
+    sh:property [
+        sh:path ec:memberRecordId ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ec:operative ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:boolean
+    ] .
+
+# Policy-sensitive constraints such as exact threshold arithmetic, membership
+# seasoning, bootstrap operativity, founder phase transitions, conflict-recusal
+# arithmetic, Endowment principal withdrawal, Mission Lock and domain-transfer
 # approval are additionally checked by deterministic code because their validity
 # depends on versioned policy state rather than graph shape alone.
