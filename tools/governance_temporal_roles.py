@@ -2,11 +2,20 @@ from __future__ import annotations
 
 import validate_governance as core
 import validate_governance_lifecycle as life
+import governance_founding_lifecycle as founding_lifecycle
 
 
 def validate_mission_guardian_assignment(status, founding, rules, membership, phase_evidence) -> None:
     guardian = founding.get("mission_guardian")
     core.require(isinstance(guardian, dict), "mission_guardian projection missing")
+    contract = founding.get("mission_guardian_assignment_contract")
+    core.require(isinstance(contract, dict), "mission_guardian_assignment_contract missing")
+    core.require(
+        contract.get("succession_mode_requires_validated_founding_steward_cessation") is True
+        and contract.get("succession_assignment_must_not_predate_cessation") is True
+        and contract.get("succession_evidence_must_bind_cessation_digest") is True,
+        "Mission Guardian succession/cessation binding contract missing/weakened",
+    )
     if guardian.get("operative_assignment") is not True:
         core.require(guardian.get("assignment_record") is None, "inactive Mission Guardian cannot claim assignment record")
         return
@@ -41,6 +50,18 @@ def validate_mission_guardian_assignment(status, founding, rules, membership, ph
             expected_decision_date=decision_date_text,
         )
     elif mode == "succession-process":
+        founder = founding.get("founding_steward")
+        core.require(isinstance(founder, dict), "succession Guardian requires Founding Steward projection")
+        cessation_ref = founder.get("cessation_record")
+        core.require(isinstance(cessation_ref, dict), "succession Guardian requires content-addressed Founding Steward cessation")
+        cessation_effective = founding_lifecycle.validate_founding_steward_lifecycle(status, founding, rules, membership)
+        core.require(cessation_effective is not None, "succession Guardian cannot coexist with an unceased Founding Steward assignment")
+        core.require(cessation_effective <= effective, "succession Guardian assignment cannot predate Founding Steward cessation")
+        cessation, _ = core.validate_content_ref(cessation_ref, "Mission Guardian linked Founding Steward cessation", "records/decisions")
+        core.require(cessation.get("record_type") == "founding-steward-cessation" and cessation.get("status") == "adopted", "linked Founding Steward cessation invalid")
+        core.require(cessation.get("authority_mode") == "succession-process", "succession Guardian requires a succession-process Founding Steward cessation")
+        core.require(record.get("founding_steward_cessation_record") == cessation_ref, "Mission Guardian assignment must bind exact Founding Steward cessation record")
+
         process = core.validate_process_evidence_ref(
             record.get("process_evidence"),
             "Mission Guardian succession evidence",
@@ -52,6 +73,9 @@ def validate_mission_guardian_assignment(status, founding, rules, membership, ph
         core.require(process.get("assignment_payload_sha256") == payload_hash, "Mission Guardian succession evidence does not bind exact assignment payload")
         core.require(process.get("guardian_person_id") == person_id and process.get("guardian_record_id") == record_id, "Mission Guardian succession evidence identity mismatch")
         core.require(process.get("effective_date") == record.get("effective_date"), "Mission Guardian succession evidence effective date mismatch")
+        core.require(process.get("founding_steward_person_id") == founder.get("person_id"), "Mission Guardian succession evidence founder identity mismatch")
+        core.require(process.get("founding_steward_cessation_sha256") == cessation_ref.get("sha256"), "Mission Guardian succession evidence must bind exact founder cessation digest")
+        core.require(process.get("founding_steward_cessation_effective_date") == cessation.get("effective_date"), "Mission Guardian succession evidence cessation chronology mismatch")
     else:
         raise SystemExit("governance integrity failure: Mission Guardian authority_mode unsupported")
 
