@@ -161,6 +161,41 @@ def validate_review_auth_mutation_matrix() -> int:
     )
     cases += 1
 
+    # Legacy review formats that cannot directly include the reviewer list in
+    # their primary digest must carry a reviewer-binding digest *inside* that
+    # signed primary payload. This closes the same substitution class without
+    # requiring a self-referential signature list.
+    legacy = copy.deepcopy(baseline)
+    legacy["reviewer_authentication_sha256"] = review_auth.reviewer_binding_sha256(
+        legacy["reviewers"],
+        "synthetic legacy review",
+    )
+    review_auth.require_reviewer_binding_digest(legacy, "synthetic legacy review")
+
+    legacy_qualification_swap = copy.deepcopy(legacy)
+    legacy_qualification_swap["reviewers"][0]["qualification_evidence"]["sha256"] = "4" * 64
+    expect_failure(
+        "legacy review cannot replay reviewer binding after qualification swap",
+        lambda: review_auth.require_reviewer_binding_digest(legacy_qualification_swap, "synthetic legacy review"),
+    )
+    cases += 1
+
+    legacy_identity_swap = copy.deepcopy(legacy)
+    legacy_identity_swap["reviewers"][0]["reviewer_id"] = "reviewer-2"
+    expect_failure(
+        "legacy review cannot replay reviewer binding after identity swap",
+        lambda: review_auth.require_reviewer_binding_digest(legacy_identity_swap, "synthetic legacy review"),
+    )
+    cases += 1
+
+    legacy_missing_binding = copy.deepcopy(legacy)
+    del legacy_missing_binding["reviewer_authentication_sha256"]
+    expect_failure(
+        "legacy review cannot omit reviewer authentication digest",
+        lambda: review_auth.require_reviewer_binding_digest(legacy_missing_binding, "synthetic legacy review"),
+    )
+    cases += 1
+
     return cases
 
 
