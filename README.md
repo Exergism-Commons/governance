@@ -42,6 +42,7 @@ The machine layer enforces a reviewable subset of adopted rules. It cannot manuf
 - [`architecture/DOMAIN-AND-URI-ARCHITECTURE.md`](architecture/DOMAIN-AND-URI-ARCHITECTURE.md) — `exergism.org`, persistent identifiers and infrastructure custody.
 - [`IP-POLICY.md`](IP-POLICY.md) — cross-project intellectual-property and inbound-rights policy.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to propose organization-level governance changes.
+- [`OPEN-KNOWLEDGE-POLICY.md`](OPEN-KNOWLEDGE-POLICY.md) — proposed Public Knowledge, Source Form and anti-enclosure policy.
 
 ### Machine-readable governance
 
@@ -51,10 +52,13 @@ The machine layer enforces a reviewable subset of adopted rules. It cannot manuf
 - [`policy/membership-status.json`](policy/membership-status.json) — draft repository-safe Member Registry projection.
 - [`policy/founding-stewardship.json`](policy/founding-stewardship.json) — draft Founding Steward, Mission Lock and maturity-phase projection.
 - [`policy/delegations.json`](policy/delegations.json) — explicit delegation registry; currently empty/non-operative.
+- [`policy/open-knowledge-status.json`](policy/open-knowledge-status.json) — closed-world machine projection of the Open Knowledge/anti-enclosure contract.
 - [`ontology/commons.ttl`](ontology/commons.ttl) — organization governance vocabulary at `https://id.exergism.org/commons#`.
 - [`ontology/commons-context.jsonld`](ontology/commons-context.jsonld) — JSON-LD context.
 - [`ontology/governance-shapes.ttl`](ontology/governance-shapes.ttl) — structural SHACL constraints.
-- [`tools/validate_governance.py`](tools/validate_governance.py) — deterministic fail-closed integrity checks, including governance and CLA activation gates.
+- [`tools/validate.py`](tools/validate.py) — **canonical complete fail-closed integrity entrypoint**. It installs strict parsing, lifecycle, temporal, release-history, authority, Open Knowledge and CLA/Schedule gates before returning PASS.
+- [`tools/validate_governance.py`](tools/validate_governance.py) — internal core validation library. Running/importing this module alone is **not** the supported activation verdict.
+- [`tools/test_governance_mutation_guards.py`](tools/test_governance_mutation_guards.py) — adversarial mutation matrix for recurring bug classes such as subset weakening, paired-source edits and mutable taxonomy redefinition.
 
 ### Contributor rights / CLA
 
@@ -70,6 +74,20 @@ The machine layer enforces a reviewable subset of adopted rules. It cannot manuf
 - [`cla/ADOPTION.md`](cla/ADOPTION.md) — activation gates.
 - [`policy/cla-status.yaml`](policy/cla-status.yaml) — machine-readable CLA adoption state.
 - [`policy/covered-projects.yaml`](policy/covered-projects.yaml) — machine-readable CLA project scope projection.
+
+## Integrity model
+
+The complete validation command is:
+
+```bash
+python tools/validate.py
+```
+
+CI also runs `python tools/test_governance_mutation_guards.py`. The distinction is intentional: the first validates the actual repository state and historical authority chain, while the second mutates whole classes of rights-sensitive fields to prove the validator fails closed under adversarial combinations.
+
+For rights-sensitive schema versions, EC uses a **closed-world contract**: required fields are compared as exact sets/mappings, not `non-empty`, `all true`, minimum-length or subset checks. Likewise, agreement between two mutable representations is insufficient for authority-sensitive semantics. The Schedule and its YAML projection are both checked against an independent semantic invariant set, so changing both sides to the same weakened value is still a failure.
+
+Temporal authority is also historical rather than current-state-only. Operative release history is validated from the permanent release-1 founding anchor forward; a later amendment cannot retroactively repair a missing founding Open Knowledge binding, backdate a newly introduced policy, or authorize itself with proposed replacement rules.
 
 ## Project authority boundaries
 
@@ -128,7 +146,7 @@ At F2 the founder is expected to cease having general executive primacy and reta
 
 Membership governs **Exergism Commons**, not an arbitrary organization that happens to inherit its assets and name.
 
-The Mission Lock protects EC's institutional identity: stewardship around Exergism, project-authority separation, non-ownership membership, no governance-for-money, contributor-rights attribution, persistent-ID integrity, contestability and anti-capture.
+The Mission Lock protects EC's institutional identity: stewardship around Exergism, project-authority separation, non-ownership membership, no governance-for-money, contributor-rights attribution, persistent-ID integrity, contestability, anti-capture and anti-enclosure of established EC Public Knowledge.
 
 It does not freeze every philosophical claim, roadmap item or implementation decision.
 
@@ -209,10 +227,10 @@ The same acceptance boundary now applies to both the Individual and Entity CLA d
 
 ## Current legal and institutional status
 
-The constitutional, Founding Stewardship, Membership and CLA packages are intentionally **non-operative** at bootstrap.
+The constitutional, Founding Stewardship, Membership, Open Knowledge and CLA packages are intentionally **non-operative** at bootstrap.
 
-`tools/validate_governance.py` now contains explicit fail-closed checks for both non-operative and future operative states. Merely flipping an `operative` boolean must fail unless the associated legal entity/adoption metadata, Member Registry, founder assignment, conflict/records/treasury controls, legal review and aligned policy flags are present.
+`tools/validate.py` is the supported complete fail-closed verdict. Merely flipping an `operative` boolean must fail unless the associated legal entity/adoption metadata, Member Registry, founder assignment, conflict/records/treasury controls, legal review, Open Knowledge release history and aligned policy flags are present. Lower-level validator modules exist as implementation components and must not be treated as equivalent standalone activation verdicts.
 
-Before organization governance can become operative, EC must resolve at least the legal entity/form, governing law, initial membership/voter registry, valid adoption mechanism, records/privacy controls, treasury authority, Founding Steward assignment/succession compatibility and appropriate independent legal review. The CLA has additional activation gates in `cla/ADOPTION.md`.
+Before organization governance can become operative, EC must resolve at least the legal entity/form, governing law, initial membership/voter registry, valid adoption mechanism, records/privacy controls, treasury authority, Founding Steward assignment/succession compatibility, an adopted rights-reviewed Open Knowledge implementation and appropriate independent legal review. The CLA has additional activation gates in `cla/ADOPTION.md`.
 
 A merge of draft architecture into Git is not ratification, incorporation, signature, delegation or legal advice.
