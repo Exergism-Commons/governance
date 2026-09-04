@@ -13,6 +13,21 @@ AMENDMENT_KINDS = {"constitutional-amendment", "mission-locked-amendment"}
 ORIG_VALIDATE_ADOPTION_RECORD = release_lifecycle.validate_adoption_record
 ORIG_VALIDATE_CLASSIFICATION = release_lifecycle._validate_classification
 
+MEMBERSHIP_POLICY_KEYS = (
+    "one_person_one_vote",
+    "natural_person_voting_members_only",
+    "candidate_period_days",
+    "voting_seasoning_days",
+    "voting_window_contract",
+    "voting_window_authenticity_contract",
+    "ballot_authentication_contract",
+    "ballot_proposal_binding_contract",
+    "conflict_determination_contract",
+    "f0_signature_chronology_contract",
+    "admission_modes",
+    "state_transition_contract",
+)
+
 
 def require_authority_provenance_contract(status: dict) -> None:
     contract = status.get("authority_provenance_contract")
@@ -23,6 +38,8 @@ def require_authority_provenance_contract(status: dict) -> None:
             "amendment_authorized_by_predecessor_release": True,
             "proposed_rules_cannot_authorize_their_own_adoption": True,
             "predecessor_activation_processes_control_amendment_vote": True,
+            "membership_policy_frozen_in_release_snapshot": True,
+            "historical_decisions_use_release_in_force": True,
             "approval_ballots_bind_predecessor_authority": True,
             "approval_ballots_bind_proposed_release_payload": True,
         },
@@ -37,6 +54,39 @@ def _load_adoption(ref, label: str) -> dict:
         f"{label} must be an adopted governance-adoption",
     )
     return data
+
+
+def membership_policy_projection(membership: dict) -> dict:
+    policy: dict = {}
+    for key in MEMBERSHIP_POLICY_KEYS:
+        core.require(key in membership, f"membership policy field missing: {key}")
+        policy[key] = copy.deepcopy(membership[key])
+    return policy
+
+
+def _validate_membership_policy(policy: object, label: str) -> dict:
+    core.require(isinstance(policy, dict), f"{label} membership_policy missing")
+    core.require(set(policy) == set(MEMBERSHIP_POLICY_KEYS), f"{label} membership_policy fields incomplete/unexpected")
+    core.require(policy.get("one_person_one_vote") is True, f"{label} cannot weaken one-person-one-vote")
+    core.require(policy.get("natural_person_voting_members_only") is True, f"{label} cannot weaken natural-person voting membership")
+    candidate_days = policy.get("candidate_period_days")
+    core.require(isinstance(candidate_days, int) and candidate_days >= 0, f"{label} candidate period invalid")
+    seasoning = policy.get("voting_seasoning_days")
+    core.require(isinstance(seasoning, dict), f"{label} voting seasoning policy invalid")
+    core.require(
+        set(seasoning) == {"ordinary-approval", "qualified-approval", "constitutional-amendment", "mission-locked-amendment"}
+        and all(isinstance(value, int) and value >= 0 for value in seasoning.values()),
+        f"{label} voting seasoning policy incomplete/invalid",
+    )
+    return policy
+
+
+def membership_under_snapshot(membership: dict, snapshot: dict, label: str) -> dict:
+    projected = copy.deepcopy(membership)
+    policy = _validate_membership_policy(snapshot.get("membership_policy"), label)
+    for key in MEMBERSHIP_POLICY_KEYS:
+        projected[key] = copy.deepcopy(policy[key])
+    return projected
 
 
 def _validate_rules_snapshot(ref, adoption: dict, label: str) -> dict:
@@ -63,6 +113,7 @@ def validate_authority_snapshot(ref, adoption: dict, label: str) -> tuple[dict, 
         "governance_version",
         "effective_date",
         "decision_rules_snapshot",
+        "membership_policy",
         "activation_evidence",
     }
     core.require(set(snapshot) == required, f"{label} fields incomplete/unexpected")
@@ -72,6 +123,7 @@ def validate_authority_snapshot(ref, adoption: dict, label: str) -> tuple[dict, 
     )
     core.require(snapshot["governance_version"] == adoption.get("governance_version"), f"{label} version mismatch")
     core.require(snapshot["effective_date"] == adoption.get("effective_date"), f"{label} effective-date mismatch")
+    _validate_membership_policy(snapshot.get("membership_policy"), label)
 
     rules = _validate_rules_snapshot(snapshot["decision_rules_snapshot"], adoption, f"{label} decision rules")
 
@@ -112,6 +164,18 @@ def authority_context_as_of(status: dict, target: date) -> tuple[dict, dict, dic
         adoption_ref,
         f"governance release #{adoption['release_sequence']} as of {target.isoformat()}",
     )
+
+
+def membership_context_as_of(status: dict, membership: dict, target: date) -> dict:
+    authority_status, _, adoption, _ = authority_context_as_of(status, target)
+    snapshot, _ = validate_authority_snapshot(
+        adoption["authority_snapshot"],
+        adoption,
+        f"membership authority as of {target.isoformat()}",
+    )
+    projected = membership_under_snapshot(membership, snapshot, f"membership authority as of {target.isoformat()}")
+    projected["governance_version"] = authority_status["governance_version"]
+    return projected
 
 
 def current_authority_snapshot(status: dict) -> tuple[dict, dict, dict]:
@@ -161,7 +225,12 @@ def _proposed_release_bindings(status: dict) -> dict[str, str]:
         "proposed decision-rules sha256",
     )
 
-    validate_authority_snapshot(snapshot_ref, adoption, "proposed governance authority snapshot")
+    snapshot, _ = validate_authority_snapshot(snapshot_ref, adoption, "proposed governance authority snapshot")
+    proposed_membership = core.load_json("policy/membership-status.json")
+    core.require(
+        snapshot.get("membership_policy") == membership_policy_projection(proposed_membership),
+        "proposed authority snapshot must bind the exact proposed membership policy",
+    )
 
     return {
         "governance_amendment_payload_sha256": amendment_hash,
@@ -239,6 +308,14 @@ def validate_approval_evidence(
 
     decision_date = _approval_decision_date(ref, expected_decision_date, label)
     authority_status, authority_rules, authority_adoption, authority_ref = authority_context_as_of(status, decision_date)
+    authority_snapshot, _ = validate_authority_snapshot(
+        authority_adoption["authority_snapshot"],
+        authority_adoption,
+        f"{label} membership authority snapshot",
+    )
+    authority_membership = membership_under_snapshot(membership, authority_snapshot, f"{label} membership authority")
+    authority_membership["governance_version"] = authority_status["governance_version"]
+
     protected_current_amendment = (
         isinstance(sequence, int)
         and sequence >= 2
@@ -265,7 +342,7 @@ def validate_approval_evidence(
         expected_decision_id,
         authority_status,
         authority_rules,
-        membership,
+        authority_membership,
         expected_rule_id=rule_id,
         expected_artifact_bindings=bindings,
         expected_decision_date=expected_decision_date,
@@ -336,10 +413,14 @@ def validate_adoption_record(
         return result
 
     chain = release_history.release_chain(status)
-    adoption, _, current_rules = current_authority_snapshot(status)
+    adoption, snapshot, current_rules = current_authority_snapshot(status)
     core.require(
         current_rules.get("governance_version") == status.get("governance_version"),
         "current authority snapshot must establish the current governance version",
+    )
+    core.require(
+        snapshot.get("membership_policy") == membership_policy_projection(membership),
+        "current authority snapshot must bind the exact current membership policy",
     )
     sequence = status["governance_release_contract"]["current_release_sequence"]
     if sequence == 1:
