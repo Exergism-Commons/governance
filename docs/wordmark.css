@@ -1,0 +1,52 @@
+/* Shared Exergism Commons header/footer wordmark treatment. */
+.brand {
+  gap: 6px !important;
+  align-items: center;
+}
+
+.brand-logo {
+  width: 30px !important;
+  height: 30px !important;
+  flex: 0 0 30px;
+  object-fit: contain;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: translateY(-1px);
+}
+
+.brand-copy {
+  display: grid;
+  line-height: .98;
+  margin-left: -1px;
+}
+
+.brand-copy strong {
+  font-size: .97rem !important;
+  font-weight: 820;
+  letter-spacing: -.035em;
+}
+
+.brand-copy span {
+  margin-top: 3px !important;
+  font-size: .62rem !important;
+  font-weight: 820 !important;
+  letter-spacing: .17em !important;
+  text-transform: uppercase;
+}
+
+.brand-footer .brand-logo {
+  filter: grayscale(1) invert(1) brightness(1.16);
+  opacity: .94;
+}
+
+@media (max-width: 650px) {
+  .brand { gap: 5px !important; }
+  .brand-logo {
+    width: 28px !important;
+    height: 28px !important;
+    flex-basis: 28px;
+  }
+  .brand-copy strong { font-size: .94rem !important; }
+  .brand-copy span { font-size: .59rem !important; }
+}
