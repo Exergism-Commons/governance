@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import governance_release_authority as release_authority
+import governance_release_lifecycle as release_lifecycle
 import validate_governance as core
 
 
@@ -116,13 +117,13 @@ def validate_cla_steward_authority() -> None:
     payload_hash = core.sha256_json(payload)
     core.require(record.get("authority_payload_sha256") == payload_hash, "CLA Steward authority payload hash mismatch")
 
-    # Evaluate approval under the release/policy/electorate that was actually in
-    # force on decision_date. This preserves valid historical appointments after
-    # later amendments while preventing current rules from retroactively blessing
-    # an old decision.
-    core.validate_approval_evidence(
+    # Evaluate approval directly under the release/policy/electorate that was in
+    # force on decision_date. Calling the current release-aware wrapper again
+    # here would re-interpret the already-projected historical status contract;
+    # the saved base vote validator consumes the exact historical context once.
+    release_lifecycle.ORIG_VALIDATE_APPROVAL_EVIDENCE(
         record.get("approval_evidence"),
-        "CLA legal Steward authority approval",
+        "CLA legal Steward historical authority approval",
         decision_id,
         authority_status,
         authority_rules,
@@ -160,8 +161,6 @@ def validate_cla_steward_authority() -> None:
         signed_people.add(signer)
     core.require(signed_people == set(signatories), "CLA Steward authority missing competent signature")
 
-    # Prove that the release context used above is itself the release selected by
-    # the validated historical chain, rather than a caller-supplied version shim.
     core.require(
         authority_adoption.get("governance_version") == event_version,
         "CLA Steward historical authority adoption/version mismatch",
