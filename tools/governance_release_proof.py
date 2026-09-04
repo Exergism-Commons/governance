@@ -4,6 +4,7 @@ import copy
 from datetime import date
 
 import governance_guardian_consent as guardian_consent
+import governance_membership_roster as membership_roster
 import governance_release_authority as authority
 import governance_release_history as history
 import governance_release_lifecycle as lifecycle
@@ -15,6 +16,7 @@ CONSTITUTIONAL_KIND = "constitutional-amendment"
 MISSION_KIND = "mission-locked-amendment"
 AMENDMENT_KINDS = {CONSTITUTIONAL_KIND, MISSION_KIND}
 MISSION_VOTE_SEPARATION_FLOOR_DAYS = 60
+SUPPORTED_MISSION_SUCCESSFUL_VOTES = 2
 
 
 def _status_at_release(status: dict, chain: list[tuple[dict, dict]], index: int) -> dict:
@@ -64,17 +66,26 @@ def _require_adoption_chronology(record: dict, approval: dict, label: str) -> tu
 
 
 def historical_mission_vote_separation_days(authority_rules: dict, label: str) -> int:
-    """Resolve the repeated-vote floor from the predecessor authority itself.
+    """Resolve repeated-vote semantics from the predecessor authority itself.
 
-    A later release may strengthen this value prospectively. Re-proving an older
-    release must therefore use the rule that actually authorized that release,
-    while still enforcing the constitutional floor that existed for the v1
-    governance contract. Current-state contract values are intentionally not an
-    input here, preventing future strengthening from retroactively invalidating
-    a previously valid release.
+    The current v1 release-record schema represents exactly two successful
+    Mission-Locked votes: one `first_vote_approval_evidence` plus the final
+    `approval_evidence`. A future rule that legitimately requires three or more
+    votes must therefore bump the release-record schema and add an authenticated
+    vote-sequence representation before such a rule can become authority. This
+    avoids accepting a stronger declarative rule that the proof format cannot
+    actually prove.
+
+    The separation interval itself may be strengthened prospectively. Re-proving
+    an older release uses the predecessor's own interval, while retaining the
+    immutable 60-day constitutional floor.
     """
     mission = core.rule_by_id(authority_rules).get(MISSION_KIND)
     core.require(isinstance(mission, dict), f"{label} Mission-Locked rule missing")
+    core.require(
+        mission.get("successful_votes_required") == SUPPORTED_MISSION_SUCCESSFUL_VOTES,
+        f"{label} Mission-Locked successful-vote count is unsupported by release-record schema; schema upgrade required",
+    )
     days = mission.get("minimum_days_between_successful_votes")
     core.require(
         isinstance(days, int) and days >= MISSION_VOTE_SEPARATION_FLOOR_DAYS,
@@ -129,6 +140,11 @@ def _validate_constitutive_release(
         signed = core.parse_iso_date(signature.get("signed_date"), f"{label} signature {index}.signed_date")
         core.require(signed <= completed <= effective, f"{label} constitutive signature postdates adoption")
 
+    # The immutable release payload also checkpoints the complete Member roster
+    # and transition history existing by its effective date. A later mutable
+    # projection may append Members/transitions but cannot prune this checkpoint.
+    membership_roster.validate_release_roster_snapshot(record, membership, label)
+
     # A descendant may use this release only after its signed adoption and its
     # exact authority snapshot have both validated.
     authority.validate_authority_snapshot(record.get("authority_snapshot"), record, f"{label} authority snapshot")
@@ -177,6 +193,16 @@ def _validate_amendment_release(
         f"{label} repeated-vote shape invalid",
     )
 
+    # Before reconstructing any predecessor electorate, prove that the current
+    # mutable registry still contains every Member/admission/transition that the
+    # predecessor release immutably checkpointed. This closes roster pruning in
+    # sequence-3+ proofs.
+    membership_roster.validate_release_roster_snapshot(
+        predecessor,
+        membership,
+        f"{label} predecessor release #{predecessor['release_sequence']}",
+    )
+
     predecessor_status = _status_at_release(status, chain, index - 1)
     authority_status, authority_rules, _, authority_ref = authority.authority_context_for_release(
         predecessor_status,
@@ -197,9 +223,10 @@ def _validate_amendment_release(
     )
     authority_membership["governance_version"] = authority_status["governance_version"]
 
-    # Validate the proposed snapshot before allowing this release to become the
-    # predecessor authority for the next iteration.
+    # Validate both the proposed authority snapshot and the proposed immutable
+    # roster checkpoint before allowing this release to authorize descendants.
     authority.validate_authority_snapshot(record.get("authority_snapshot"), record, f"{label} proposed authority snapshot")
+    membership_roster.validate_release_roster_snapshot(record, membership, label)
 
     expected_bindings = _authority_bound_artifacts(record, predecessor, previous_ref)
     human_hashes = record["artifact_bindings"]
@@ -229,6 +256,7 @@ def _validate_amendment_release(
 
     first_date: date | None = None
     if kind == MISSION_KIND:
+        minimum_days = historical_mission_vote_separation_days(authority_rules, label)
         first_ref = record["first_vote_approval_evidence"]
         first, _ = core.validate_content_ref(first_ref, f"{label} first Mission-Locked approval", "records/evidence")
         first_id = first.get("decision_id")
@@ -245,7 +273,6 @@ def _validate_amendment_release(
             expected_decision_date=first.get("decision_date"),
         )
         first_date = core.parse_iso_date(first.get("decision_date"), f"{label} first vote date")
-        minimum_days = historical_mission_vote_separation_days(authority_rules, label)
         core.require((final_date - first_date).days >= minimum_days, f"{label} Mission-Locked vote separation insufficient")
 
     review_completed = authority.ORIG_VALIDATE_CLASSIFICATION(
@@ -288,9 +315,10 @@ def validate_release_proof_chain(status: dict, membership: dict) -> None:
     """Inductively prove every release before trusting descendant authority.
 
     Structural ancestry is necessary but insufficient. Release N+1 may consume
-    N's snapshot only after release N's own approval path has been fully
-    authenticated under release N-1. This defeats fabricated intermediate
-    releases even when their hashes form a perfectly contiguous chain.
+    N's snapshot only after release N's own approval path, activation semantics,
+    and immutable Member-roster checkpoint have been fully authenticated under
+    release N-1. This defeats fabricated intermediate releases and historical
+    roster pruning even when their hashes form a contiguous chain.
     """
     if status.get("operative") is not True:
         return
