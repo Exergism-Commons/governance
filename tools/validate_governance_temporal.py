@@ -26,18 +26,28 @@ import governance_membership_process_chronology as process_chronology
 import governance_voting_window_authenticity as voting_window_authenticity
 import governance_ballot_proposal_binding as ballot_binding
 import governance_release_lifecycle as release_lifecycle
+import governance_release_history as release_history
+import governance_release_membership as release_membership
+import governance_guardian_consent as guardian_consent
 import governance_succession_auth as succession_auth
+
+# Preserve the true pre-release base callback before redirecting historical
+# constitutive Member validation through the release #1 anchor.
+release_membership.BASE_VALIDATE_MEMBER_ADMISSION_RECORD = life.ORIG_VALIDATE_MEMBER_ADMISSION_RECORD
+life.ORIG_VALIDATE_MEMBER_ADMISSION_RECORD = release_membership.validate_member_admission_record
 
 
 def validate_saved_base_callbacks() -> None:
     callbacks = {
-        "member admission": getattr(life, "ORIG_VALIDATE_MEMBER_ADMISSION_RECORD", None),
+        "member admission": getattr(release_membership, "BASE_VALIDATE_MEMBER_ADMISSION_RECORD", None),
+        "release-aware member admission": getattr(life, "ORIG_VALIDATE_MEMBER_ADMISSION_RECORD", None),
         "conflict determination": getattr(life, "ORIG_VALIDATE_CONFLICT_DETERMINATION", None),
         "vote approval": getattr(life, "ORIG_VALIDATE_VOTE_APPROVAL", None),
         "adoption record": getattr(life, "ORIG_VALIDATE_ADOPTION_RECORD", None),
         "phase evidence": getattr(life, "ORIG_VALIDATE_PHASE_EVIDENCE", None),
         "CLA status": getattr(life, "ORIG_VALIDATE_CLA_STATUS", None),
         "release approval evidence": getattr(release_lifecycle, "ORIG_VALIDATE_APPROVAL_EVIDENCE", None),
+        "release guardian consent": getattr(guardian_consent, "validate_guardian_consent", None),
         "founding succession lifecycle": getattr(succession_auth, "ORIG_VALIDATE_FOUNDING_STEWARD_LIFECYCLE", None),
         "guardian succession assignment": getattr(succession_auth, "ORIG_VALIDATE_MISSION_GUARDIAN_ASSIGNMENT", None),
     }
@@ -61,6 +71,11 @@ def main() -> None:
 
     life.validate_state_transition_history = process_chronology.validate_state_transition_history
     life.validate_member_admission_record_historical = phase.validate_member_admission_record
+
+    # Release history is a stable authority primitive: the current release can
+    # change without moving the constitutive Member/phase epoch forward.
+    phase.phase_timeline = release_history.phase_timeline
+    release_lifecycle._validate_guardian_consent = guardian_consent.validate_guardian_consent
 
     # Install authenticated succession before any authority wrapper can use the
     # Founding Steward or Mission Guardian lifecycle.
