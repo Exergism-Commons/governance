@@ -31,6 +31,7 @@ import governance_release_history as release_history
 import governance_release_membership as release_membership
 import governance_guardian_consent as guardian_consent
 import governance_release_authority as release_authority
+import governance_release_evidence_hardening as release_evidence_hardening
 import governance_release_proof as release_proof
 import governance_succession_auth as succession_auth
 import governance_open_knowledge as open_knowledge
@@ -53,6 +54,8 @@ def validate_saved_base_callbacks() -> None:
         "release approval evidence": getattr(release_lifecycle, "ORIG_VALIDATE_APPROVAL_EVIDENCE", None),
         "release adoption authority": getattr(release_authority, "ORIG_VALIDATE_ADOPTION_RECORD", None),
         "release classification authority": getattr(release_authority, "ORIG_VALIDATE_CLASSIFICATION", None),
+        "release activation semantics": getattr(release_evidence_hardening, "validate_authority_snapshot", None),
+        "review-bound amendment classification": getattr(release_evidence_hardening, "validate_classification_base", None),
         "release guardian consent": getattr(guardian_consent, "validate_guardian_consent", None),
         "founding succession lifecycle": getattr(succession_auth, "ORIG_VALIDATE_FOUNDING_STEWARD_LIFECYCLE", None),
         "guardian succession assignment": getattr(succession_auth, "ORIG_VALIDATE_MISSION_GUARDIAN_ASSIGNMENT", None),
@@ -76,6 +79,13 @@ def main() -> None:
     validate_saved_base_callbacks()
     strict_yaml.install()
     signature_chronology.install()
+
+    # Historical release snapshots are authority only after their activation
+    # records have passed the same semantic/type/result/chronology checks as a
+    # current release. Qualified reviews and amendment classifications also use
+    # one shared signed-review payload contract that includes reviewer identity
+    # and exact qualification-evidence references.
+    release_evidence_hardening.install()
 
     cla_schedule_binding.validate_schedule_projection_manifest()
 
