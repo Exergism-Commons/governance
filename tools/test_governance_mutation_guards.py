@@ -64,6 +64,23 @@ def validate_json_ambiguity_matrix() -> int:
     return cases
 
 
+def validate_yaml_ambiguity_matrix() -> int:
+    """Prove nested authoritative YAML children are direct and unique."""
+    strict_yaml.install()
+    cases = 0
+    duplicate_nested = """schema_version: 5
+legal_review:
+  complete: true
+  complete: false
+"""
+    expect_failure(
+        "duplicate nested YAML authority key",
+        lambda: core.yaml_nested_bool(duplicate_nested, "legal_review", "complete"),
+    )
+    cases += 1
+    return cases
+
+
 def _synthetic_review() -> dict:
     review = {
         "record_type": "qualified-legal-review-evidence",
@@ -86,7 +103,7 @@ def _synthetic_review() -> dict:
             }
         ],
     }
-    payload = {key: value for key, value in review.items() if key != "reviewers"}
+    payload, _ = review_auth.signed_review_payload(review, "synthetic qualified review")
     review["review_payload_sha256"] = core.sha256_json(payload)
     return review
 
@@ -125,6 +142,14 @@ def validate_review_auth_mutation_matrix() -> int:
     expect_failure(
         "qualified review signatures cannot be replayed after payload mutation",
         lambda: review_auth.require_authentication_shape(replayed_conclusion, "synthetic qualified review"),
+    )
+    cases += 1
+
+    replayed_qualification = copy.deepcopy(baseline)
+    replayed_qualification["reviewers"][0]["qualification_evidence"]["sha256"] = "3" * 64
+    expect_failure(
+        "qualified review signatures cannot be replayed after qualification mutation",
+        lambda: review_auth.require_authentication_shape(replayed_qualification, "synthetic qualified review"),
     )
     cases += 1
 
@@ -305,14 +330,15 @@ def validate_schedule_mutation_matrix() -> int:
 def main() -> None:
     strict_json.install()
     json_cases = validate_json_ambiguity_matrix()
+    yaml_cases = validate_yaml_ambiguity_matrix()
     review_cases = validate_review_auth_mutation_matrix()
     open_knowledge_cases = validate_open_knowledge_mutation_matrix()
     schedule_cases = validate_schedule_mutation_matrix()
-    total = json_cases + review_cases + open_knowledge_cases + schedule_cases
+    total = json_cases + yaml_cases + review_cases + open_knowledge_cases + schedule_cases
     print(
         "Exergism Commons adversarial mutation guards: PASS "
-        f"({total} generalized mutations; JSON ambiguity={json_cases}, review auth={review_cases}, "
-        f"Open Knowledge={open_knowledge_cases}, Schedule/rights={schedule_cases})"
+        f"({total} generalized mutations; JSON ambiguity={json_cases}, YAML ambiguity={yaml_cases}, "
+        f"review auth={review_cases}, Open Knowledge={open_knowledge_cases}, Schedule/rights={schedule_cases})"
     )
 
 
