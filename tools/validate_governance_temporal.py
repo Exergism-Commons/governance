@@ -29,6 +29,7 @@ import governance_release_lifecycle as release_lifecycle
 import governance_release_history as release_history
 import governance_release_membership as release_membership
 import governance_guardian_consent as guardian_consent
+import governance_release_authority as release_authority
 import governance_succession_auth as succession_auth
 
 # Preserve the true pre-release base callback before redirecting historical
@@ -47,6 +48,8 @@ def validate_saved_base_callbacks() -> None:
         "phase evidence": getattr(life, "ORIG_VALIDATE_PHASE_EVIDENCE", None),
         "CLA status": getattr(life, "ORIG_VALIDATE_CLA_STATUS", None),
         "release approval evidence": getattr(release_lifecycle, "ORIG_VALIDATE_APPROVAL_EVIDENCE", None),
+        "release adoption authority": getattr(release_authority, "ORIG_VALIDATE_ADOPTION_RECORD", None),
+        "release classification authority": getattr(release_authority, "ORIG_VALIDATE_CLASSIFICATION", None),
         "release guardian consent": getattr(guardian_consent, "validate_guardian_consent", None),
         "founding succession lifecycle": getattr(succession_auth, "ORIG_VALIDATE_FOUNDING_STEWARD_LIFECYCLE", None),
         "guardian succession assignment": getattr(succession_auth, "ORIG_VALIDATE_MISSION_GUARDIAN_ASSIGNMENT", None),
@@ -75,7 +78,13 @@ def main() -> None:
     # Release history is a stable authority primitive: the current release can
     # change without moving the constitutive Member/phase epoch forward.
     phase.phase_timeline = release_history.phase_timeline
-    release_lifecycle._validate_guardian_consent = guardian_consent.validate_guardian_consent
+
+    # A governance amendment must be authorized by the release already in
+    # force, never by the rules/processes it is proposing to replace. The
+    # predecessor authority snapshot therefore controls classification,
+    # protected votes, ballots and Founding-Period guardian consent.
+    release_lifecycle._validate_classification = release_authority.validate_classification
+    release_lifecycle._validate_guardian_consent = release_authority.validate_guardian_consent
 
     # Install authenticated succession before any authority wrapper can use the
     # Founding Steward or Mission Guardian lifecycle.
@@ -88,11 +97,11 @@ def main() -> None:
     core.validate_member_admission_record = founding_authority.validate_member_admission_record
     core.validate_conflict_determination = evidence.validate_conflict_determination
     core.validate_vote_approval = voting_window_authenticity.validate_vote_approval
-    core.validate_approval_evidence = release_lifecycle.validate_approval_evidence
+    core.validate_approval_evidence = release_authority.validate_approval_evidence
     core.validate_membership_registry = validate_membership_registry
     core.validate_delegations = delegation_lifecycle.validate_delegations
     core.delegation_active_on = delegation_lifecycle.delegation_active_on
-    core.validate_adoption_record = release_lifecycle.validate_adoption_record
+    core.validate_adoption_record = release_authority.validate_adoption_record
     core.validate_phase_evidence = phase.validate_phase_evidence
     core.validate_covered_projects = cla_schedule_binding.validate_covered_projects
     core.validate_cla_status = roles.validate_cla_status
