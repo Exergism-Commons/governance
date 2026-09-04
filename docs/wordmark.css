@@ -4,20 +4,20 @@
 }
 
 /*
- * Header rule: one physical plate only. The Commons symbol asset has a white
- * background, so the whole signature uses that same solid white. Children
- * never create their own tiles, bands or colour planes.
+ * One material, one plate. The brand character comes from silhouette,
+ * spacing and type hierarchy — never from nested colour blocks.
  */
 .site-header .brand {
   display: inline-flex;
   width: fit-content;
-  gap: 8px !important;
-  padding: 6px 13px 6px 6px;
+  gap: 10px !important;
+  padding: 7px 16px 7px 7px;
   overflow: hidden;
-  border: 1px solid rgba(17, 21, 18, .08);
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 5px 16px rgba(17, 21, 18, .065);
+  border: 1px solid rgba(17, 21, 18, .075);
+  border-radius: 11px 28px 15px 22px / 13px 22px 18px 24px;
+  background: #f9f9f9;
+  box-shadow: 0 8px 24px rgba(17, 21, 18, .075);
+  transition: transform .18s ease, box-shadow .18s ease;
 }
 
 .site-header .brand::before,
@@ -27,24 +27,26 @@
 
 .site-header .brand-logo {
   display: block;
-  width: 38px !important;
-  height: 38px !important;
-  flex: 0 0 38px;
+  width: 40px !important;
+  height: 40px !important;
+  flex: 0 0 40px;
   padding: 0;
   object-fit: contain;
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
-  mix-blend-mode: normal;
+  mix-blend-mode: multiply;
+  filter: contrast(1.06);
+  transform: translateY(-1px);
 }
 
 .site-header .brand-copy {
   display: grid;
   justify-items: start;
   align-content: center;
-  gap: 3px;
-  line-height: .98;
+  gap: 4px;
+  line-height: .95;
   background: transparent;
 }
 
@@ -62,18 +64,25 @@
 }
 
 .site-header .brand-copy strong {
-  color: #111512;
-  font-size: .97rem !important;
-  font-weight: 820;
-  letter-spacing: -.035em;
+  color: #0c100d;
+  font-size: 1rem !important;
+  font-weight: 850;
+  letter-spacing: -.04em;
 }
 
 .site-header .brand-copy span {
-  color: #4f5650 !important;
-  font-size: .62rem !important;
-  font-weight: 820 !important;
-  letter-spacing: .17em !important;
+  color: #3f4641 !important;
+  font-size: .60rem !important;
+  font-weight: 840 !important;
+  letter-spacing: .205em !important;
   text-transform: uppercase;
+}
+
+@media (hover: hover) {
+  .site-header .brand:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 11px 28px rgba(17, 21, 18, .09);
+  }
 }
 
 .brand-footer .brand-logo {
@@ -84,23 +93,28 @@
   opacity: .94;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .site-header .brand { transition: none; }
+}
+
 @media (max-width: 650px) {
   .site-header .brand {
-    gap: 7px !important;
-    padding: 5px 11px 5px 5px;
-    border-radius: 14px;
+    gap: 8px !important;
+    padding: 6px 13px 6px 6px;
+    border-radius: 10px 24px 13px 20px / 12px 20px 16px 22px;
   }
 
   .site-header .brand-logo {
-    width: 36px !important;
-    height: 36px !important;
-    flex-basis: 36px;
+    width: 37px !important;
+    height: 37px !important;
+    flex-basis: 37px;
   }
 
-  .site-header .brand-copy { gap: 2px; }
-  .site-header .brand-copy strong { font-size: .94rem !important; }
+  .site-header .brand-copy { gap: 3px; }
+  .site-header .brand-copy strong { font-size: .95rem !important; }
   .site-header .brand-copy span {
-    color: #4b524c !important;
-    font-size: .59rem !important;
+    color: #3f4641 !important;
+    font-size: .57rem !important;
+    letter-spacing: .19em !important;
   }
 }
