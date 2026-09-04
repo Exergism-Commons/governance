@@ -1,41 +1,12 @@
 from __future__ import annotations
 
 import validate_governance as core
+import governance_release_history as release_history
+import governance_semantic_invariants as invariants
 
 
 OPEN_KNOWLEDGE_STATUS_PATH = "policy/open-knowledge-status.json"
 OPEN_KNOWLEDGE_POLICY_PATH = "OPEN-KNOWLEDGE-POLICY.md"
-
-EXPECTED_MISSION_LOCKED_SUBJECTS = {
-    "repurpose-exergism-commons-away-from-exergism",
-    "remove-project-authority-separation",
-    "create-membership-economic-ownership",
-    "permit-funding-to-purchase-organization-governance",
-    "permit-retroactive-fabrication-of-contributor-rights",
-    "permit-silent-persistent-identifier-repurposing",
-    "remove-structural-contestability-or-anti-capture-commitment",
-    "permit-enclosure-of-established-ec-public-knowledge",
-}
-
-EXPECTED_FREEDOMS = {
-    "access",
-    "inspect",
-    "reproduce",
-    "study",
-    "modify",
-    "fork",
-    "redistribute",
-    "commercial-use",
-    "non-commercial-use",
-}
-
-EXPECTED_AUTHORITY_BOUNDARIES = {
-    "copying_transfers_canonicality": False,
-    "copying_transfers_namespace_authority": False,
-    "copying_grants_trademark_rights": False,
-    "publication_or_contribution_grants_patent_rights": False,
-    "id_resolver_relicenses_source_material": False,
-}
 
 
 def _validate_policy_semantics(text: str) -> None:
@@ -50,73 +21,111 @@ def _validate_policy_semantics(text: str) -> None:
 
 def _validate_projection_invariants(projection: dict, rules: dict) -> None:
     core.require(projection.get("schema_version") == 1, "unsupported Open Knowledge projection schema")
+    core.require(set(projection) == invariants.OPEN_KNOWLEDGE_TOP_LEVEL_KEYS_V1, "Open Knowledge schema v1 top-level field set changed")
     core.require(projection.get("policy") == "exergism-commons-open-knowledge", "unexpected Open Knowledge policy id")
     core.require(projection.get("policy_artifact") == OPEN_KNOWLEDGE_POLICY_PATH, "Open Knowledge policy path changed")
     core.require(projection.get("constitutional_principle") == "knowledge-commons-and-anti-enclosure", "Open Knowledge constitutional principle changed")
     core.require(projection.get("core_rule") == "canonicality-is-not-exclusivity", "Open Knowledge canonicality rule changed")
-    core.require(set(projection.get("protected_freedoms") or []) == EXPECTED_FREEDOMS, "Open Knowledge protected-freedom set changed")
+    core.require(set(projection.get("protected_freedoms") or []) == invariants.OPEN_KNOWLEDGE_PROTECTED_FREEDOMS_V1, "Open Knowledge protected-freedom set changed")
+    core.require(projection.get("ec_publication_requirements") == invariants.OPEN_KNOWLEDGE_PUBLICATION_REQUIREMENTS_V1, "Open Knowledge publication/source-form contract changed")
+    core.require(projection.get("anti_enclosure") == invariants.OPEN_KNOWLEDGE_ANTI_ENCLOSURE_V1, "Open Knowledge anti-enclosure contract changed")
+    core.require(projection.get("license_implementation") == invariants.OPEN_KNOWLEDGE_LICENSE_IMPLEMENTATION_V1, "Open Knowledge license-implementation contract changed")
+    core.require(projection.get("authority_boundaries") == invariants.OPEN_KNOWLEDGE_AUTHORITY_BOUNDARIES_V1, "Open Knowledge authority boundaries changed")
+    core.require(projection.get("project_relationships") == invariants.OPEN_KNOWLEDGE_PROJECT_RELATIONSHIPS_V1, "Open Knowledge project-authority relationships changed")
+    core.require(set(projection.get("excluded_or_protected_material") or []) == invariants.OPEN_KNOWLEDGE_EXCLUDED_MATERIAL_V1, "Open Knowledge protected/excluded material taxonomy changed")
+    core.require(projection.get("adoption_requirements") == invariants.OPEN_KNOWLEDGE_ADOPTION_REQUIREMENTS_V1, "Open Knowledge adoption contract changed")
+    core.require(projection.get("integrity_contract") == invariants.OPEN_KNOWLEDGE_INTEGRITY_CONTRACT_V1, "Open Knowledge integrity contract changed")
+    core.require(projection.get("history_contract") == invariants.OPEN_KNOWLEDGE_HISTORY_CONTRACT_V1, "Open Knowledge release-history contract changed")
+    notes = projection.get("notes")
+    core.require(isinstance(notes, list) and notes and all(isinstance(item, str) and item.strip() for item in notes), "Open Knowledge notes must remain a non-empty string list")
+    core.require(set(rules.get("mission_locked_subjects") or []) == invariants.MISSION_LOCKED_SUBJECTS_V1, "Mission Lock subject taxonomy does not exactly include the anti-enclosure invariant")
 
-    publication = projection.get("ec_publication_requirements")
+
+def _validate_policy_binding_shape(binding: dict, label: str) -> tuple[dict, dict, object]:
     core.require(
-        publication == {
-            "source_form_available": True,
-            "open_documented_format_preferred": True,
-            "versioned_source": True,
-            "clonable_or_exportable": True,
-            "rendered_representation_alone_sufficient": False,
-            "api_only_publication_sufficient": False,
+        isinstance(binding, dict)
+        and set(binding) == {
+            "policy",
+            "rights_review_record",
+            "effective_date",
+            "core_rule",
+            "anti_enclosure_mission_lock_subject",
         },
-        "Open Knowledge publication/source-form contract changed",
+        f"{label} Open Knowledge binding fields invalid",
     )
+    policy = binding.get("policy")
+    core.require(isinstance(policy, dict) and set(policy) == {"path", "version", "sha256"}, f"{label} Open Knowledge policy binding fields invalid")
+    core.require(policy.get("path") == OPEN_KNOWLEDGE_POLICY_PATH, f"{label} Open Knowledge path changed")
+    version = policy.get("version")
+    core.require(isinstance(version, str) and version.strip() and "-DRAFT" not in version, f"{label} Open Knowledge version must be non-draft")
+    core.require_sha256(policy.get("sha256"), f"{label} Open Knowledge policy sha256")
+    core.require(binding.get("core_rule") == "canonicality-is-not-exclusivity", f"{label} Open Knowledge core rule changed")
+    core.require(binding.get("anti_enclosure_mission_lock_subject") == "permit-enclosure-of-established-ec-public-knowledge", f"{label} anti-enclosure Mission-Lock binding changed")
+    effective = core.parse_iso_date(binding.get("effective_date"), f"{label} Open Knowledge effective_date")
+    review_ref = binding.get("rights_review_record")
+    core.require(isinstance(review_ref, dict) and set(review_ref) == {"path", "sha256"}, f"{label} Open Knowledge rights-review reference invalid")
+    return policy, review_ref, effective
 
-    anti_enclosure = projection.get("anti_enclosure")
-    core.require(
-        anti_enclosure == {
-            "copyright_enclosure": False,
-            "database_right_enclosure": False,
-            "contractual_enclosure": False,
-            "drm_enclosure": False,
-            "repository_or_api_exclusivity": False,
-            "legitimate_confidentiality_exceptions": True,
-        },
-        "Open Knowledge anti-enclosure contract changed",
-    )
 
-    core.require(projection.get("authority_boundaries") == EXPECTED_AUTHORITY_BOUNDARIES, "Open Knowledge authority boundaries changed")
+def _validate_historical_rights_review(
+    review_ref: dict,
+    policy_binding: dict,
+    binding_effective,
+    label: str,
+    expected_governance_version: str | None,
+) -> None:
+    review, _ = core.validate_content_ref(review_ref, f"{label} Open Knowledge rights review", "records/evidence")
+    core.require(review.get("record_type") == "qualified-legal-review-evidence", f"{label} Open Knowledge review type mismatch")
+    core.require(review.get("status") == "final" and review.get("complete") is True and review.get("result") == "approved", f"{label} Open Knowledge review must be final/complete/approved")
+    if expected_governance_version is not None:
+        core.require(review.get("governance_version") == expected_governance_version, f"{label} changed Open Knowledge binding must be reviewed under the authorizing governance release")
+    core.require(review.get("reviewed_open_knowledge_policy") == policy_binding, f"{label} qualified legal review does not bind exact Open Knowledge policy bytes")
+    completed = core.parse_iso_date(review.get("completed_date"), f"{label} Open Knowledge review completed_date")
+    core.require(completed <= binding_effective, f"{label} Open Knowledge review completed after policy effective date")
 
-    licensing = projection.get("license_implementation")
-    core.require(isinstance(licensing, dict), "Open Knowledge license implementation missing")
-    core.require(licensing.get("constitutional_lock_on_specific_license") is False, "Constitution cannot be silently locked to one license brand")
-    core.require(licensing.get("software_license_inferred_from_content_policy") is False, "Open Knowledge policy cannot infer a software license")
-    core.require(licensing.get("explicit_file_terms_control") is True, "explicit file terms must retain precedence")
-    core.require(licensing.get("historical_relicensing_by_governance_vote") is False, "governance cannot fabricate historical relicensing authority")
 
-    relationships = projection.get("project_relationships")
-    core.require(isinstance(relationships, dict), "Open Knowledge project relationships missing")
-    core.require(relationships.get("ecl") == "capability-license-separate-from-open-knowledge-supporting-records", "ECL capability/knowledge boundary changed")
-    core.require(relationships.get("ecl_pl") == "public-knowledge-development-material-separate-from-express-patent-grants", "ECL-PL patent boundary changed")
-    core.require(relationships.get("id_exergism_org") == "resolver-and-persistence-surface-not-relicensing-authority", "id.exergism.org relicensing boundary changed")
+def _validate_release_history(governance: dict) -> tuple[dict, dict]:
+    """Validate Open Knowledge as a release-chain invariant, not a current-state add-on.
 
-    requirements = projection.get("adoption_requirements")
-    core.require(isinstance(requirements, dict) and requirements, "Open Knowledge adoption requirements missing")
-    core.require(all(value is True for value in requirements.values()), "Open Knowledge adoption requirements cannot be weakened")
+    Every operative release must carry the complete binding. Release #1 therefore
+    cannot be repaired retroactively by release #2+. If a later release changes
+    the binding, the changed policy/review becomes effective with that release;
+    unchanged releases preserve the exact historical binding byte-for-byte.
+    """
 
-    integrity = projection.get("integrity_contract")
-    core.require(
-        integrity == {
-            "human_policy_path_fixed": True,
-            "operative_policy_requires_exact_sha256": True,
-            "operative_policy_requires_rights_review": True,
-            "operative_policy_requires_governance_adoption_binding": True,
-            "governance_cannot_be_operative_while_policy_is_draft": True,
-        },
-        "Open Knowledge integrity contract changed",
-    )
+    chain = release_history.release_chain(governance)
+    core.require(chain, "operative governance requires a release history")
+    previous_binding: dict | None = None
+    previous_release_effective = None
 
-    core.require(
-        set(rules.get("mission_locked_subjects") or []) == EXPECTED_MISSION_LOCKED_SUBJECTS,
-        "Mission Lock subject taxonomy does not exactly include the anti-enclosure invariant",
-    )
+    for record, ref in chain:
+        sequence = record.get("release_sequence")
+        label = f"governance release #{sequence}"
+        binding = record.get("open_knowledge_binding")
+        policy_binding, review_ref, binding_effective = _validate_policy_binding_shape(binding, label)
+        release_effective = core.parse_iso_date(record.get("effective_date"), f"{label} effective_date")
+        core.require(binding_effective <= release_effective, f"{label} cannot claim Open Knowledge effective after the release")
+
+        changed = previous_binding is None or binding != previous_binding
+        if previous_binding is None:
+            core.require(sequence == 1, "Open Knowledge history must begin at release #1")
+        elif changed:
+            core.require(binding_effective == release_effective, f"{label} changed Open Knowledge binding cannot be backdated before its authorizing release")
+            core.require(previous_release_effective is not None and binding_effective > previous_release_effective, f"{label} changed Open Knowledge binding must postdate its predecessor release")
+
+        _validate_historical_rights_review(
+            review_ref,
+            policy_binding,
+            binding_effective,
+            label,
+            record.get("governance_version") if changed else None,
+        )
+        previous_binding = binding
+        previous_release_effective = release_effective
+
+    latest_record, latest_ref = chain[-1]
+    core.require(latest_record.get("open_knowledge_binding") == previous_binding, "latest Open Knowledge release binding mismatch")
+    return latest_record, latest_ref
 
 
 def validate_open_knowledge() -> None:
@@ -150,33 +159,26 @@ def validate_open_knowledge() -> None:
     core.require(not core.contradictory_status_declaration(policy_text), "operative Open Knowledge policy still declares draft/non-operative status")
     core.require_version_header(policy_text, version, "Open Knowledge policy")
 
-    effective = core.parse_iso_date(projection.get("effective_date"), "Open Knowledge effective_date")
-    governance_effective = core.parse_iso_date(governance.get("effective_date"), "governance effective_date")
-    core.require(effective <= governance_effective, "Open Knowledge implementation must be effective no later than governance")
-
-    activation = governance.get("activation_evidence")
-    core.require(isinstance(activation, dict), "operative governance activation evidence missing")
-    legal_review_ref = activation.get("qualified_legal_review")
-    core.require(projection.get("rights_review_record") == legal_review_ref, "Open Knowledge rights review must be the governance-qualified legal review bound at activation")
-    review, _ = core.validate_content_ref(legal_review_ref, "Open Knowledge rights review", "records/evidence")
-    expected_review_binding = {
+    latest_release, latest_ref = _validate_release_history(governance)
+    latest_binding = latest_release.get("open_knowledge_binding")
+    expected_policy_binding = {
         "path": OPEN_KNOWLEDGE_POLICY_PATH,
         "version": version,
         "sha256": policy_sha,
     }
-    core.require(review.get("reviewed_open_knowledge_policy") == expected_review_binding, "qualified legal review does not bind exact Open Knowledge policy bytes")
-
-    adoption_ref = governance.get("adoption_record")
-    core.require(projection.get("adoption_record") == adoption_ref, "Open Knowledge projection must bind the current validated governance adoption record")
-    adoption, _ = core.validate_content_ref(adoption_ref, "Open Knowledge governance adoption binding", "records/adoptions")
-    expected_adoption_binding = {
-        "policy": expected_review_binding,
-        "rights_review_record": legal_review_ref,
+    expected_latest_binding = {
+        "policy": expected_policy_binding,
+        "rights_review_record": projection.get("rights_review_record"),
         "effective_date": projection.get("effective_date"),
         "core_rule": "canonicality-is-not-exclusivity",
         "anti_enclosure_mission_lock_subject": "permit-enclosure-of-established-ec-public-knowledge",
     }
-    core.require(adoption.get("open_knowledge_binding") == expected_adoption_binding, "governance adoption does not bind the exact rights-reviewed Open Knowledge implementation")
+    core.require(latest_binding == expected_latest_binding, "current Open Knowledge projection does not exactly equal the latest release binding")
+    core.require(projection.get("adoption_record") == latest_ref, "Open Knowledge projection must bind the latest validated governance adoption record")
+
+    effective = core.parse_iso_date(projection.get("effective_date"), "Open Knowledge effective_date")
+    governance_effective = core.parse_iso_date(governance.get("effective_date"), "governance effective_date")
+    core.require(effective <= governance_effective, "Open Knowledge implementation must be effective no later than current governance")
 
 
 if __name__ == "__main__":

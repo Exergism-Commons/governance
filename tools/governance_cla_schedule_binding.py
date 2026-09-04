@@ -4,6 +4,7 @@ import json
 import re
 
 import validate_governance as core
+import governance_semantic_invariants as invariants
 
 
 SENSITIVE_MATERIAL_RIGHTS_FIELDS = {
@@ -33,6 +34,31 @@ def block_scalar(text: str, parent: str, key: str):
     if value in {"null", "~"}:
         return None
     return value.strip("'\"")
+
+
+def block_scalar_mapping(text: str, parent: str) -> dict[str, object]:
+    """Parse a closed-world direct-child scalar mapping and reject duplicate/nested decoys."""
+    block = core.yaml_block(text, parent)
+    result: dict[str, object] = {}
+    for raw in block.splitlines():
+        if not raw.strip():
+            continue
+        if raw[0].isspace():
+            continue
+        core.require(":" in raw, f"{parent} direct child must be a scalar mapping entry")
+        key, value = raw.split(":", 1)
+        key = key.strip()
+        core.require(key and key not in result, f"{parent} duplicate/invalid direct key: {key}")
+        parsed = value.strip()
+        if parsed == "true":
+            result[key] = True
+        elif parsed == "false":
+            result[key] = False
+        elif parsed in {"null", "~"}:
+            result[key] = None
+        else:
+            result[key] = parsed.strip("'\"")
+    return result
 
 
 def block_list(text: str, parent: str, key: str) -> list[str]:
@@ -93,6 +119,14 @@ def parse_schedule_coverage(text: str) -> dict[str, set[str]]:
     return result
 
 
+def validate_rights_semantic_invariants(repositories: dict[str, dict], label: str) -> None:
+    """Pin rights semantics independently of agreement between mutable projections."""
+    core.require(
+        repositories == invariants.SCHEDULE_RIGHTS_MANIFEST_V1,
+        f"{label} rights semantics differ from closed-world Schedule manifest schema v1",
+    )
+
+
 def parse_schedule_rights_manifest(text: str) -> dict[str, dict]:
     begin = "<!-- EC-SCHEDULE-BINDING-MANIFEST:BEGIN -->"
     end = "<!-- EC-SCHEDULE-BINDING-MANIFEST:END -->"
@@ -105,23 +139,15 @@ def parse_schedule_rights_manifest(text: str) -> dict[str, dict]:
     except json.JSONDecodeError as exc:
         raise SystemExit("governance integrity failure: Project Schedule rights manifest is not valid JSON") from exc
 
-    core.require(isinstance(manifest, dict) and manifest.get("schema_version") == 1, "unsupported Project Schedule rights manifest schema")
+    core.require(
+        isinstance(manifest, dict)
+        and set(manifest) == {"schema_version", "repositories"}
+        and manifest.get("schema_version") == 1,
+        "unsupported or non-closed Project Schedule rights manifest schema",
+    )
     repositories = manifest.get("repositories")
     core.require(isinstance(repositories, dict) and repositories, "Project Schedule rights manifest has no repositories")
-
-    for repository, repo_data in repositories.items():
-        core.require(isinstance(repository, str) and repository, "Project Schedule rights manifest repository id invalid")
-        core.require(isinstance(repo_data, dict), f"Project Schedule rights manifest repository invalid: {repository}")
-        core.require(set(repo_data) == {"cla_patent_grant", "material_classes"}, f"Project Schedule rights manifest repository fields invalid: {repository}")
-        core.require(repo_data["cla_patent_grant"] == "none", f"Project Schedule must not infer CLA patent grants: {repository}")
-        material_classes = repo_data["material_classes"]
-        core.require(isinstance(material_classes, dict) and material_classes, f"Project Schedule rights manifest material classes missing: {repository}")
-        for material_id, rights in material_classes.items():
-            core.require(isinstance(material_id, str) and material_id, f"Project Schedule rights manifest material id invalid: {repository}")
-            core.require(isinstance(rights, dict) and rights, f"Project Schedule rights manifest empty rights fields: {repository}/{material_id}")
-            core.require(set(rights).issubset(SENSITIVE_MATERIAL_RIGHTS_FIELDS), f"Project Schedule rights manifest contains unsupported rights field: {repository}/{material_id}")
-            core.require("cla_outbound_family" in rights, f"Project Schedule rights manifest requires cla_outbound_family: {repository}/{material_id}")
-            core.require(all(isinstance(value, str) and value for value in rights.values()), f"Project Schedule rights manifest values must be non-empty strings: {repository}/{material_id}")
+    validate_rights_semantic_invariants(repositories, "Project Schedule")
     return repositories
 
 
@@ -224,8 +250,31 @@ def parse_projection_repositories(text: str) -> dict[str, dict]:
     return result
 
 
+def normalized_projection_rights(projection: dict[str, dict]) -> dict[str, dict]:
+    return {
+        repository: {
+            "cla_patent_grant": data["cla_patent_grant"],
+            "material_classes": data["material_rights"],
+        }
+        for repository, data in projection.items()
+    }
+
+
 def parse_projection_coverage(text: str) -> dict[str, set[str]]:
     return {repository: set(data["material_ids"]) for repository, data in parse_projection_repositories(text).items()}
+
+
+def validate_coverage_state_contract(projects_text: str) -> tuple[set[str], set[str]]:
+    """Pin final/provisional semantics even while the projection itself is draft."""
+    final_states = set(block_list(projects_text, "coverage_state_contract", "final_states"))
+    provisional_states = set(block_list(projects_text, "coverage_state_contract", "provisional_states"))
+    core.require(final_states == invariants.COVERAGE_FINAL_STATES_V2, "covered-projects final-state taxonomy changed")
+    core.require(
+        provisional_states == invariants.COVERAGE_PROVISIONAL_STATES_V2,
+        "covered-projects provisional-state taxonomy changed",
+    )
+    core.require(not final_states.intersection(provisional_states), "covered-projects state contract overlaps final/provisional states")
+    return final_states, provisional_states
 
 
 def validate_schedule_projection_manifest(status_text: str | None = None, projects_text: str | None = None) -> None:
@@ -241,6 +290,9 @@ def validate_schedule_projection_manifest(status_text: str | None = None, projec
     schedule = parse_schedule_coverage(schedule_text)
     rights_manifest = parse_schedule_rights_manifest(schedule_text)
     projection = parse_projection_repositories(projects_text)
+    projection_rights = normalized_projection_rights(projection)
+    validate_rights_semantic_invariants(projection_rights, "covered-projects projection")
+    validate_coverage_state_contract(projects_text)
 
     core.require(set(projection) == set(schedule), "covered-projects repository set does not exactly match Project Schedule")
     core.require(set(rights_manifest) == set(schedule), "Project Schedule rights manifest repository set does not match human Schedule")
@@ -258,12 +310,14 @@ def validate_schedule_projection_manifest(status_text: str | None = None, projec
                 f"covered-projects rights fields do not match Project Schedule for {repository}/{material_id}",
             )
 
-    contract = block_scalar(projects_text, "schedule_binding_contract", "authoritative_schedule_artifact")
-    core.require(contract == schedule_artifact, "covered-projects schedule binding points to wrong artifact")
-    core.require(block_scalar(projects_text, "schedule_binding_contract", "exact_repository_set_required") is True, "covered-projects exact repository-set binding disabled")
-    core.require(block_scalar(projects_text, "schedule_binding_contract", "exact_material_class_id_set_per_repository_required") is True, "covered-projects exact material-class binding disabled")
-    core.require(block_scalar(projects_text, "schedule_binding_contract", "exact_repository_rights_fields_required") is True, "covered-projects repository rights-field binding disabled")
-    core.require(block_scalar(projects_text, "schedule_binding_contract", "exact_material_rights_fields_required") is True, "covered-projects material rights-field binding disabled")
+    binding_contract = block_scalar_mapping(projects_text, "schedule_binding_contract")
+    core.require(binding_contract == invariants.SCHEDULE_BINDING_CONTRACT_V2, "covered-projects Schedule binding contract changed")
+
+    non_retroactivity = block_scalar_mapping(projects_text, "non_retroactivity")
+    core.require(
+        non_retroactivity == invariants.COVERED_PROJECTS_NON_RETROACTIVITY_V2,
+        "covered-projects non-retroactivity contract changed",
+    )
 
 
 def validate_covered_projects(status_text: str, projects_text: str) -> str:
@@ -278,9 +332,7 @@ def validate_covered_projects(status_text: str, projects_text: str) -> str:
     core.require(core.yaml_scalar(projects_text, "operative") is True, "operative CLA requires operative covered-projects")
     core.require(core.yaml_scalar(projects_text, "status") in {"adopted", "operative"}, "operative covered-projects must be adopted/operative")
 
-    final_states = set(block_list(projects_text, "coverage_state_contract", "final_states"))
-    provisional_states = set(block_list(projects_text, "coverage_state_contract", "provisional_states"))
-    core.require(final_states and not final_states.intersection(provisional_states), "covered-projects state contract invalid")
+    final_states, provisional_states = validate_coverage_state_contract(projects_text)
 
     repositories = parse_projection_repositories(projects_text)
     for repository, data in repositories.items():

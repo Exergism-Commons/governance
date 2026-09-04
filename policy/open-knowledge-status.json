@@ -86,11 +86,24 @@
     "operative_policy_requires_exact_sha256": true,
     "operative_policy_requires_rights_review": true,
     "operative_policy_requires_governance_adoption_binding": true,
-    "governance_cannot_be_operative_while_policy_is_draft": true
+    "governance_cannot_be_operative_while_policy_is_draft": true,
+    "closed_world_schema_required": true,
+    "release_history_binding_required": true,
+    "paired_projection_edits_cannot_weaken_semantics": true
+  },
+  "history_contract": {
+    "founding_release_must_bind_open_knowledge": true,
+    "every_operative_release_must_bind_open_knowledge": true,
+    "later_release_cannot_repair_missing_founding_binding": true,
+    "policy_change_requires_new_rights_review": true,
+    "policy_change_effective_with_authorizing_release": true,
+    "current_projection_must_equal_latest_release_binding": true,
+    "historical_release_binding_cannot_be_rewritten_by_later_release": true
   },
   "notes": [
     "This projection is descriptive and non-operative.",
     "Machine state cannot itself relicense copyrighted material, create patent rights, transfer marks or establish canonical authority.",
-    "The Constitution is intended to protect the anti-enclosure principle rather than permanently hard-code a particular license brand or version."
+    "The Constitution is intended to protect the anti-enclosure principle rather than permanently hard-code a particular license brand or version.",
+    "Schema v1 is closed-world: paired edits to human and machine projections cannot weaken rights-sensitive semantics without an explicit schema/validator change."
   ]
 }
