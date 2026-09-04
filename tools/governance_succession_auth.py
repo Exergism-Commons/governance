@@ -7,6 +7,7 @@ import governance_founding_lifecycle as founding_lifecycle
 import governance_temporal_roles as temporal_roles
 import governance_release_authority as release_authority
 import governance_release_history as release_history
+import governance_release_evidence_hardening as release_evidence_hardening
 
 
 ORIG_VALIDATE_FOUNDING_STEWARD_LIFECYCLE = founding_lifecycle.validate_founding_steward_lifecycle
@@ -18,6 +19,7 @@ def _require_contract(founding: dict) -> None:
     core.require(
         contract == {
             "adopted_process_reference": "operative-release-authority-snapshot#activation_evidence.succession_process",
+            "adopted_process_authenticated_under_release_of_origin": True,
             "adopted_process_requires_authenticated_authorized_reviewers": True,
             "cessation_event_must_bind_exact_adopted_process": True,
             "guardian_assignment_event_must_bind_exact_adopted_process": True,
@@ -30,23 +32,39 @@ def _require_contract(founding: dict) -> None:
 
 
 def _adopted_process(status: dict, target: date) -> tuple[dict, dict, set[str], dict]:
-    authority_status, _, _, _ = release_authority.authority_context_as_of(status, target)
+    """Resolve the process in force on target while authenticating its immutable bytes at origin."""
+    authority_status, _, authority_adoption, _ = release_authority.authority_context_as_of(status, target)
     activation = authority_status.get("activation_evidence")
     core.require(isinstance(activation, dict), "historical governance activation_evidence missing")
     ref = activation.get("succession_process")
     core.require(isinstance(ref, dict), "succession authority requires adopted succession_process reference in release authority snapshot")
-    process = core.validate_process_evidence_ref(
+
+    # A later release may inherit the exact succession-process bytes from an
+    # earlier release. The event is governed by the release operative on target,
+    # but the immutable adopted process and its authorization signatures retain
+    # the governance version of the release that introduced those bytes.
+    origin, origin_snapshot = release_evidence_hardening._activation_origin(
+        authority_adoption,
+        "succession_process",
         ref,
         "adopted succession process",
-        "succession-process-evidence",
-        authority_status["governance_version"],
-        "succession-process",
     )
+    release_evidence_hardening._validate_activation_at_origin(
+        "succession_process",
+        ref,
+        origin,
+        origin_snapshot,
+        "adopted succession process",
+    )
+    process, _ = core.validate_content_ref(ref, "adopted succession process", "records/evidence")
+    origin_version = origin.get("governance_version")
+    core.require(isinstance(origin_version, str) and origin_version.strip(), "adopted succession process origin governance version missing")
+
     process_id = process.get("process_id")
     core.require(isinstance(process_id, str) and process_id.strip(), "adopted succession process_id required")
     completed = core.parse_iso_date(process.get("completed_date"), "adopted succession process completed_date")
-    authority_effective = core.parse_iso_date(authority_status["effective_date"], "succession authority release effective_date")
-    core.require(completed <= authority_effective, "adopted succession process must be complete by the release effective date that activates it")
+    origin_effective = core.parse_iso_date(origin.get("effective_date"), "succession process origin release effective_date")
+    core.require(completed <= origin_effective, "adopted succession process must be complete by the release effective date that first activates it")
 
     authorized = process.get("authorized_reviewer_person_ids")
     core.require(
@@ -90,8 +108,8 @@ def _adopted_process(status: dict, target: date) -> tuple[dict, dict, set[str], 
             process_id,
             payload_hash,
             "succession-process-authority",
-            authority_status["governance_version"],
-            authority_status["governance_version"],
+            origin_version,
+            origin_version,
         )
         signed = core.parse_iso_date(
             signature.get("signed_date"),
