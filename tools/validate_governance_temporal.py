@@ -31,6 +31,7 @@ import governance_release_membership as release_membership
 import governance_guardian_consent as guardian_consent
 import governance_release_authority as release_authority
 import governance_succession_auth as succession_auth
+import governance_open_knowledge as open_knowledge
 
 # Preserve the true pre-release base callback before redirecting historical
 # constitutive Member validation through the release #1 anchor.
@@ -107,6 +108,12 @@ def main() -> None:
     core.validate_cla_status = roles.validate_cla_status
 
     core.main()
+
+    # Open Knowledge is a constitutional activation dependency, not an optional
+    # descriptive sidecar. Its draft/operative state, exact policy bytes,
+    # rights-review binding, anti-enclosure taxonomy and governance-adoption
+    # binding are checked after the core authority chain has been validated.
+    open_knowledge.validate_open_knowledge()
 
     status = core.load_json("policy/governance-status.json")
     rules = core.load_json("policy/decision-rules.json")
