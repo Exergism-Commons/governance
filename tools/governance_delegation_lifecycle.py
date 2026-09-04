@@ -12,6 +12,24 @@ def _rule_ids(rules: dict) -> set[str]:
     return {item.get("id") for item in items if isinstance(item, dict) and isinstance(item.get("id"), str)}
 
 
+def _event_authority(status: dict, rules: dict, membership: dict, decision_date: date, label: str) -> tuple[dict, dict, dict]:
+    """Resolve the governance authority that was operative for one delegation event."""
+    if status.get("operative") is not True:
+        return status, rules, membership
+
+    # Imported lazily to avoid turning delegation lifecycle import order into a
+    # module cycle in the canonical temporal entry point.
+    import governance_release_authority as release_authority
+
+    event_status, event_rules, _, _ = release_authority.authority_context_as_of(status, decision_date)
+    event_membership = release_authority.membership_context_as_of(status, membership, decision_date)
+    core.require(
+        event_membership.get("governance_version") == event_status.get("governance_version"),
+        f"{label} membership authority version mismatch",
+    )
+    return event_status, event_rules, event_membership
+
+
 def _base_required_fields() -> set[str]:
     return {
         "delegation_id", "holder_person_id", "source_authority", "scope_types", "scope_resources",
@@ -45,14 +63,33 @@ def _validate_creation(item: dict, delegations: dict, status: dict, rules: dict,
     core.require(isinstance(prohibited, list) and prohibited and len(prohibited) == len(set(prohibited)), f"delegation {delegation_id} prohibited_actions invalid")
     core.require(not reserved.intersection(allowed), f"delegation {delegation_id} grants reserved action")
     core.require(reserved.issubset(set(prohibited)), f"delegation {delegation_id} must explicitly prohibit reserved actions")
-    core.require(item["governing_rule_version"] == status["governance_version"], f"delegation {delegation_id} governing rule mismatch")
 
     effective = core.parse_iso_date(item["effective_date"], f"delegation {delegation_id}.effective_date")
-    if status.get("operative") is True:
-        governance_effective = core.parse_iso_date(status["effective_date"], "governance effective_date")
-        core.require(effective >= governance_effective, f"delegation {delegation_id} predates governance")
     if item["expires_at"] is not None:
         core.require(core.parse_iso_date(item["expires_at"], f"delegation {delegation_id}.expires_at") >= effective, f"delegation {delegation_id} expires before effective date")
+
+    decision, _ = core.validate_content_ref(item["decision_record"], f"delegation decision {delegation_id}", "records/decisions")
+    core.require(decision.get("record_type") == "delegation-decision" and decision.get("status") == "adopted", f"delegation decision invalid: {delegation_id}")
+    decision_id, decision_class, decision_date_text = decision.get("decision_id"), decision.get("decision_class"), decision.get("decision_date")
+    core.require(isinstance(decision_id, str) and decision_id, f"delegation decision_id required: {delegation_id}")
+    core.require(decision_class in {"ordinary-approval", "qualified-approval"}, f"delegation decision class invalid: {delegation_id}")
+    decision_date = core.parse_iso_date(decision_date_text, f"delegation {delegation_id}.decision_date")
+    core.require(decision_date <= effective, f"delegation decision occurs after effective date: {delegation_id}")
+
+    event_status, event_rules, _ = _event_authority(
+        status,
+        rules,
+        membership,
+        decision_date,
+        f"delegation creation {delegation_id}",
+    )
+    event_version = event_status["governance_version"]
+    core.require(item["governing_rule_version"] == event_version, f"delegation {delegation_id} governing rule mismatch")
+    core.require(decision.get("governance_version") == event_version, f"delegation decision version mismatch: {delegation_id}")
+    core.require(decision_class in _rule_ids(event_rules), f"delegation decision rule unavailable at creation: {delegation_id}")
+    if status.get("operative") is True:
+        event_effective = core.parse_iso_date(event_status["effective_date"], f"delegation {delegation_id} authority release effective_date")
+        core.require(event_effective <= decision_date <= effective, f"delegation {delegation_id} creation chronology crosses its authority boundary")
 
     revocation = item["revocation"]
     core.require(
@@ -61,29 +98,24 @@ def _validate_creation(item: dict, delegations: dict, status: dict, rules: dict,
         and revocation.get("revocable") is True
         and isinstance(revocation.get("mechanism"), str)
         and revocation["mechanism"].strip()
-        and revocation.get("authority") in _rule_ids(rules),
-        f"delegation {delegation_id} revocation contract invalid",
+        and revocation.get("authority") in _rule_ids(event_rules),
+        f"delegation {delegation_id} revocation contract invalid under creation release",
     )
 
-    decision, _ = core.validate_content_ref(item["decision_record"], f"delegation decision {delegation_id}", "records/decisions")
-    core.require(decision.get("record_type") == "delegation-decision" and decision.get("status") == "adopted", f"delegation decision invalid: {delegation_id}")
-    core.require(decision.get("governance_version") == status["governance_version"], f"delegation decision version mismatch: {delegation_id}")
     for field in (
         "delegation_id", "holder_person_id", "source_authority", "scope_types", "scope_resources",
         "allowed_actions", "prohibited_actions", "governing_rule_version", "effective_date", "expires_at", "revocation",
     ):
         core.require(decision.get(field) == item[field], f"delegation decision field mismatch: {delegation_id}.{field}")
 
-    decision_id, decision_class, decision_date_text = decision.get("decision_id"), decision.get("decision_class"), decision.get("decision_date")
-    core.require(isinstance(decision_id, str) and decision_id, f"delegation decision_id required: {delegation_id}")
-    core.require(decision_class in {"ordinary-approval", "qualified-approval"}, f"delegation decision class invalid: {delegation_id}")
-    core.require(core.parse_iso_date(decision_date_text, f"delegation {delegation_id}.decision_date") <= effective, f"delegation decision occurs after effective date: {delegation_id}")
     source = item["source_authority"]
     core.require(isinstance(source, dict) and set(source) == {"type", "decision_id", "constitutional_basis"}, f"delegation {delegation_id} source authority shape invalid")
     core.require(source == {"type": "governance-decision", "decision_id": decision_id, "constitutional_basis": core.RESERVED_CONSTITUTIONAL_BASIS}, f"delegation {delegation_id} source authority does not resolve to creating decision")
 
     grant_hash = core.sha256_json(_grant_payload(item))
     core.require(decision.get("delegation_payload_sha256") == grant_hash, f"delegation decision payload hash mismatch: {delegation_id}")
+    # The installed approval validator independently resolves the release in
+    # force on decision_date and reconstructs that release's electorate/policy.
     core.validate_approval_evidence(
         decision.get("approval_evidence"),
         f"delegation approval {delegation_id}",
@@ -107,17 +139,31 @@ def _validate_revocation(item: dict, effective: date, grant_hash: str, status: d
     }
     core.require(set(record) == required, f"delegation revocation {delegation_id} fields incomplete/unexpected")
     core.require(record["record_type"] == "delegation-revocation" and record["status"] == "adopted", f"delegation revocation invalid: {delegation_id}")
-    core.require(record["governance_version"] == status["governance_version"], f"delegation revocation governance version mismatch: {delegation_id}")
     core.require(record["delegation_id"] == delegation_id, f"delegation revocation identity mismatch: {delegation_id}")
     core.require(record["delegation_payload_sha256"] == grant_hash, f"delegation revocation does not bind immutable grant: {delegation_id}")
 
     decision_id, decision_class = record["decision_id"], record["decision_class"]
     core.require(isinstance(decision_id, str) and decision_id, f"delegation revocation decision_id required: {delegation_id}")
-    core.require(decision_class == item["revocation"]["authority"], f"delegation revocation authority mismatch: {delegation_id}")
     decision_date_text = record["decision_date"]
     decision_date = core.parse_iso_date(decision_date_text, f"delegation revocation {delegation_id}.decision_date")
     revoked_effective = core.parse_iso_date(record["effective_date"], f"delegation revocation {delegation_id}.effective_date")
     core.require(effective <= decision_date <= revoked_effective, f"delegation revocation chronology invalid: {delegation_id}")
+
+    event_status, event_rules, _ = _event_authority(
+        status,
+        rules,
+        membership,
+        decision_date,
+        f"delegation revocation {delegation_id}",
+    )
+    event_version = event_status["governance_version"]
+    core.require(record["governance_version"] == event_version, f"delegation revocation governance version mismatch: {delegation_id}")
+    core.require(decision_class == item["revocation"]["authority"], f"delegation revocation authority mismatch: {delegation_id}")
+    core.require(decision_class in _rule_ids(event_rules), f"delegation revocation rule unavailable on decision date: {delegation_id}")
+    if status.get("operative") is True:
+        event_effective = core.parse_iso_date(event_status["effective_date"], f"delegation revocation {delegation_id} authority release effective_date")
+        core.require(event_effective <= decision_date, f"delegation revocation {delegation_id} predates its authority release")
+
     if item["expires_at"] is not None:
         expiry = core.parse_iso_date(item["expires_at"], f"delegation {delegation_id}.expires_at")
         core.require(revoked_effective <= expiry, f"delegation revocation effective date occurs after natural expiry: {delegation_id}")
@@ -160,6 +206,9 @@ def validate_delegations(delegations: dict, status: dict, rules: dict, membershi
             "registry_edit_alone_cannot_deactivate": True,
             "historical_effective_period_must_be_reconstructable": True,
             "revoked_delegations_remain_in_registry": True,
+            "creation_validated_under_release_in_force_on_decision_date": True,
+            "revocation_validated_under_release_in_force_on_decision_date": True,
+            "governing_rule_version_is_creation_release": True,
         },
         "delegation lifecycle contract missing/weakened",
     )
