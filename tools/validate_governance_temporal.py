@@ -14,6 +14,7 @@ life.ORIG_VALIDATE_VOTE_APPROVAL = core.validate_vote_approval
 import governance_temporal_phase as phase
 import governance_temporal_evidence as evidence
 import governance_temporal_roles as roles
+import governance_cla_review_hardening as cla_review_hardening
 import governance_founding_lifecycle as founding_lifecycle
 import governance_delegation_lifecycle as delegation_lifecycle
 import governance_founding_authority as founding_authority
@@ -51,6 +52,7 @@ def validate_saved_base_callbacks() -> None:
         "adoption record": getattr(life, "ORIG_VALIDATE_ADOPTION_RECORD", None),
         "phase evidence": getattr(life, "ORIG_VALIDATE_PHASE_EVIDENCE", None),
         "CLA status": getattr(life, "ORIG_VALIDATE_CLA_STATUS", None),
+        "CLA reviewer binding": getattr(cla_review_hardening, "validate_cla_status", None),
         "release approval evidence": getattr(release_lifecycle, "ORIG_VALIDATE_APPROVAL_EVIDENCE", None),
         "release adoption authority": getattr(release_authority, "ORIG_VALIDATE_ADOPTION_RECORD", None),
         "release classification authority": getattr(release_authority, "ORIG_VALIDATE_CLASSIFICATION", None),
@@ -121,7 +123,7 @@ def main() -> None:
     core.validate_adoption_record = release_authority.validate_adoption_record
     core.validate_phase_evidence = phase.validate_phase_evidence
     core.validate_covered_projects = cla_schedule_binding.validate_covered_projects
-    core.validate_cla_status = roles.validate_cla_status
+    core.validate_cla_status = cla_review_hardening.validate_cla_status
 
     core.main()
 
