@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "policy": "exergism-commons-open-knowledge",
+  "policy_version": "0.1-DRAFT",
+  "policy_artifact": "OPEN-KNOWLEDGE-POLICY.md",
+  "status": "draft",
+  "operative": false,
+  "constitutional_principle": "knowledge-commons-and-anti-enclosure",
+  "core_rule": "canonicality-is-not-exclusivity",
+  "protected_freedoms": [
+    "access",
+    "inspect",
+    "reproduce",
+    "study",
+    "modify",
+    "fork",
+    "redistribute",
+    "commercial-use",
+    "non-commercial-use"
+  ],
+  "ec_publication_requirements": {
+    "source_form_available": true,
+    "open_documented_format_preferred": true,
+    "versioned_source": true,
+    "clonable_or_exportable": true,
+    "rendered_representation_alone_sufficient": false,
+    "api_only_publication_sufficient": false
+  },
+  "anti_enclosure": {
+    "copyright_enclosure": false,
+    "database_right_enclosure": false,
+    "contractual_enclosure": false,
+    "drm_enclosure": false,
+    "repository_or_api_exclusivity": false,
+    "legitimate_confidentiality_exceptions": true
+  },
+  "license_implementation": {
+    "constitutional_lock_on_specific_license": false,
+    "default_open_share_alike_content_candidate": "CC-BY-SA-4.0",
+    "database_specific_candidate": "ODbL-1.0-for-project-specific-consideration",
+    "software_license_inferred_from_content_policy": false,
+    "explicit_file_terms_control": true,
+    "historical_relicensing_by_governance_vote": false
+  },
+  "authority_boundaries": {
+    "copying_transfers_canonicality": false,
+    "copying_transfers_namespace_authority": false,
+    "copying_grants_trademark_rights": false,
+    "publication_or_contribution_grants_patent_rights": false,
+    "id_resolver_relicenses_source_material": false
+  },
+  "project_relationships": {
+    "exergism": "existing-cc-by-sa-content-apache-tooling-boundary-preserved",
+    "ecl": "capability-license-separate-from-open-knowledge-supporting-records",
+    "ecl_dossiers_and_evidence": "open-knowledge-target-after-valid-project-license-adoption",
+    "ecl_pl": "public-knowledge-development-material-separate-from-express-patent-grants",
+    "funding": "open-knowledge-target-after-valid-project-license-adoption",
+    "governance": "open-knowledge-target-after-valid-project-license-adoption",
+    "id_exergism_org": "resolver-and-persistence-surface-not-relicensing-authority"
+  },
+  "excluded_or_protected_material": [
+    "unnecessary-or-unlawful-personal-data",
+    "private-signatures-and-identity-evidence",
+    "credentials-and-recovery-material",
+    "temporarily-embargoed-security-details",
+    "privileged-or-confidential-records",
+    "third-party-material-without-relicensing-authority",
+    "legally-restricted-material"
+  ],
+  "adoption_requirements": {
+    "project_specific_material_classification": true,
+    "exact_outbound_license_per_class": true,
+    "rights_authority_or_chain_of_title_review": true,
+    "third_party_material_treatment": true,
+    "source_form_rule": true,
+    "historical_vs_future_scope": true,
+    "effective_release_or_decision_record": true,
+    "qualified_legal_review_before_organization_level_operation": true
+  },
+  "notes": [
+    "This projection is descriptive and non-operative.",
+    "Machine state cannot itself relicense copyrighted material, create patent rights, transfer marks or establish canonical authority.",
+    "The Constitution is intended to protect the anti-enclosure principle rather than permanently hard-code a particular license brand or version."
+  ]
+}
