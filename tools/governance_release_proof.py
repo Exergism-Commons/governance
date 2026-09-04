@@ -14,6 +14,7 @@ INITIAL_KIND = "initial-constitutive-adoption"
 CONSTITUTIONAL_KIND = "constitutional-amendment"
 MISSION_KIND = "mission-locked-amendment"
 AMENDMENT_KINDS = {CONSTITUTIONAL_KIND, MISSION_KIND}
+MISSION_VOTE_SEPARATION_FLOOR_DAYS = 60
 
 
 def _status_at_release(status: dict, chain: list[tuple[dict, dict]], index: int) -> dict:
@@ -60,6 +61,26 @@ def _require_adoption_chronology(record: dict, approval: dict, label: str) -> tu
     core.require(decision <= completed <= effective, f"{label} adoption chronology invalid")
     core.require(approval.get("decision_date") == record.get("decision_date"), f"{label} approval/adoption decision date mismatch")
     return decision, completed, effective
+
+
+def historical_mission_vote_separation_days(authority_rules: dict, label: str) -> int:
+    """Resolve the repeated-vote floor from the predecessor authority itself.
+
+    A later release may strengthen this value prospectively. Re-proving an older
+    release must therefore use the rule that actually authorized that release,
+    while still enforcing the constitutional floor that existed for the v1
+    governance contract. Current-state contract values are intentionally not an
+    input here, preventing future strengthening from retroactively invalidating
+    a previously valid release.
+    """
+    mission = core.rule_by_id(authority_rules).get(MISSION_KIND)
+    core.require(isinstance(mission, dict), f"{label} Mission-Locked rule missing")
+    days = mission.get("minimum_days_between_successful_votes")
+    core.require(
+        isinstance(days, int) and days >= MISSION_VOTE_SEPARATION_FLOOR_DAYS,
+        f"{label} Mission-Locked vote-separation authority weakened",
+    )
+    return days
 
 
 def _validate_constitutive_release(
@@ -224,10 +245,7 @@ def _validate_amendment_release(
             expected_decision_date=first.get("decision_date"),
         )
         first_date = core.parse_iso_date(first.get("decision_date"), f"{label} first vote date")
-        minimum_days = max(
-            core.rule_by_id(authority_rules)[MISSION_KIND]["minimum_days_between_successful_votes"],
-            status["governance_release_contract"]["mission_locked_requires_minimum_vote_separation_days"],
-        )
+        minimum_days = historical_mission_vote_separation_days(authority_rules, label)
         core.require((final_date - first_date).days >= minimum_days, f"{label} Mission-Locked vote separation insufficient")
 
     review_completed = authority.ORIG_VALIDATE_CLASSIFICATION(
