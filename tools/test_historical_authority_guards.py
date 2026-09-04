@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 from datetime import date
 
+import governance_activation_origin as activation_origin
 import governance_cla_review_hardening as cla_hardening
 import governance_membership_roster as membership_roster
 import governance_release_authority as authority
@@ -236,6 +237,90 @@ def validate_historical_roster_guards() -> int:
     return 3
 
 
+def validate_activation_origin_guards() -> int:
+    """Keep current-state and historical activation validation on one origin rule."""
+    evidence = {
+        key: {
+            "path": f"records/evidence/{key}.json",
+            "sha256": format(index + 1, "x") * 64,
+        }
+        for index, key in enumerate(historical.ACTIVATION_EVIDENCE_CONTRACT)
+    }
+    human_hashes = {"CONSTITUTION.md": "a" * 64}
+    rules_hash = "b" * 64
+    legal_entity = {"legal_name": "Exergism Commons", "evidence": {"path": "ignored", "sha256": "c" * 64}}
+    status = {
+        "operative": True,
+        "governance_version": "EC-GOV-2.0",
+        "effective_date": "2026-06-01",
+        "governing_law": "synthetic-law",
+        "adoption_record": {"path": "records/adoptions/release-2.json", "sha256": "d" * 64},
+        "activation_evidence": evidence,
+    }
+    current_adoption = {
+        "governance_version": "EC-GOV-2.0",
+        "effective_date": "2026-06-01",
+        "artifact_bindings": human_hashes,
+        "legal_entity": {"legal_name": "Exergism Commons"},
+        "governing_law": "synthetic-law",
+        "normative_machine_bindings": {"policy/decision-rules.json": rules_hash},
+    }
+    current_snapshot = {"activation_evidence": evidence}
+    origin_adoption = {"governance_version": "EC-GOV-1.0", "effective_date": "2026-01-01"}
+    origin_snapshot = {"governance_version": "EC-GOV-1.0"}
+
+    saved = {
+        "load": historical._load_adoption,
+        "snapshot": historical._raw_authority_snapshot,
+        "origin": historical._activation_origin,
+        "validate": historical._validate_activation_at_origin,
+    }
+    calls: list[tuple[str, str]] = []
+    try:
+        historical._load_adoption = lambda ref, label: current_adoption
+        historical._raw_authority_snapshot = lambda adoption, label: current_snapshot
+        historical._activation_origin = lambda adoption, key, ref, label: (origin_adoption, origin_snapshot)
+        historical._validate_activation_at_origin = (
+            lambda key, ref, origin, snapshot, label: calls.append((key, origin["governance_version"]))
+        )
+
+        hashes = activation_origin.validate_activation_evidence(
+            status,
+            legal_entity,
+            human_hashes,
+            rules_hash,
+        )
+        core.require(set(hashes) == set(evidence), "activation-origin guard lost evidence keys")
+        core.require(
+            len(calls) == len(evidence)
+            and all(version == "EC-GOV-1.0" for _, version in calls),
+            "current activation gate did not validate inherited records at release of origin",
+        )
+
+        mismatched_snapshot = {"activation_evidence": copy.deepcopy(evidence)}
+        mismatched_snapshot["activation_evidence"]["conflict_process"] = {
+            "path": "records/evidence/decoy.json",
+            "sha256": "f" * 64,
+        }
+        historical._raw_authority_snapshot = lambda adoption, label: mismatched_snapshot
+        expect_failure(
+            "current status cannot substitute activation evidence outside its authority snapshot",
+            lambda: activation_origin.validate_activation_evidence(
+                status,
+                legal_entity,
+                human_hashes,
+                rules_hash,
+            ),
+        )
+    finally:
+        historical._load_adoption = saved["load"]
+        historical._raw_authority_snapshot = saved["snapshot"]
+        historical._activation_origin = saved["origin"]
+        historical._validate_activation_at_origin = saved["validate"]
+
+    return 2
+
+
 def validate_cla_adopter_authority_guards() -> int:
     steward = {
         "legal_identity": {
@@ -273,6 +358,7 @@ def main() -> None:
     total += validate_historical_membership_guards()
     total += validate_historical_separation_semantics()
     total += validate_historical_roster_guards()
+    total += validate_activation_origin_guards()
     total += validate_cla_adopter_authority_guards()
     print(f"Historical authority hardening guards: PASS ({total} cases)")
 
