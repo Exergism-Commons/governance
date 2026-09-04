@@ -43,13 +43,8 @@ def validate_cla_reviewer_binding() -> None:
         and manifest.get("status") == "final",
         "CLA reviewer-binding manifest invalid",
     )
-    reviewers = manifest.get("reviewers")
-    core.require(isinstance(reviewers, list) and reviewers, "CLA reviewer-binding requires reviewers")
-    binding_hash = review_auth.reviewer_binding_sha256(reviewers, "CLA legal review")
-    core.require(
-        manifest.get("reviewer_authentication_sha256") == binding_hash,
-        "CLA legal review does not bind reviewer identities and qualification evidence",
-    )
+    review_auth.require_reviewer_binding_digest(manifest, "CLA legal review")
+    reviewers = manifest["reviewers"]
 
     # Prove that the binding field itself is inside the already-signed base
     # review payload rather than an unsigned sidecar.
