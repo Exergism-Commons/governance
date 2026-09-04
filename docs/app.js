@@ -31,11 +31,14 @@ viewportFix.textContent = `
     min-width: 0;
   }
 
+  /* Keep the Samsung-width fix without turning every shell-backed panel
+     into a full-bleed block. The gutter now lives outside the shell, as on
+     the other Commons sites. */
   .shell {
-    width: 100% !important;
+    width: calc(100% - 40px) !important;
     max-width: 1180px;
     margin-inline: auto;
-    padding-inline: 20px;
+    padding-inline: 0;
   }
 
   .hero-grid,
@@ -57,17 +60,17 @@ viewportFix.textContent = `
 
   @media (max-width: 900px) {
     .shell {
-      width: 100% !important;
-      max-width: none;
-      padding-inline: 15px;
+      width: calc(100% - 30px) !important;
+      max-width: 1180px;
+      padding-inline: 0;
     }
   }
 
   @media (max-width: 650px) {
     .shell {
-      width: 100% !important;
-      max-width: none;
-      padding-inline: 12px;
+      width: calc(100% - 24px) !important;
+      max-width: 1180px;
+      padding-inline: 0;
     }
 
     .status-panel,
