@@ -10,154 +10,51 @@ if (siteBrand) {
   siteBrand.setAttribute('aria-label', 'Governance home');
 }
 
-const viewportFix = document.createElement('style');
-viewportFix.id = 'viewport-width-fix';
-viewportFix.textContent = `
+/*
+ * Governance shares the same shell model as the other Commons sites.
+ * Do not override .shell or section widths here: styles.css already defines
+ * the canonical 1180px centered rail and responsive gutters.
+ */
+const viewportSafety = document.createElement('style');
+viewportSafety.id = 'viewport-safety';
+viewportSafety.textContent = `
   html, body {
-    width: 100%;
     max-width: 100%;
     overflow-x: clip;
   }
 
-  body,
-  .site-header,
-  main,
-  footer,
-  .hero,
-  .statement,
-  .section {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-  }
-
-  .shell {
-    width: calc(100% - 40px) !important;
-    max-width: 1180px;
-    margin-inline: auto;
-    padding-inline: 0;
-  }
-
-  /* Governance uses the same centered content rail as the other Commons
-     sites. Colored section surfaces are panels on that rail, not full-bleed
-     bands across the viewport. */
-  .statement,
-  .how-section,
-  .section-dark,
-  .section-decisions,
-  .vote-section,
-  .example-section,
-  .machine-section,
-  .cla-section {
-    position: relative;
-    isolation: isolate;
-    background: transparent !important;
-    border: 0 !important;
-  }
-
-  .statement::before,
-  .how-section::before,
-  .section-dark::before,
-  .section-decisions::before,
-  .vote-section::before,
-  .example-section::before,
-  .machine-section::before,
-  .cla-section::before {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    inset-block: 0;
-    left: 50%;
-    width: calc(100% - 40px);
-    max-width: 1180px;
-    transform: translateX(-50%);
-    box-sizing: border-box;
-    border-radius: 24px;
-  }
-
-  .statement::before,
-  .how-section::before,
-  .section-decisions::before {
-    background: var(--surface);
-    border: 1px solid var(--line);
-  }
-
-  .section-dark::before,
-  .vote-section::before,
-  .cla-section::before {
-    background: var(--dark);
-    border: 1px solid var(--dark-line);
-  }
-
-  .example-section::before,
-  .machine-section::before {
-    background: var(--soft-green);
-    border: 1px solid #c2c8bd;
-  }
-
   .hero-grid,
+  .how-intro,
+  .start-grid,
+  .governance-steps,
   .membership-grid,
+  .membership-content,
+  .lifecycle,
+  .phase-grid,
+  .decision-grid,
+  .vote-pipeline,
+  .evidence-grid,
+  .example-grid,
+  .example-timeline,
+  .from-decision,
   .machine-grid,
+  .stack-list,
+  .domain-grid,
   .cla-grid,
   .cta-panel,
   .section-heading,
   .split-heading,
   .principles-grid,
-  .decision-grid,
-  .domain-grid,
   .status-panel,
-  .membership-content,
   .class-table {
     min-width: 0;
-    max-width: 100%;
-  }
-
-  @media (max-width: 900px) {
-    .shell {
-      width: calc(100% - 30px) !important;
-      max-width: 1180px;
-      padding-inline: 0;
-    }
-
-    .statement::before,
-    .how-section::before,
-    .section-dark::before,
-    .section-decisions::before,
-    .vote-section::before,
-    .example-section::before,
-    .machine-section::before,
-    .cla-section::before {
-      width: calc(100% - 30px);
-      max-width: 1180px;
-      border-radius: 20px;
-    }
   }
 
   @media (max-width: 650px) {
-    .shell {
-      width: calc(100% - 24px) !important;
-      max-width: 1180px;
-      padding-inline: 0;
-    }
-
-    .statement::before,
-    .how-section::before,
-    .section-dark::before,
-    .section-decisions::before,
-    .vote-section::before,
-    .example-section::before,
-    .machine-section::before,
-    .cla-section::before {
-      width: calc(100% - 24px);
-      max-width: 1180px;
-      border-radius: 18px;
-    }
-
     .status-panel,
     .hero-copy,
     .hero-lead,
     .cta-panel {
-      width: 100%;
       max-width: 100%;
     }
 
@@ -248,7 +145,7 @@ viewportFix.textContent = `
     }
   }
 `;
-document.head.appendChild(viewportFix);
+document.head.appendChild(viewportSafety);
 
 for (const table of document.querySelectorAll('.class-table table')) {
   const headers = Array.from(table.querySelectorAll('thead th')).map(header => header.textContent.trim());
