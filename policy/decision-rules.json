@@ -72,7 +72,8 @@
     "permit-funding-to-purchase-organization-governance",
     "permit-retroactive-fabrication-of-contributor-rights",
     "permit-silent-persistent-identifier-repurposing",
-    "remove-structural-contestability-or-anti-capture-commitment"
+    "remove-structural-contestability-or-anti-capture-commitment",
+    "permit-enclosure-of-established-ec-public-knowledge"
   ],
   "conflict_rules": {
     "self_compensation_recusal_required": true,
