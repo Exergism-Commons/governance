@@ -3,17 +3,22 @@
 
 These are not examples of reachable production workflows. They deliberately
 exercise the attack classes that repeatedly appear in adversarial review:
-closed-world key deletion, paired-source weakening, taxonomy redefinition and
-semantic values changed while local hashes/equality would still agree.
+closed-world key deletion, paired-source weakening, taxonomy redefinition,
+parser ambiguity, unsigned authority envelopes and semantic values changed
+while local hashes/equality would still agree.
 """
 
 from __future__ import annotations
 
 import copy
+import io
+import json
 
 import governance_cla_schedule_binding as schedule
 import governance_open_knowledge as open_knowledge
+import governance_review_auth as review_auth
 import governance_semantic_invariants as invariants
+import governance_strict_json as strict_json
 import governance_strict_yaml as strict_yaml
 import validate_governance as core
 
@@ -36,6 +41,102 @@ def mutated_value(value):
     if value is None:
         return "MUTATED"
     return "MUTATED"
+
+
+def validate_json_ambiguity_matrix() -> int:
+    """Prove duplicate names fail regardless of nesting/decoder entry point."""
+    cases = 0
+    expect_failure(
+        "duplicate JSON top-level object name",
+        lambda: json.loads('{"mission_locked_subjects": ["weakened"], "mission_locked_subjects": ["canonical"]}'),
+    )
+    cases += 1
+    expect_failure(
+        "duplicate JSON nested object name",
+        lambda: json.loads('{"authority": {"operative": false, "operative": true}}'),
+    )
+    cases += 1
+    expect_failure(
+        "duplicate JSON through file decoder",
+        lambda: json.load(io.StringIO('{"review": {"result": "rejected", "result": "approved"}}')),
+    )
+    cases += 1
+    return cases
+
+
+def _synthetic_review() -> dict:
+    review = {
+        "record_type": "qualified-legal-review-evidence",
+        "status": "final",
+        "complete": True,
+        "result": "approved",
+        "governance_version": "1.0",
+        "review_id": "review-test-001",
+        "completed_date": "2026-01-01",
+        "reviewed_open_knowledge_policy": {
+            "path": "OPEN-KNOWLEDGE-POLICY.md",
+            "version": "1.0",
+            "sha256": "0" * 64,
+        },
+        "reviewers": [
+            {
+                "reviewer_id": "reviewer-1",
+                "qualification_evidence": {"path": "records/evidence/q.json", "sha256": "1" * 64},
+                "signature_evidence": {"path": "records/evidence/s.json", "sha256": "2" * 64},
+            }
+        ],
+    }
+    payload = {key: value for key, value in review.items() if key != "reviewers"}
+    review["review_payload_sha256"] = core.sha256_json(payload)
+    return review
+
+
+def validate_review_auth_mutation_matrix() -> int:
+    baseline = _synthetic_review()
+    review_auth.require_authentication_shape(baseline, "synthetic qualified review")
+    cases = 0
+
+    missing_reviewers = copy.deepcopy(baseline)
+    del missing_reviewers["reviewers"]
+    expect_failure(
+        "qualified review cannot delete reviewer authentication",
+        lambda: review_auth.require_authentication_shape(missing_reviewers, "synthetic qualified review"),
+    )
+    cases += 1
+
+    empty_reviewers = copy.deepcopy(baseline)
+    empty_reviewers["reviewers"] = []
+    expect_failure(
+        "qualified review cannot use an empty reviewer set",
+        lambda: review_auth.require_authentication_shape(empty_reviewers, "synthetic qualified review"),
+    )
+    cases += 1
+
+    missing_digest = copy.deepcopy(baseline)
+    del missing_digest["review_payload_sha256"]
+    expect_failure(
+        "qualified review cannot omit exact payload digest",
+        lambda: review_auth.require_authentication_shape(missing_digest, "synthetic qualified review"),
+    )
+    cases += 1
+
+    replayed_conclusion = copy.deepcopy(baseline)
+    replayed_conclusion["result"] = "rejected"
+    expect_failure(
+        "qualified review signatures cannot be replayed after payload mutation",
+        lambda: review_auth.require_authentication_shape(replayed_conclusion, "synthetic qualified review"),
+    )
+    cases += 1
+
+    duplicate_reviewer = copy.deepcopy(baseline)
+    duplicate_reviewer["reviewers"].append(copy.deepcopy(duplicate_reviewer["reviewers"][0]))
+    expect_failure(
+        "qualified review cannot duplicate reviewer identity",
+        lambda: review_auth.require_authentication_shape(duplicate_reviewer, "synthetic qualified review"),
+    )
+    cases += 1
+
+    return cases
 
 
 def validate_open_knowledge_mutation_matrix() -> int:
@@ -202,12 +303,16 @@ def validate_schedule_mutation_matrix() -> int:
 
 
 def main() -> None:
+    strict_json.install()
+    json_cases = validate_json_ambiguity_matrix()
+    review_cases = validate_review_auth_mutation_matrix()
     open_knowledge_cases = validate_open_knowledge_mutation_matrix()
     schedule_cases = validate_schedule_mutation_matrix()
-    total = open_knowledge_cases + schedule_cases
+    total = json_cases + review_cases + open_knowledge_cases + schedule_cases
     print(
         "Exergism Commons adversarial mutation guards: PASS "
-        f"({total} generalized mutations; Open Knowledge={open_knowledge_cases}, Schedule/rights={schedule_cases})"
+        f"({total} generalized mutations; JSON ambiguity={json_cases}, review auth={review_cases}, "
+        f"Open Knowledge={open_knowledge_cases}, Schedule/rights={schedule_cases})"
     )
 
 
