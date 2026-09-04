@@ -1,3 +1,9 @@
+const wordmarkStylesheet = document.createElement('link');
+wordmarkStylesheet.rel = 'stylesheet';
+wordmarkStylesheet.href = 'wordmark.css';
+wordmarkStylesheet.dataset.commonsWordmark = '';
+document.head.appendChild(wordmarkStylesheet);
+
 const viewportFix = document.createElement('style');
 viewportFix.id = 'viewport-width-fix';
 viewportFix.textContent = `
