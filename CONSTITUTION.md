@@ -26,6 +26,7 @@ EC governance is based on the following constraints:
 10. **Subsidiarity.** Organization governance acts only on organization-level matters or authority explicitly delegated to it.
 11. **Contestability.** Material decisions must preserve a documented route for objection, contrary evidence and correction.
 12. **Power should become distributed as capacity becomes real.** Bootstrap concentration is tolerated only as an explicit transitional condition, not as hidden permanent ownership.
+13. **Knowledge commons and anti-enclosure.** Public knowledge intentionally stewarded as part of EC's commons should remain inspectable, reproducible, modifiable, forkable and redistributable to the extent the relevant rightsholders can lawfully grant those freedoms; canonical stewardship must not be converted into artificial scarcity over knowledge.
 
 ## 3. Legal identity and bootstrap state
 
@@ -55,8 +56,11 @@ At minimum, it protects these invariants:
 - membership, funding, employment, contribution, founder status and technical administration do not create economic ownership of EC;
 - funding cannot purchase organization-wide governance authority merely through money;
 - contributor rights, copyright rights and patent rights cannot be fabricated or expanded retroactively by organizational vote;
-- persistent identifiers and immutable released artifacts cannot be silently repurposed; and
+- persistent identifiers and immutable released artifacts cannot be silently repurposed;
+- EC must not use rights or infrastructure it controls to convert established EC Public Knowledge into artificially scarce or non-forkable knowledge, subject to lawful privacy, security, confidentiality, third-party-rights and mandatory-law limits; and
 - contestability and resistance to capture remain structural governance commitments.
+
+The protected open-knowledge invariant concerns the freedom of the knowledge layer, not a permanent constitutional commitment to any one license brand or version. Governance may replace a particular outbound license only through a rights-valid process that preserves the protected knowledge freedoms and applicable non-retroactivity constraints.
 
 The Mission Lock protects **what EC is**, not every current implementation, roadmap decision or philosophical proposition. Exergism itself may evolve through its own canonical process.
 
@@ -271,13 +275,31 @@ The Founding Steward may perform reversible bootstrap technical administration w
 
 The canonical infrastructure architecture is documented in `architecture/DOMAIN-AND-URI-ARCHITECTURE.md`.
 
-## 13. Contributor rights and IP
+## 13. Contributor rights, IP and the Knowledge Commons
 
 Contributor-rights administration is governed by `IP-POLICY.md`, the exact CLA/version if adopted, Project Schedules and acceptance records.
 
 Nothing in this Constitution creates a copyright assignment or patent grant. The CLA framework remains non-operative until its own activation requirements are satisfied.
 
 Neither a Member majority nor the Founding Steward may manufacture rights that actual rightsholders did not grant.
+
+### 13.1 Canonicality is not exclusivity
+
+EC's role as canonical steward does not by itself grant exclusive copyright, database, patent or contractual rights over underlying knowledge and must not be used to imply that a lawful fork is technically or intellectually invalid merely because it is not canonical.
+
+Where EC or the relevant rightsholders can lawfully grant the necessary permissions, EC Public Knowledge should remain inspectable, reproducible, modifiable, forkable and redistributable under an adopted open/share-alike regime. EC's own publication should expose the practical Source Form needed to edit and reconstruct that knowledge in open, documented formats where reasonably possible.
+
+The detailed proposed policy is `OPEN-KNOWLEDGE-POLICY.md`; its machine-readable draft projection is `policy/open-knowledge-status.json`.
+
+The constitutional invariant protects those freedoms rather than hard-coding `CC-BY-SA-4.0`, `ODbL` or any other particular license forever. Project-level implementation must respect actual rightsholders, existing file/release terms, third-party rights and non-retroactivity.
+
+### 13.2 Capability and patent boundaries
+
+Open treatment of EC's public knowledge does not automatically determine the license of software or another operational capability.
+
+ECL may impose its own exact capability-oriented software-right conditions through an exact ECL Bundle without making its supporting dossiers, evidence and public governance knowledge unavailable for inspection and challenge.
+
+ECL-PL remains separate. Publication, contribution, open licensing of documentation or source availability cannot itself create a patent grant; any patent permission must arise from an express authorized instrument or other independent legal basis.
 
 ## 14. Decision records
 
@@ -308,7 +330,7 @@ Founder executive authority is expected to reduce through the F0 → F1 → F2 m
 
 An operative F1/F2 state MUST be supported by `policy/phase-evidence.json`. F1 requires the objective Member minimum plus evidence of independent institutional capacity and documented delegations. F2 additionally requires the seven-Member minimum, twelve months of operative governance, separation of cross-domain unilateral control, independent audit/review capacity and demonstrated delegated-role replacement. Machine flags without the referenced evidence records do not satisfy these criteria.
 
-Legal or technical succession must preserve the mission, contributor-rights constraints, persistent-identifier commitments and project authority boundaries.
+Legal or technical succession must preserve the mission, contributor-rights constraints, Knowledge Commons/anti-enclosure commitment, persistent-identifier commitments and project authority boundaries.
 
 A change in GitHub ownership, domain registrar account, hosting provider, corporate control or maintainer personnel does not by itself rewrite EC governance or contributor grants.
 
@@ -324,6 +346,8 @@ Automation must not infer membership or founder authority from GitHub access, fu
 
 An operative machine state must identify the adopted non-draft Constitution, Membership Policy and Founding Stewardship Policy and bind their exact bytes by cryptographic digest. A mutable status flag cannot overrule draft/non-operative human text.
 
+The separate `policy/open-knowledge-status.json` projection is non-operative while the Open Knowledge Policy remains a draft. It may describe proposed scope and publication requirements but cannot itself relicense a work, create a patent grant, transfer a mark or establish canonicality.
+
 See `spec/MACHINE-READABLE-GOVERNANCE.md`.
 
 ## 17. Adoption
@@ -337,7 +361,8 @@ This 0.1 draft is intentionally **non-operative**. Before constitutional adoptio
 5. conflict, records and privacy implementation;
 6. treasury/banking authority and accounting controls;
 7. exact operative Founding Steward assignment and succession triggers;
-8. compatibility of Mission Lock/founder provisions with mandatory law in the chosen jurisdiction; and
-9. qualified independent legal review appropriate to that jurisdiction.
+8. compatibility of Mission Lock/founder provisions with mandatory law in the chosen jurisdiction;
+9. an adopted implementation path for the Knowledge Commons/anti-enclosure invariant that does not pretend to relicense rights EC does not possess; and
+10. qualified independent legal review appropriate to that jurisdiction.
 
 A merge of this file is architecture work, not constitutional ratification.
