@@ -70,13 +70,7 @@ def require_reviewer_binding_digest(
     *,
     field: str = "reviewer_authentication_sha256",
 ) -> str:
-    """Require a legacy review envelope to bind reviewer identity/qualification.
-
-    The returned digest deliberately excludes signature references. Callers must
-    additionally ensure `field` itself belongs to the primary signed review
-    payload; this helper centralizes the exact reviewer projection so no legacy
-    review type can invent a weaker or incompatible binding convention.
-    """
+    """Require a legacy review envelope to bind reviewer identity/qualification."""
     core.require(isinstance(review, dict), f"{label} review object required")
     reviewers = review.get("reviewers")
     core.require(isinstance(reviewers, list) and reviewers, f"{label} reviewers required")
@@ -105,12 +99,7 @@ def signed_review_payload(review: dict, label: str) -> tuple[dict, list[dict]]:
 
 
 def require_authentication_shape(review: dict, label: str) -> tuple[str, str, list[dict]]:
-    """Require an immutable signed-review envelope before dereferencing evidence.
-
-    The payload digest excludes only signature references and the digest field
-    itself. Reviewer identity and qualification evidence are therefore covered
-    by the exact bytes the reviewer signatures authenticate.
-    """
+    """Require an immutable signed-review envelope before dereferencing evidence."""
     core.require(isinstance(review, dict), f"{label} review object required")
     review_id = review.get("review_id")
     core.require(isinstance(review_id, str) and review_id.strip(), f"{label} review_id required")
@@ -123,6 +112,43 @@ def require_authentication_shape(review: dict, label: str) -> tuple[str, str, li
     return review_id, payload_hash, reviewers
 
 
+def validate_reviewer_qualification_ref(
+    ref: dict,
+    label: str,
+    review_version: str,
+    reviewer_id: str,
+    required_scope: str,
+) -> dict:
+    """Prove that qualification evidence qualifies this reviewer for this review.
+
+    A generic supporting-evidence envelope is insufficient: the immutable record
+    must identify the reviewer as its subject and explicitly cover the review
+    scope being authorized. This prevents a reviewer from signing a review that
+    merely points at unrelated but otherwise well-formed evidence.
+    """
+    qualification = core.validate_supporting_evidence_ref(ref, label, review_version)
+    core.require(
+        qualification.get("evidence_purpose") == "reviewer-qualification",
+        f"{label} must be reviewer-qualification evidence",
+    )
+    core.require(
+        qualification.get("subject_person_id") == reviewer_id,
+        f"{label} does not qualify the claimed reviewer",
+    )
+    kind = qualification.get("qualification_kind")
+    core.require(isinstance(kind, str) and kind.strip(), f"{label} qualification_kind required")
+    scopes = qualification.get("qualification_scope")
+    core.require(
+        isinstance(scopes, list)
+        and scopes
+        and len(scopes) == len(set(scopes))
+        and all(isinstance(scope, str) and scope.strip() for scope in scopes),
+        f"{label} qualification_scope invalid",
+    )
+    core.require(required_scope in scopes, f"{label} does not cover review scope {required_scope}")
+    return qualification
+
+
 def validate_authenticated_qualified_review(
     review: dict,
     label: str,
@@ -130,14 +156,10 @@ def validate_authenticated_qualified_review(
     completed_no_later_than: date,
     expected_governance_version: str | None = None,
     forbidden_reviewer_ids: set[str] | None = None,
+    qualification_scope: str = "governance-legal-review",
+    signature_context: str = "governance-legal-review",
 ) -> None:
-    """Authenticate a qualified legal review and bind its chronology.
-
-    This is intentionally generic: any governance subsystem that treats a
-    qualified review as authority can use the same reviewer/qualification/
-    payload/signature contract rather than trusting an unsigned `approved`
-    envelope.
-    """
+    """Authenticate a qualified review and bind identity, competence and chronology."""
     review_id, payload_hash, reviewers = require_authentication_shape(review, label)
     review_version = review["governance_version"]
     if expected_governance_version is not None:
@@ -151,10 +173,12 @@ def validate_authenticated_qualified_review(
         reviewer_id = reviewer["reviewer_id"]
         core.require(reviewer_id not in forbidden, f"{label} reviewer is not independent: {reviewer_id}")
 
-        qualification = core.validate_supporting_evidence_ref(
+        qualification = validate_reviewer_qualification_ref(
             reviewer["qualification_evidence"],
             f"{label} reviewer qualification {index}",
             review_version,
+            reviewer_id,
+            qualification_scope,
         )
         captured = core.parse_iso_date(
             qualification.get("captured_date"),
@@ -168,7 +192,7 @@ def validate_authenticated_qualified_review(
             reviewer_id,
             review_id,
             payload_hash,
-            "governance-legal-review",
+            signature_context,
             review_version,
             review_version,
         )
