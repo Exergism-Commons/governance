@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import copy
 from datetime import date
 
 import validate_governance as core
 
 
 INITIAL_KIND = "initial-constitutive-adoption"
+AMENDMENT_KINDS = {"constitutional-amendment", "mission-locked-amendment"}
 
 
 def release_contract(status: dict) -> dict:
@@ -16,27 +18,90 @@ def release_contract(status: dict) -> dict:
     return contract
 
 
-def founding_adoption_ref(status: dict) -> dict:
-    contract = release_contract(status)
-    sequence = contract["current_release_sequence"]
-    core.require(status.get("operative") is True and sequence >= 1, "founding governance anchor exists only for operative governance")
-    ref = contract.get("founding_adoption_record")
-    core.require(isinstance(ref, dict), "operative governance requires a content-addressed founding adoption anchor")
-    if sequence == 1:
-        core.require(ref == status.get("adoption_record"), "release #1 founding anchor must equal current adoption record")
-    return ref
-
-
-def founding_adoption(status: dict) -> tuple[dict, dict]:
-    ref = founding_adoption_ref(status)
-    record, _ = core.validate_content_ref(ref, "founding governance adoption", "records/adoptions")
+def _load_adoption(ref: dict, label: str) -> dict:
+    core.require(isinstance(ref, dict), f"{label} reference required")
+    record, _ = core.validate_content_ref(ref, label, "records/adoptions")
     core.require(
         record.get("record_type") == "governance-adoption"
         and record.get("status") == "adopted"
-        and record.get("release_sequence") == 1
-        and record.get("release_kind") == INITIAL_KIND,
-        "founding governance anchor must resolve to release #1 constitutive adoption",
+        and isinstance(record.get("release_sequence"), int)
+        and record["release_sequence"] >= 1,
+        f"{label} must be an adopted governance release",
     )
+    return record
+
+
+def release_chain(status: dict) -> list[tuple[dict, dict]]:
+    """Return the immutable governance release chain in ascending sequence order."""
+    contract = release_contract(status)
+    if status.get("operative") is not True:
+        core.require(contract["current_release_sequence"] == 0, "non-operative governance cannot expose an operative release chain")
+        return []
+
+    expected = contract["current_release_sequence"]
+    core.require(expected >= 1, "operative governance requires release sequence >= 1")
+    current_ref = status.get("adoption_record")
+    core.require(isinstance(current_ref, dict), "operative governance requires current adoption reference")
+
+    descending: list[tuple[dict, dict]] = []
+    seen: set[str] = set()
+    ref = current_ref
+    sequence = expected
+    while True:
+        digest = core.require_sha256(ref.get("sha256"), f"governance release #{sequence} sha256")
+        core.require(digest not in seen, "governance release history contains a cycle")
+        seen.add(digest)
+        record = _load_adoption(ref, f"governance release #{sequence}")
+        core.require(record["release_sequence"] == sequence, "governance release history is not contiguous")
+        if sequence == 1:
+            core.require(record.get("release_kind") == INITIAL_KIND, "release #1 must remain constitutive")
+            core.require(record.get("previous_adoption_record") is None, "release #1 cannot have a predecessor")
+            descending.append((record, ref))
+            break
+        core.require(record.get("release_kind") in AMENDMENT_KINDS, "later governance release must be an amendment")
+        previous = record.get("previous_adoption_record")
+        core.require(isinstance(previous, dict), "later governance release missing predecessor")
+        descending.append((record, ref))
+        ref = previous
+        sequence -= 1
+
+    chain = list(reversed(descending))
+    core.require(len(chain) == expected, "governance release history length mismatch")
+    founding_ref = contract.get("founding_adoption_record")
+    core.require(isinstance(founding_ref, dict) and chain[0][1] == founding_ref, "release chain does not terminate at the founding anchor")
+    if expected == 1:
+        core.require(contract.get("previous_adoption_record") is None, "release #1 cannot expose a predecessor")
+    else:
+        core.require(contract.get("previous_adoption_record") == chain[-2][1], "release contract predecessor does not match release chain")
+
+    previous_effective: date | None = None
+    versions: set[str] = set()
+    for index, (record, _) in enumerate(chain, start=1):
+        version = record.get("governance_version")
+        core.require(isinstance(version, str) and version.strip() and version not in versions, f"governance release #{index} version invalid/reused")
+        versions.add(version)
+        effective = core.parse_iso_date(record.get("effective_date"), f"governance release #{index} effective_date")
+        if previous_effective is not None:
+            core.require(previous_effective < effective, "governance releases must have strictly increasing effective dates")
+        previous_effective = effective
+
+    current, current_ref_checked = chain[-1]
+    core.require(current_ref_checked == current_ref, "current governance release reference mismatch")
+    core.require(current.get("governance_version") == status.get("governance_version"), "current governance version does not match release chain")
+    core.require(current.get("effective_date") == status.get("effective_date"), "current governance effective date does not match release chain")
+    return chain
+
+
+def founding_adoption_ref(status: dict) -> dict:
+    chain = release_chain(status)
+    core.require(chain, "founding governance anchor exists only for operative governance")
+    return chain[0][1]
+
+
+def founding_adoption(status: dict) -> tuple[dict, dict]:
+    chain = release_chain(status)
+    core.require(chain, "founding governance anchor exists only for operative governance")
+    record, ref = chain[0]
     contract = release_contract(status)
     core.require(
         record.get("governance_version") == contract.get("initial_operative_version"),
@@ -48,6 +113,39 @@ def founding_adoption(status: dict) -> tuple[dict, dict]:
 def founding_effective_date(status: dict) -> date:
     record, _ = founding_adoption(status)
     return core.parse_iso_date(record.get("effective_date"), "founding governance effective_date")
+
+
+def release_as_of(status: dict, target: date) -> tuple[dict, dict]:
+    selected: tuple[dict, dict] | None = None
+    for record, ref in release_chain(status):
+        effective = core.parse_iso_date(record.get("effective_date"), f"governance release #{record['release_sequence']} effective_date")
+        if effective > target:
+            break
+        selected = (record, ref)
+    core.require(selected is not None, f"no operative governance release existed on {target.isoformat()}")
+    return selected
+
+
+def governance_version_as_of(status: dict, target: date) -> str:
+    record, _ = release_as_of(status, target)
+    version = record.get("governance_version")
+    core.require(isinstance(version, str) and version.strip(), "historical governance version missing")
+    return version
+
+
+def release_status_as_of(status: dict, target: date) -> dict:
+    """Project release identity fields as they existed on target date.
+
+    Authority-specific machine state (rules/processes) is filled by
+    governance_release_authority.authority_context_as_of; this helper only
+    removes the accidental dependency on the current release identity.
+    """
+    record, ref = release_as_of(status, target)
+    projected = copy.deepcopy(status)
+    projected["governance_version"] = record["governance_version"]
+    projected["effective_date"] = record["effective_date"]
+    projected["adoption_record"] = ref
+    return projected
 
 
 def validate_constitutive_initial_member(item: dict, status: dict) -> None:
