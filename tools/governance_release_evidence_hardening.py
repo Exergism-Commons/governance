@@ -5,6 +5,7 @@ from datetime import date
 import governance_release_authority as authority
 import governance_release_lifecycle as lifecycle
 import governance_review_auth as review_auth
+import governance_semantic_invariants as invariants
 import validate_governance as core
 
 
@@ -17,6 +18,302 @@ ACTIVATION_EVIDENCE_CONTRACT = {
     "succession_process": ("succession-process-evidence", "succession-process"),
     "qualified_legal_review": ("qualified-legal-review-evidence", "governance-activation"),
 }
+
+MANDATORY_QUALIFIED_SUBJECTS_FLOOR = {
+    "endowment-principal-withdrawal",
+    "persistent-domain-transfer",
+    "identifier-authority-transfer",
+    "legal-steward-appointment-or-removal",
+    "organization-wide-exclusive-ip-transfer",
+    "institutional-merger-dissolution-or-succession",
+}
+
+MEMBERSHIP_POLICY_BASELINE = {
+    "voting_window_contract": {
+        "eligibility_fixed_at_window_open": True,
+        "content_addressed_open_record_required": True,
+        "late_admissions_cannot_join_open_vote": True,
+    },
+    "voting_window_authenticity_contract": {
+        "opening_recorded_on_opened_date": True,
+        "active_member_opener_required": True,
+        "exact_opening_payload_signature_required": True,
+        "opening_signature_must_be_on_opened_date": True,
+        "supporting_evidence_captured_no_later_than_opened_date": True,
+    },
+    "ballot_authentication_contract": {
+        "content_addressed_authentication_required": True,
+        "member_signature_required": True,
+        "signature_context_type": "member-ballot",
+        "ballot_payload_fields": {
+            "decision_id",
+            "decision_class",
+            "voting_window_open_date",
+            "person_id",
+            "vote",
+        },
+        "authentication_must_occur_within_voting_window": True,
+    },
+    "ballot_proposal_binding_contract": {
+        "exact_artifact_bindings_required": True,
+        "artifact_bindings_sha256_in_signed_ballot_payload": True,
+        "ballot_reuse_across_rewritten_proposals_prohibited": True,
+    },
+    "conflict_determination_contract": {
+        "content_addressed_record_required": True,
+        "self_recusal_requires_subject_signature": True,
+        "independent_determination_requires_adopted_conflict_process": True,
+        "independent_determiners_must_be_active_members": True,
+        "independent_determiners_must_exclude_subject": True,
+        "independent_determiners_must_sign_exact_payload": True,
+        "signatures_must_not_postdate_determination": True,
+        "determination_must_not_postdate_decision": True,
+    },
+    "f0_signature_chronology_contract": {
+        "signed_date_required": True,
+        "signature_no_later_than_action_decision_date": True,
+        "founding_steward_must_be_operative_on_signed_date": True,
+        "founding_steward_must_be_operative_on_action_date": True,
+    },
+    "admission_modes": {
+        "constitutive-initial-member": {
+            "allowed_only_at_initial_governance_adoption": True,
+            "candidate_period_applies": False,
+            "authority": "competent-constitutive-adoption",
+        },
+        "f0-founding-steward-admission": {
+            "candidate_period_applies": True,
+            "authority": "operative-founding-steward",
+            "signed_decision_required": True,
+        },
+        "member-ordinary-approval": {
+            "candidate_period_applies": True,
+            "authority": "ordinary-approval",
+            "approval_evidence_required": True,
+            "allowed_from_phase": "F1-early-institution",
+        },
+    },
+    "state_transition_contract": {
+        "content_addressed_records_required": True,
+        "registry_edit_alone_cannot_change_voting_state": True,
+        "historical_state_must_be_reconstructable": True,
+        "historical_phase_authority_required": True,
+        "process_evidence_must_bind_exact_transition_payload": True,
+        "process_evidence_completed_no_later_than_decision_date": True,
+        "process_supporting_evidence_captured_no_later_than_completion": True,
+        "resignation_signature_no_later_than_decision_date": True,
+        "approval_backed_removal_effective_after_voting_window_open": True,
+        "supported_transition_types": {
+            "resignation",
+            "inactivity",
+            "suspension",
+            "reactivation",
+            "termination",
+        },
+        "f1_plus_termination_authority": "qualified-approval",
+        "f0_termination_authority": "founding-steward-signed-decision",
+    },
+}
+
+
+def _require_baseline(actual, baseline, label: str) -> None:
+    """Require every baseline semantic without forbidding future strengthening."""
+    if isinstance(baseline, dict):
+        core.require(isinstance(actual, dict), f"{label} must be an object")
+        for key, expected in baseline.items():
+            core.require(key in actual, f"{label} missing protected field: {key}")
+            _require_baseline(actual[key], expected, f"{label}.{key}")
+        return
+    if isinstance(baseline, set):
+        core.require(isinstance(actual, (list, tuple, set)), f"{label} must be a collection")
+        core.require(baseline.issubset(set(actual)), f"{label} removes protected values")
+        return
+    core.require(actual == baseline, f"{label} protected value changed")
+
+
+def _require_fraction_floor(spec: object, *, field_type: str, numerator: int, denominator: int, label: str) -> None:
+    core.require(isinstance(spec, dict), f"{label} ratio missing")
+    core.require(spec.get("type") == field_type, f"{label} ratio type changed")
+    comparison = spec.get("comparison")
+    core.require(comparison in {"at_least", "strictly_greater_than"}, f"{label} comparison invalid")
+    value_num = spec.get("numerator")
+    value_den = spec.get("denominator")
+    core.require(
+        isinstance(value_num, int)
+        and isinstance(value_den, int)
+        and value_num >= 0
+        and value_den > 0,
+        f"{label} ratio must use positive integer denominator",
+    )
+    core.require(value_num * denominator >= numerator * value_den, f"{label} falls below constitutional floor")
+
+
+def validate_historical_rule_semantics(rules: object, label: str) -> None:
+    """Apply constitutional/anti-capture floors to every immutable rule snapshot.
+
+    A content-addressed predecessor is not authority merely because its JSON is
+    structurally valid. Descendant releases may consume it only if the snapshot
+    preserves the same minimum democratic and Mission-Lock safeguards enforced
+    for the current projection. Stronger later rules are allowed, but a release
+    cannot smuggle a weak historical snapshot into the ancestry and restore the
+    current values after the weak vote has already authorized a descendant.
+    """
+    core.require(isinstance(rules, dict), f"{label} rules snapshot must be an object")
+    by_id = core.rule_by_id(rules)
+    expected_ids = {
+        "ordinary-approval",
+        "qualified-approval",
+        "constitutional-amendment",
+        "mission-locked-amendment",
+    }
+    core.require(set(by_id) == expected_ids, f"{label} decision-rule set incomplete/unexpected")
+
+    ordinary = by_id["ordinary-approval"]
+    qualified = by_id["qualified-approval"]
+    constitutional = by_id["constitutional-amendment"]
+    mission = by_id["mission-locked-amendment"]
+
+    core.require(
+        ordinary.get("quorum")
+        == {
+            "type": "fraction_of_effective_eligible",
+            "comparison": "strictly_greater_than",
+            "numerator": 1,
+            "denominator": 2,
+        },
+        f"{label} Ordinary Approval quorum changed",
+    )
+    core.require(
+        ordinary.get("approval") == {"type": "votes_for_vs_against", "comparison": "strictly_greater_than"},
+        f"{label} Ordinary Approval rule changed",
+    )
+    _require_fraction_floor(
+        qualified.get("quorum"),
+        field_type="fraction_of_effective_eligible",
+        numerator=2,
+        denominator=3,
+        label=f"{label} Qualified quorum",
+    )
+    _require_fraction_floor(
+        qualified.get("approval"),
+        field_type="fraction_of_valid_for_against",
+        numerator=2,
+        denominator=3,
+        label=f"{label} Qualified approval",
+    )
+    _require_fraction_floor(
+        constitutional.get("quorum"),
+        field_type="fraction_of_effective_eligible",
+        numerator=2,
+        denominator=3,
+        label=f"{label} Constitutional quorum",
+    )
+    _require_fraction_floor(
+        constitutional.get("approval"),
+        field_type="fraction_of_valid_for_against",
+        numerator=3,
+        denominator=4,
+        label=f"{label} Constitutional approval",
+    )
+    _require_fraction_floor(
+        mission.get("quorum"),
+        field_type="fraction_of_effective_eligible",
+        numerator=3,
+        denominator=4,
+        label=f"{label} Mission-Locked quorum",
+    )
+    _require_fraction_floor(
+        mission.get("approval"),
+        field_type="fraction_of_valid_for_against",
+        numerator=9,
+        denominator=10,
+        label=f"{label} Mission-Locked approval",
+    )
+
+    for rule_id, rule in by_id.items():
+        core.require(rule.get("abstentions_count_toward_approval") is False, f"{label} {rule_id} abstention semantics weakened")
+        core.require(rule.get("zero_valid_for_against_result") == "fail", f"{label} {rule_id} zero-vote result must fail closed")
+        core.require(
+            isinstance(rule.get("minimum_affirmative_votes"), int) and rule["minimum_affirmative_votes"] >= 1,
+            f"{label} {rule_id} minimum affirmative-vote floor weakened",
+        )
+
+    classification = mission.get("classification")
+    core.require(
+        isinstance(classification, dict)
+        and classification.get("trigger")
+        == "any_operative_effect_alters_weakens_removes_excepts_or_bypasses_mission_lock_invariant"
+        and classification.get("bundled_or_secondary_effects_included") is True
+        and classification.get("proposal_label_cannot_downgrade") is True,
+        f"{label} Mission-Lock classification weakened",
+    )
+    core.require(
+        isinstance(mission.get("successful_votes_required"), int) and mission["successful_votes_required"] >= 2,
+        f"{label} Mission-Locked repeated-vote count weakened",
+    )
+    core.require(
+        isinstance(mission.get("minimum_days_between_successful_votes"), int)
+        and mission["minimum_days_between_successful_votes"] >= 60,
+        f"{label} Mission-Locked vote-separation floor weakened",
+    )
+    phases = mission.get("guardian_consent_required_in_phases")
+    core.require(
+        isinstance(phases, list)
+        and {"F0-founder-led-bootstrap", "F1-early-institution"}.issubset(set(phases)),
+        f"{label} Founding-Period guardian-consent scope weakened",
+    )
+    core.require(
+        mission.get("founding_period_ends_on_valid_transition_to_phase") == "F2-distributed-institution"
+        and mission.get("independent_review_required") is True,
+        f"{label} Mission-Locked Founding-Period/review safeguards weakened",
+    )
+
+    mandatory = rules.get("mandatory_qualified_subjects")
+    core.require(
+        isinstance(mandatory, list) and MANDATORY_QUALIFIED_SUBJECTS_FLOOR.issubset(set(mandatory)),
+        f"{label} mandatory Qualified Approval subject set weakened",
+    )
+    mission_subjects = rules.get("mission_locked_subjects")
+    core.require(
+        isinstance(mission_subjects, list)
+        and invariants.MISSION_LOCKED_SUBJECTS_V1.issubset(set(mission_subjects)),
+        f"{label} Mission-Lock subject set weakened",
+    )
+    conflicts = rules.get("conflict_rules")
+    _require_baseline(
+        conflicts,
+        {
+            "self_compensation_recusal_required": True,
+            "self_contract_approval_prohibited": True,
+            "conflicted_voters_excluded_from_effective_eligible_denominator": True,
+            "funding_does_not_create_governance_rights": True,
+            "founder_status_does_not_override_conflict_recusal": True,
+        },
+        f"{label} conflict/anti-capture rules",
+    )
+
+
+def validate_historical_membership_semantics(policy: object, label: str) -> None:
+    """Preserve anti-capture and authenticated-voting floors in every snapshot."""
+    core.require(isinstance(policy, dict), f"{label} membership policy missing")
+    core.require(policy.get("one_person_one_vote") is True, f"{label} cannot weaken one-person-one-vote")
+    core.require(policy.get("natural_person_voting_members_only") is True, f"{label} cannot weaken natural-person voting membership")
+    candidate_days = policy.get("candidate_period_days")
+    core.require(isinstance(candidate_days, int) and candidate_days >= 30, f"{label} Candidate-period floor weakened")
+    seasoning = policy.get("voting_seasoning_days")
+    required_seasoning = {
+        "ordinary-approval": 30,
+        "qualified-approval": 90,
+        "constitutional-amendment": 90,
+        "mission-locked-amendment": 180,
+    }
+    core.require(isinstance(seasoning, dict) and set(seasoning) == set(required_seasoning), f"{label} voting seasoning policy incomplete/unexpected")
+    for rule_id, floor in required_seasoning.items():
+        value = seasoning.get(rule_id)
+        core.require(isinstance(value, int) and value >= floor, f"{label} {rule_id} seasoning floor weakened")
+
+    for contract_name, baseline in MEMBERSHIP_POLICY_BASELINE.items():
+        _require_baseline(policy.get(contract_name), baseline, f"{label} {contract_name}")
 
 
 def _review_forbidden_ids(legal_entity: dict) -> set[str]:
@@ -152,6 +449,7 @@ def _rules_for_origin(adoption: dict, snapshot: dict, label: str) -> tuple[dict,
     rules, _ = core.validate_content_ref(rules_ref, f"{label} decision-rules snapshot", "records/snapshots")
     core.require(rules.get("governance_version") == adoption.get("governance_version"), f"{label} rules version mismatch")
     core.require(rules.get("operative") is True, f"{label} rules snapshot must be operative")
+    validate_historical_rule_semantics(rules, f"{label} decision rules")
     return rules, rules_hash
 
 
@@ -220,6 +518,8 @@ def validate_release_activation_semantics(snapshot: dict, adoption: dict, rules:
 
 def validate_authority_snapshot(ref, adoption: dict, label: str) -> tuple[dict, dict]:
     snapshot, rules = ORIG_VALIDATE_AUTHORITY_SNAPSHOT(ref, adoption, label)
+    validate_historical_membership_semantics(snapshot.get("membership_policy"), f"{label} membership policy")
+    validate_historical_rule_semantics(rules, f"{label} decision rules")
     validate_release_activation_semantics(snapshot, adoption, rules, label)
     return snapshot, rules
 
