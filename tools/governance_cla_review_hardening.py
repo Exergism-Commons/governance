@@ -22,6 +22,49 @@ def _steward_ref(status_text: str) -> dict:
     }
 
 
+def _adoption_ref(status_text: str) -> dict:
+    return {
+        "path": core.yaml_scalar(status_text, "adoption_record_artifact"),
+        "sha256": core.yaml_scalar(status_text, "adoption_record_sha256"),
+    }
+
+
+def _competent_steward_signatories(steward: dict, label: str) -> set[str]:
+    legal_identity = steward.get("legal_identity")
+    core.require(isinstance(legal_identity, dict), f"{label} legal identity missing")
+    signatories = legal_identity.get("competent_signatories")
+    core.require(
+        isinstance(signatories, list)
+        and signatories
+        and len(signatories) == len(set(signatories))
+        and all(isinstance(person_id, str) and person_id.strip() for person_id in signatories),
+        f"{label} competent-signatory set invalid",
+    )
+    return set(signatories)
+
+
+def require_adopters_authorized_by_steward(adopters: object, steward: dict, label: str = "CLA adoption") -> None:
+    """Require every adopter to be a competent signatory of the receiving Steward.
+
+    Signature authenticity is not institutional authority. The CLA receiving
+    party is the adopted Legal Steward, so an operative adoption must be signed
+    by identities that the content-addressed Steward authority record already
+    recognizes as competent signatories. A future delegated-adopter mechanism
+    would need its own explicit content-addressed authority schema; it must not
+    be inferred from a valid signature alone.
+    """
+    competent = _competent_steward_signatories(steward, f"{label} Legal Steward")
+    core.require(
+        isinstance(adopters, list)
+        and adopters
+        and len(adopters) == len(set(adopters))
+        and all(isinstance(person_id, str) and person_id.strip() for person_id in adopters),
+        f"{label} adopter identities invalid",
+    )
+    unauthorized = set(adopters) - competent
+    core.require(not unauthorized, f"{label} contains adopter without Legal Steward authority: {sorted(unauthorized)}")
+
+
 def validate_cla_reviewer_binding() -> None:
     """Close reviewer/qualification replay in the legacy CLA review envelope.
 
@@ -60,9 +103,7 @@ def validate_cla_reviewer_binding() -> None:
 
     completed = core.parse_iso_date(manifest.get("completed_date"), "CLA legal review completed_date")
     steward, _ = core.validate_content_ref(_steward_ref(status_text), "CLA reviewer-binding Steward authority", "records/decisions")
-    competent_signatories = steward.get("legal_identity", {}).get("competent_signatories", [])
-    core.require(isinstance(competent_signatories, list), "CLA Steward competent-signatory set invalid")
-    forbidden = set(competent_signatories)
+    forbidden = _competent_steward_signatories(steward, "CLA reviewer-binding Steward")
 
     for index, reviewer in enumerate(reviewers):
         reviewer_id = reviewer["reviewer_id"]
@@ -78,6 +119,22 @@ def validate_cla_reviewer_binding() -> None:
         core.require(captured <= completed, "CLA reviewer qualification postdates legal-review completion")
 
 
+def validate_cla_adopter_authority() -> None:
+    """Bind operative CLA adoption identities to the adopted Legal Steward."""
+    status_text = (core.ROOT / "policy/cla-status.yaml").read_text(encoding="utf-8")
+    if core.yaml_scalar(status_text, "operative") is not True:
+        return
+
+    steward, _ = core.validate_content_ref(_steward_ref(status_text), "CLA adopter-authority Steward", "records/decisions")
+    adoption, _ = core.validate_content_ref(_adoption_ref(status_text), "CLA adopter-authority adoption", "records/adoptions")
+    core.require(
+        adoption.get("record_type") == "cla-adoption" and adoption.get("status") == "adopted",
+        "CLA adopter-authority adoption record invalid",
+    )
+    require_adopters_authorized_by_steward(adoption.get("adopters"), steward)
+
+
 def validate_cla_status() -> None:
     ORIG_VALIDATE_CLA_STATUS()
     validate_cla_reviewer_binding()
+    validate_cla_adopter_authority()
