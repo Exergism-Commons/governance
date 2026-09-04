@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date
 
 import validate_governance as core
+import governance_release_history as release_history
 
 
 def validate_evidence_as_of(ref, label: str, record_type: str, subject: str, governance_version: str, phase_date: date) -> dict:
@@ -59,14 +60,14 @@ def validate_phase_maturity_chronology(status: dict, phase_evidence: dict) -> No
     current_phase_date = core.parse_iso_date(phase_evidence.get("phase_effective_date"), "phase_effective_date")
     f1_date = historical_f1_effective_date(status, phase_evidence)
     core.require(f1_date <= current_phase_date, "historical F1 evidence cannot postdate current phase")
-    version = status["governance_version"]
+    f1_version = release_history.governance_version_as_of(status, f1_date)
     f1 = phase_evidence["f1"]
     validate_evidence_as_of(
         f1["independent_role_holder_evidence"],
         "F1 independent role evidence chronology",
         "independent-role-holder-evidence",
         "f1-independent-role-holder",
-        version,
+        f1_version,
         f1_date,
     )
     validate_evidence_as_of(
@@ -74,16 +75,17 @@ def validate_phase_maturity_chronology(status: dict, phase_evidence: dict) -> No
         "F1 delegation evidence chronology",
         "delegation-coverage-evidence",
         "f1-critical-delegation-coverage",
-        version,
+        f1_version,
         f1_date,
     )
 
     if phase != "F2-distributed-institution":
         return
+    f2_version = release_history.governance_version_as_of(status, current_phase_date)
     f2 = phase_evidence["f2"]
     for key, record_type, subject, label in (
         ("control_separation_evidence", "control-separation-evidence", "f2-control-separation", "F2 control separation evidence chronology"),
         ("audit_review_evidence", "audit-review-capacity-evidence", "f2-audit-review-capacity", "F2 audit/review evidence chronology"),
         ("role_replacement_evidence", "role-replacement-evidence", "f2-role-replacement", "F2 role replacement evidence chronology"),
     ):
-        validate_evidence_as_of(f2[key], label, record_type, subject, version, current_phase_date)
+        validate_evidence_as_of(f2[key], label, record_type, subject, f2_version, current_phase_date)
