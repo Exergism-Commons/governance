@@ -30,6 +30,8 @@ The authority record must identify at least:
 
 For an operative EC governance regime, appointment/removal of the legal Steward is a protected institutional decision and the CLA authority record must resolve to the corresponding valid Qualified Approval. Repeating a Steward name in `cla-status.yaml`, a legal-review manifest or an adoption record is not itself evidence that the receiving party exists or has authority.
 
+The Steward appointment is a historical governance act. If Governance is amended later, that appointment remains validated under the governance release, decision rules, Membership/electorate and governance version that were actually operative on the appointment decision date. A later governance release neither invalidates a valid historical appointment by version mismatch nor retroactively cures an invalid one.
+
 The record must explain the Steward's relationship to Exergism Commons and authority to steward the Covered Projects.
 
 **Current: open.**
@@ -146,6 +148,8 @@ Activation should occur through a dedicated PR whose sole substantive purpose is
 - explain transition rules for open PRs submitted before the effective date.
 
 The legal review and adoption must be complete **before or on** the declared effective date. The legal-review manifest must record its completion date; every qualified-reviewer signature must be dated no later than that completion/effective date. The CLA adoption record must record its decision date after completed legal review and no later than the effective date, and every adopter signature must likewise exist no later than activation. An effective date cannot be backdated to make later review, adoption or signatures appear prospectively authoritative.
+
+Authentication is not authority. Every adopter identity must already be a competent signatory in the exact content-addressed Legal Steward authority record. A valid signature from an outsider, reviewer or maintainer does not authorize that person to act for the receiving party. A future delegated-adopter mechanism, if ever introduced, must use its own explicit content-addressed authority record and validation contract; authority must never be inferred from signature validity alone.
 
 The adoption record and legal-review manifest must bind the same exact legal Steward identity, Steward-authority digest, governing law, forum, privacy policy, acceptance methods and legal-artifact hashes. They cannot cure an unproven Steward merely by repeating the same string.
 
