@@ -32,6 +32,47 @@ def validate_signature_ref(
         f"{label} verification chronology",
         "records/evidence",
     )
+
+    # A generic supporting-evidence envelope is not enough to authenticate an
+    # authority-bearing signature. The verification record must itself identify
+    # the signer, decision, exact payload and signature context it verified.
+    # This prevents unrelated/replayed evidence from being attached to a new
+    # signature-evidence record that merely repeats the expected metadata.
+    core.require(
+        verification.get("evidence_purpose") == "signature-verification",
+        f"{label} verification evidence purpose mismatch",
+    )
+    core.require(
+        verification.get("subject_person_id") == expected_person_id,
+        f"{label} verification signer mismatch",
+    )
+    core.require(
+        verification.get("decision_id") == expected_decision_id,
+        f"{label} verification decision mismatch",
+    )
+    core.require(
+        verification.get("verified_payload_sha256") == expected_payload_sha256,
+        f"{label} verification does not bind exact signed payload",
+    )
+    core.require(
+        verification.get("context_type") == context_type
+        and verification.get("context_version") == context_version,
+        f"{label} verification context mismatch",
+    )
+    core.require(
+        verification.get("verification_result") == "valid",
+        f"{label} verification must conclude valid",
+    )
+    verification_method = verification.get("verification_method")
+    core.require(
+        isinstance(verification_method, str) and verification_method.strip(),
+        f"{label} verification_method required",
+    )
+    core.require(
+        verification.get("signature_method") == data.get("signature_method"),
+        f"{label} verification/signature method mismatch",
+    )
+
     captured = core.parse_iso_date(
         verification.get("captured_date"),
         f"{label} verification.captured_date",
