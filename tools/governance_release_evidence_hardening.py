@@ -80,58 +80,142 @@ def _validate_activation_process_chronology(process: dict, release_effective: da
         core.require(captured <= completed, f"{label} supporting evidence postdates completion")
 
 
+def _load_adoption(ref: dict, label: str) -> dict:
+    data, _ = core.validate_content_ref(ref, label, "records/adoptions")
+    core.require(
+        data.get("record_type") == "governance-adoption"
+        and data.get("status") == "adopted"
+        and isinstance(data.get("release_sequence"), int)
+        and data["release_sequence"] >= 1,
+        f"{label} must be an adopted governance release",
+    )
+    return data
+
+
+def _raw_authority_snapshot(adoption: dict, label: str) -> dict:
+    snapshot, _ = core.validate_content_ref(adoption.get("authority_snapshot"), label, "records/snapshots")
+    core.require(
+        snapshot.get("record_type") == "governance-authority-snapshot"
+        and snapshot.get("status") == "final"
+        and snapshot.get("governance_version") == adoption.get("governance_version")
+        and snapshot.get("effective_date") == adoption.get("effective_date"),
+        f"{label} identity/version invalid",
+    )
+    activation = snapshot.get("activation_evidence")
+    core.require(
+        isinstance(activation, dict) and set(activation) == set(ACTIVATION_EVIDENCE_CONTRACT),
+        f"{label} activation evidence set invalid",
+    )
+    return snapshot
+
+
+def _activation_origin(adoption: dict, key: str, ref: dict, label: str) -> tuple[dict, dict]:
+    """Find the release that introduced the exact activation record.
+
+    Later releases may inherit an already-proved activation record without
+    pretending it was created under the newer governance version. If a release
+    changes a record, that release becomes the new origin and the changed record
+    must pass the full semantic gate under that release's authority.
+    """
+    current = adoption
+    current_snapshot = _raw_authority_snapshot(current, f"{label} current authority snapshot")
+    core.require(current_snapshot["activation_evidence"].get(key) == ref, f"{label} current activation reference mismatch")
+    seen: set[str] = set()
+    while current.get("release_sequence", 0) > 1:
+        previous_ref = current.get("previous_adoption_record")
+        core.require(isinstance(previous_ref, dict), f"{label} predecessor reference missing")
+        digest = core.require_sha256(previous_ref.get("sha256"), f"{label} predecessor sha256")
+        core.require(digest not in seen, f"{label} predecessor cycle detected")
+        seen.add(digest)
+        previous = _load_adoption(previous_ref, f"{label} predecessor adoption")
+        core.require(
+            previous.get("release_sequence") == current["release_sequence"] - 1,
+            f"{label} predecessor sequence is not contiguous",
+        )
+        previous_snapshot = _raw_authority_snapshot(previous, f"{label} predecessor authority snapshot")
+        if previous_snapshot["activation_evidence"].get(key) != ref:
+            break
+        current = previous
+        current_snapshot = previous_snapshot
+    return current, current_snapshot
+
+
+def _rules_for_origin(adoption: dict, snapshot: dict, label: str) -> tuple[dict, str]:
+    normative = adoption.get("normative_machine_bindings")
+    core.require(isinstance(normative, dict), f"{label} normative machine bindings missing")
+    rules_hash = core.require_sha256(normative.get("policy/decision-rules.json"), f"{label} decision-rules hash")
+    rules_ref = snapshot.get("decision_rules_snapshot")
+    core.require(
+        isinstance(rules_ref, dict) and rules_ref.get("sha256") == rules_hash,
+        f"{label} decision-rules snapshot/hash mismatch",
+    )
+    rules, _ = core.validate_content_ref(rules_ref, f"{label} decision-rules snapshot", "records/snapshots")
+    core.require(rules.get("governance_version") == adoption.get("governance_version"), f"{label} rules version mismatch")
+    core.require(rules.get("operative") is True, f"{label} rules snapshot must be operative")
+    return rules, rules_hash
+
+
+def _validate_activation_at_origin(key: str, ref: dict, origin: dict, origin_snapshot: dict, label: str) -> None:
+    version = origin.get("governance_version")
+    effective_text = origin.get("effective_date")
+    effective = core.parse_iso_date(effective_text, f"{label} origin effective_date")
+    human_hashes = origin.get("artifact_bindings")
+    legal_entity = origin.get("legal_entity")
+    governing_law = origin.get("governing_law")
+    core.require(isinstance(version, str) and version, f"{label} origin governance version missing")
+    core.require(isinstance(human_hashes, dict) and human_hashes, f"{label} origin human artifact bindings missing")
+    core.require(isinstance(legal_entity, dict) and legal_entity, f"{label} origin legal entity missing")
+    core.require(isinstance(governing_law, str) and governing_law.strip(), f"{label} origin governing law missing")
+    _, rules_hash = _rules_for_origin(origin, origin_snapshot, label)
+
+    record_type, subject = ACTIVATION_EVIDENCE_CONTRACT[key]
+    if key == "qualified_legal_review":
+        validate_governance_legal_review(
+            ref,
+            {
+                "operative": True,
+                "governance_version": version,
+                "effective_date": effective_text,
+                "governing_law": governing_law,
+            },
+            legal_entity,
+            human_hashes,
+            rules_hash,
+        )
+        return
+
+    process = core.validate_process_evidence_ref(
+        ref,
+        f"{label} activation evidence {key}",
+        record_type,
+        version,
+        subject,
+    )
+    _validate_activation_process_chronology(process, effective, f"{label} activation evidence {key}")
+
+
 def validate_release_activation_semantics(snapshot: dict, adoption: dict, rules: dict, label: str) -> None:
     """Semantically prove every activation record before a release can be authority.
 
-    A content hash proves identity, not successful completion or legal-review
-    approval. Every release in the ancestry therefore receives the same
-    type/subject/result/chronology checks before its snapshot can authorize a
-    descendant.
+    Hash equality proves identity, not success. Each activation record is traced
+    backwards to the release that introduced those exact bytes, and it is then
+    validated against that release's artifacts, rules, legal identity, version
+    and chronology. Unchanged records may be inherited; changed records cannot
+    borrow an older review or masquerade as having been completed under a newer
+    release.
     """
     activation = snapshot.get("activation_evidence")
     core.require(
         isinstance(activation, dict) and set(activation) == set(ACTIVATION_EVIDENCE_CONTRACT),
         f"{label} activation evidence contract mismatch",
     )
-    version = adoption.get("governance_version")
-    effective_text = adoption.get("effective_date")
-    effective = core.parse_iso_date(effective_text, f"{label} effective_date")
-    human_hashes = adoption.get("artifact_bindings")
-    legal_entity = adoption.get("legal_entity")
-    governing_law = adoption.get("governing_law")
-    normative = adoption.get("normative_machine_bindings")
-    core.require(isinstance(human_hashes, dict) and human_hashes, f"{label} human artifact bindings missing")
-    core.require(isinstance(legal_entity, dict) and legal_entity, f"{label} legal entity missing")
-    core.require(isinstance(governing_law, str) and governing_law.strip(), f"{label} governing law missing")
-    core.require(isinstance(normative, dict), f"{label} normative machine bindings missing")
-    rules_hash = core.require_sha256(normative.get("policy/decision-rules.json"), f"{label} decision-rules hash")
-    snapshot_rules_ref = snapshot.get("decision_rules_snapshot")
-    core.require(
-        isinstance(snapshot_rules_ref, dict) and snapshot_rules_ref.get("sha256") == rules_hash,
-        f"{label} decision-rules snapshot/hash mismatch",
-    )
-    core.require(rules.get("governance_version") == version, f"{label} rules version mismatch")
+    core.require(rules.get("governance_version") == adoption.get("governance_version"), f"{label} rules version mismatch")
 
-    historical_status = {
-        "operative": True,
-        "governance_version": version,
-        "effective_date": effective_text,
-        "governing_law": governing_law,
-    }
-
-    for key, (record_type, subject) in ACTIVATION_EVIDENCE_CONTRACT.items():
+    for key in ACTIVATION_EVIDENCE_CONTRACT:
         ref = activation[key]
-        if key == "qualified_legal_review":
-            validate_governance_legal_review(ref, historical_status, legal_entity, human_hashes, rules_hash)
-            continue
-        process = core.validate_process_evidence_ref(
-            ref,
-            f"{label} activation evidence {key}",
-            record_type,
-            version,
-            subject,
-        )
-        _validate_activation_process_chronology(process, effective, f"{label} activation evidence {key}")
+        core.require(isinstance(ref, dict), f"{label} activation reference missing: {key}")
+        origin, origin_snapshot = _activation_origin(adoption, key, ref, f"{label} {key}")
+        _validate_activation_at_origin(key, ref, origin, origin_snapshot, f"{label} {key}")
 
 
 def validate_authority_snapshot(ref, adoption: dict, label: str) -> tuple[dict, dict]:
