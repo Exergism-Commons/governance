@@ -1,3 +1,8 @@
+const themeScript = document.createElement('script');
+themeScript.src = 'https://www.exergism.org/assets/theme.js';
+themeScript.dataset.ecTheme = '';
+document.head.appendChild(themeScript);
+
 const wordmarkStylesheet = document.createElement('link');
 wordmarkStylesheet.rel = 'stylesheet';
 wordmarkStylesheet.href = 'wordmark.css';
