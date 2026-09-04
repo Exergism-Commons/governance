@@ -53,6 +53,17 @@ def _signed_reviewer_projection(reviewers: list[dict], label: str) -> list[dict]
     return projected
 
 
+def reviewer_binding_sha256(reviewers: list[dict], label: str) -> str:
+    """Digest reviewer identity + exact qualification references, excluding signatures.
+
+    This primitive is useful for legacy review envelopes whose primary review
+    digest historically excluded the reviewer list: the binding digest can be
+    included as a substantive field in that primary payload, closing reviewer /
+    qualification substitution without introducing a self-referential signature.
+    """
+    return core.sha256_json(_signed_reviewer_projection(reviewers, label))
+
+
 def signed_review_payload(review: dict, label: str) -> tuple[dict, list[dict]]:
     """Build the exact review payload authenticated by every reviewer.
 
