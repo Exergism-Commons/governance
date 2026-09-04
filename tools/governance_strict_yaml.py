@@ -16,6 +16,23 @@ def _top_level_matches(text: str, key: str) -> list[tuple[int, str]]:
     return matches
 
 
+def _direct_child_matches(block: str, key: str, label: str) -> list[str]:
+    """Return exactly the direct mapping children named key.
+
+    `yaml_block` preserves relative indentation, so a direct child of the
+    selected parent begins at column zero while grandchildren remain indented.
+    This prevents a nested decoy or duplicate first/last-wins interpretation
+    from becoming authoritative.
+    """
+    matches: list[str] = []
+    for line in block.splitlines():
+        if not line or line[0].isspace():
+            if re.match(rf"^{re.escape(key)}\s*:", line):
+                matches.append(line)
+    core.require(len(matches) == 1, f"YAML nested key must appear exactly once as a direct child: {label}.{key}")
+    return matches
+
+
 def yaml_scalar(text: str, key: str):
     (_, line), = _top_level_matches(text, key)
     raw = line.split(":", 1)[1].strip()
@@ -53,6 +70,15 @@ def yaml_block(text: str, key: str) -> str:
     return "\n".join(children)
 
 
+def yaml_nested_bool(text: str, parent: str, key: str) -> bool:
+    block = yaml_block(text, parent)
+    (line,) = _direct_child_matches(block, key, parent)
+    raw = line.split(":", 1)[1].strip()
+    core.require(raw in {"true", "false"}, f"YAML {parent}.{key} must be boolean")
+    return raw == "true"
+
+
 def install() -> None:
     core.yaml_scalar = yaml_scalar
     core.yaml_block = yaml_block
+    core.yaml_nested_bool = yaml_nested_bool
