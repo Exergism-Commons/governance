@@ -4,6 +4,12 @@ wordmarkStylesheet.href = 'wordmark.css';
 wordmarkStylesheet.dataset.commonsWordmark = '';
 document.head.appendChild(wordmarkStylesheet);
 
+const siteBrand = document.querySelector('.site-header .brand');
+if (siteBrand) {
+  siteBrand.setAttribute('href', '/');
+  siteBrand.setAttribute('aria-label', 'Governance home');
+}
+
 const viewportFix = document.createElement('style');
 viewportFix.id = 'viewport-width-fix';
 viewportFix.textContent = `
