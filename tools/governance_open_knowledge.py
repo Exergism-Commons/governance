@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import validate_governance as core
 import governance_release_history as release_history
+import governance_review_auth as review_auth
 import governance_semantic_invariants as invariants
 
 
@@ -80,8 +81,16 @@ def _validate_historical_rights_review(
     if expected_governance_version is not None:
         core.require(review.get("governance_version") == expected_governance_version, f"{label} changed Open Knowledge binding must be reviewed under the authorizing governance release")
     core.require(review.get("reviewed_open_knowledge_policy") == policy_binding, f"{label} qualified legal review does not bind exact Open Knowledge policy bytes")
-    completed = core.parse_iso_date(review.get("completed_date"), f"{label} Open Knowledge review completed_date")
-    core.require(completed <= binding_effective, f"{label} Open Knowledge review completed after policy effective date")
+
+    # `approved` is not authority by itself. Every rights review must have a
+    # canonical review payload, qualified reviewers and one authenticated
+    # signature per reviewer, all completed before the policy can take effect.
+    review_auth.validate_authenticated_qualified_review(
+        review,
+        f"{label} Open Knowledge rights review",
+        completed_no_later_than=binding_effective,
+        expected_governance_version=expected_governance_version,
+    )
 
 
 def _validate_release_history(governance: dict) -> tuple[dict, dict]:
