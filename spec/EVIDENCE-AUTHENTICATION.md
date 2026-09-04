@@ -34,6 +34,8 @@ The signed review payload includes:
 
 Only signature references and the digest field itself are excluded to avoid self-reference. Swapping a reviewer, replacing qualification evidence or changing a substantive conclusion therefore changes the authenticated payload and invalidates a replayed signature.
 
+Qualification evidence is itself semantically bound. It must be final `supporting-evidence` whose `evidence_purpose` is `reviewer-qualification`, whose `subject_person_id` is the reviewer being qualified, and whose explicit `qualification_scope` covers the authority-bearing review being performed. A well-formed but unrelated evidence record cannot satisfy reviewer qualification merely because it has the right hash or date.
+
 Reviewer qualification evidence must exist no later than review completion. Where independence is required, a reviewer may not be one of the competent signatories/adopters whose act is being independently reviewed.
 
 ## 4. Legacy review envelopes
@@ -58,7 +60,25 @@ Reviewer signature references are excluded from this projection. The canonical v
 
 The operative CLA legal-review manifest uses this compatibility rule. New governance/Open Knowledge qualified reviews and governance-amendment classification reviews use the direct signed-review-payload rule instead.
 
-## 5. Canonical verdict
+## 5. Signature verification evidence
+
+A `signature-evidence` record cannot be authenticated by attaching arbitrary generic evidence. Its content-addressed verification record must explicitly describe the exact attestation that was verified.
+
+The verification record must bind:
+
+- `evidence_purpose: signature-verification`;
+- the exact `subject_person_id`;
+- the exact `decision_id`;
+- the exact `verified_payload_sha256`;
+- the exact signature context type and version;
+- the same signature method claimed by the signature record; and
+- `verification_result: valid` plus a non-empty verification method.
+
+The verification evidence must already exist when the signature is treated as effective. This prevents an unrelated verification record, or one referring to another signer/decision/payload/context, from being replayed to manufacture an authority-bearing signature envelope.
+
+This validation contract records and checks externally verifiable signature evidence; it does not claim that a repository hash by itself is a cryptographic identity system.
+
+## 6. Canonical verdict
 
 These requirements are components of the single complete verdict:
 
