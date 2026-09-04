@@ -3,8 +3,12 @@
   "policy": "exergism-commons-open-knowledge",
   "policy_version": "0.1-DRAFT",
   "policy_artifact": "OPEN-KNOWLEDGE-POLICY.md",
+  "policy_sha256": null,
   "status": "draft",
   "operative": false,
+  "effective_date": null,
+  "rights_review_record": null,
+  "adoption_record": null,
   "constitutional_principle": "knowledge-commons-and-anti-enclosure",
   "core_rule": "canonicality-is-not-exclusivity",
   "protected_freedoms": [
@@ -76,6 +80,13 @@
     "historical_vs_future_scope": true,
     "effective_release_or_decision_record": true,
     "qualified_legal_review_before_organization_level_operation": true
+  },
+  "integrity_contract": {
+    "human_policy_path_fixed": true,
+    "operative_policy_requires_exact_sha256": true,
+    "operative_policy_requires_rights_review": true,
+    "operative_policy_requires_governance_adoption_binding": true,
+    "governance_cannot_be_operative_while_policy_is_draft": true
   },
   "notes": [
     "This projection is descriptive and non-operative.",
