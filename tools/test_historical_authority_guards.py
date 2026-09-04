@@ -1,0 +1,220 @@
+#!/usr/bin/env python3
+"""Focused guards for historical authority and CLA-adopter integrity classes."""
+
+from __future__ import annotations
+
+import copy
+
+import governance_cla_review_hardening as cla_hardening
+import governance_release_authority as authority
+import governance_release_evidence_hardening as historical
+import governance_release_proof as release_proof
+import validate_governance as core
+
+
+def expect_failure(label: str, callback) -> None:
+    try:
+        callback()
+    except SystemExit:
+        return
+    raise SystemExit(f"historical authority guard failure: {label} unexpectedly validated")
+
+
+def _rules() -> dict:
+    return core.load_json("policy/decision-rules.json")
+
+
+def _membership_policy() -> dict:
+    membership = core.load_json("policy/membership-status.json")
+    return {
+        key: copy.deepcopy(membership[key])
+        for key in authority.MEMBERSHIP_POLICY_KEYS
+    }
+
+
+def validate_historical_rule_guards() -> int:
+    baseline = _rules()
+    historical.validate_historical_rule_semantics(baseline, "baseline historical rules")
+    cases = 0
+
+    weakened = copy.deepcopy(baseline)
+    rule = next(item for item in weakened["rules"] if item["id"] == "constitutional-amendment")
+    rule["quorum"] = {
+        "type": "fraction_of_effective_eligible",
+        "comparison": "at_least",
+        "numerator": 1,
+        "denominator": 10,
+    }
+    expect_failure(
+        "historical constitutional quorum cannot be weakened",
+        lambda: historical.validate_historical_rule_semantics(weakened, "weakened constitutional snapshot"),
+    )
+    cases += 1
+
+    weakened = copy.deepcopy(baseline)
+    rule = next(item for item in weakened["rules"] if item["id"] == "mission-locked-amendment")
+    rule["approval"] = {
+        "type": "fraction_of_valid_for_against",
+        "comparison": "at_least",
+        "numerator": 1,
+        "denominator": 2,
+    }
+    expect_failure(
+        "historical Mission-Locked approval cannot be weakened",
+        lambda: historical.validate_historical_rule_semantics(weakened, "weakened Mission-Lock snapshot"),
+    )
+    cases += 1
+
+    weakened = copy.deepcopy(baseline)
+    rule = next(item for item in weakened["rules"] if item["id"] == "mission-locked-amendment")
+    rule["minimum_days_between_successful_votes"] = 1
+    expect_failure(
+        "historical repeated-vote separation cannot be weakened",
+        lambda: historical.validate_historical_rule_semantics(weakened, "weakened separation snapshot"),
+    )
+    cases += 1
+
+    weakened = copy.deepcopy(baseline)
+    weakened["mission_locked_subjects"].remove("permit-enclosure-of-established-ec-public-knowledge")
+    expect_failure(
+        "historical Mission-Lock taxonomy cannot drop anti-enclosure",
+        lambda: historical.validate_historical_rule_semantics(weakened, "weakened Mission-Lock taxonomy"),
+    )
+    cases += 1
+
+    weakened = copy.deepcopy(baseline)
+    weakened["conflict_rules"]["funding_does_not_create_governance_rights"] = False
+    expect_failure(
+        "historical anti-capture rule cannot let funding create governance rights",
+        lambda: historical.validate_historical_rule_semantics(weakened, "weakened anti-capture snapshot"),
+    )
+    cases += 1
+
+    return cases
+
+
+def validate_historical_membership_guards() -> int:
+    baseline = _membership_policy()
+    historical.validate_historical_membership_semantics(baseline, "baseline historical membership")
+    cases = 0
+
+    weakened = copy.deepcopy(baseline)
+    weakened["candidate_period_days"] = 0
+    expect_failure(
+        "historical Candidate period cannot be zeroed",
+        lambda: historical.validate_historical_membership_semantics(weakened, "zero Candidate period"),
+    )
+    cases += 1
+
+    for rule_id in (
+        "ordinary-approval",
+        "qualified-approval",
+        "constitutional-amendment",
+        "mission-locked-amendment",
+    ):
+        weakened = copy.deepcopy(baseline)
+        weakened["voting_seasoning_days"][rule_id] = 0
+        expect_failure(
+            f"historical {rule_id} seasoning floor cannot be zeroed",
+            lambda m=weakened, rid=rule_id: historical.validate_historical_membership_semantics(m, f"zero {rid} seasoning"),
+        )
+        cases += 1
+
+    weakened = copy.deepcopy(baseline)
+    weakened["voting_window_contract"]["eligibility_fixed_at_window_open"] = False
+    expect_failure(
+        "historical electorate freeze cannot be disabled",
+        lambda: historical.validate_historical_membership_semantics(weakened, "disabled electorate freeze"),
+    )
+    cases += 1
+
+    weakened = copy.deepcopy(baseline)
+    weakened["ballot_proposal_binding_contract"]["artifact_bindings_sha256_in_signed_ballot_payload"] = False
+    expect_failure(
+        "historical ballots must keep exact proposal binding",
+        lambda: historical.validate_historical_membership_semantics(weakened, "disabled proposal binding"),
+    )
+    cases += 1
+
+    weakened = copy.deepcopy(baseline)
+    weakened["admission_modes"]["member-ordinary-approval"]["authority"] = "founding-steward"
+    expect_failure(
+        "historical F1+ admission authority cannot be downgraded",
+        lambda: historical.validate_historical_membership_semantics(weakened, "weakened admission authority"),
+    )
+    cases += 1
+
+    weakened = copy.deepcopy(baseline)
+    weakened["state_transition_contract"]["f1_plus_termination_authority"] = "ordinary-approval"
+    expect_failure(
+        "historical F1+ termination authority cannot be downgraded",
+        lambda: historical.validate_historical_membership_semantics(weakened, "weakened termination authority"),
+    )
+    cases += 1
+
+    return cases
+
+
+def validate_historical_separation_semantics() -> int:
+    baseline = _rules()
+    days = release_proof.historical_mission_vote_separation_days(baseline, "baseline predecessor")
+    core.require(days == 60, "baseline predecessor separation should be 60 days")
+
+    stronger = copy.deepcopy(baseline)
+    mission = next(item for item in stronger["rules"] if item["id"] == "mission-locked-amendment")
+    mission["minimum_days_between_successful_votes"] = 90
+    days = release_proof.historical_mission_vote_separation_days(stronger, "stronger predecessor")
+    core.require(days == 90, "historical proof must use the predecessor's stronger separation rule")
+
+    weakened = copy.deepcopy(baseline)
+    mission = next(item for item in weakened["rules"] if item["id"] == "mission-locked-amendment")
+    mission["minimum_days_between_successful_votes"] = 30
+    expect_failure(
+        "historical vote separation cannot fall below constitutional floor",
+        lambda: release_proof.historical_mission_vote_separation_days(weakened, "weakened predecessor"),
+    )
+    return 3
+
+
+def validate_cla_adopter_authority_guards() -> int:
+    steward = {
+        "legal_identity": {
+            "competent_signatories": ["steward-signatory-a", "steward-signatory-b"],
+        }
+    }
+    cla_hardening.require_adopters_authorized_by_steward(
+        ["steward-signatory-a"],
+        steward,
+        "synthetic CLA adoption",
+    )
+
+    expect_failure(
+        "authenticated outsider cannot adopt CLA for Legal Steward",
+        lambda: cla_hardening.require_adopters_authorized_by_steward(
+            ["outsider-reviewer"],
+            steward,
+            "synthetic unauthorized CLA adoption",
+        ),
+    )
+    expect_failure(
+        "mixed authorized/unauthorized CLA adopter set must fail closed",
+        lambda: cla_hardening.require_adopters_authorized_by_steward(
+            ["steward-signatory-a", "outsider-reviewer"],
+            steward,
+            "synthetic mixed CLA adoption",
+        ),
+    )
+    return 3
+
+
+def main() -> None:
+    total = 0
+    total += validate_historical_rule_guards()
+    total += validate_historical_membership_guards()
+    total += validate_historical_separation_semantics()
+    total += validate_cla_adopter_authority_guards()
+    print(f"Historical authority hardening guards: PASS ({total} cases)")
+
+
+if __name__ == "__main__":
+    main()
