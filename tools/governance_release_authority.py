@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import copy
+from datetime import date
 
 import validate_governance as core
 import governance_release_lifecycle as release_lifecycle
+import governance_release_history as release_history
 import governance_guardian_consent as guardian_consent
 
 
@@ -47,7 +49,7 @@ def _validate_rules_snapshot(ref, adoption: dict, label: str) -> dict:
         f"{label} must be the exact decision-rules bytes bound by its governance adoption",
     )
     core.require(rules.get("governance_version") == adoption.get("governance_version"), f"{label} governance version mismatch")
-    core.require(rules.get("operative") is True, f"{label} must represent operative predecessor rules")
+    core.require(rules.get("operative") is True, f"{label} must represent operative governance rules")
     by_id = core.rule_by_id(rules)
     core.require(AMENDMENT_KINDS.issubset(set(by_id)), f"{label} lacks protected amendment rules")
     return rules
@@ -87,35 +89,50 @@ def validate_authority_snapshot(ref, adoption: dict, label: str) -> tuple[dict, 
     return snapshot, rules
 
 
+def authority_context_for_release(status: dict, adoption: dict, adoption_ref: dict, label: str) -> tuple[dict, dict, dict, dict]:
+    snapshot_ref = adoption.get("authority_snapshot")
+    core.require(isinstance(snapshot_ref, dict), f"{label} lacks immutable authority snapshot")
+    snapshot, rules = validate_authority_snapshot(snapshot_ref, adoption, f"{label} authority snapshot")
+    authority_status = copy.deepcopy(status)
+    authority_status["governance_version"] = adoption["governance_version"]
+    authority_status["effective_date"] = adoption["effective_date"]
+    authority_status["adoption_record"] = adoption_ref
+    authority_status["activation_evidence"] = snapshot["activation_evidence"]
+    return authority_status, rules, adoption, adoption_ref
+
+
+def authority_context_as_of(status: dict, target: date) -> tuple[dict, dict, dict, dict]:
+    """Resolve the exact release and machine authority that was operative on target."""
+    require_authority_provenance_contract(status)
+    core.require(status.get("operative") is True, "historical authority requires operative governance")
+    adoption, adoption_ref = release_history.release_as_of(status, target)
+    return authority_context_for_release(
+        status,
+        adoption,
+        adoption_ref,
+        f"governance release #{adoption['release_sequence']} as of {target.isoformat()}",
+    )
+
+
 def current_authority_snapshot(status: dict) -> tuple[dict, dict, dict]:
     require_authority_provenance_contract(status)
     core.require(status.get("operative") is True, "authority snapshot exists only for operative governance")
-    adoption = _load_adoption(status.get("adoption_record"), "current governance authority adoption")
-    ref = adoption.get("authority_snapshot")
-    core.require(isinstance(ref, dict), "every operative governance release must bind an authority snapshot")
-    snapshot, rules = validate_authority_snapshot(ref, adoption, "current governance authority snapshot")
+    chain = release_history.release_chain(status)
+    core.require(chain, "operative governance release chain required")
+    adoption, ref = chain[-1]
+    _, rules, _, _ = authority_context_for_release(status, adoption, ref, "current governance release")
+    snapshot, _ = validate_authority_snapshot(adoption["authority_snapshot"], adoption, "current governance authority snapshot")
     return adoption, snapshot, rules
 
 
 def predecessor_authority_context(status: dict) -> tuple[dict, dict, dict, dict]:
     require_authority_provenance_contract(status)
-    release = status.get("governance_release_contract")
-    core.require(isinstance(release, dict), "governance release contract required")
-    sequence = release.get("current_release_sequence")
-    core.require(isinstance(sequence, int) and sequence >= 2, "predecessor authority exists only for later releases")
-    previous_ref = release.get("previous_adoption_record")
-    core.require(isinstance(previous_ref, dict), "later governance release requires predecessor adoption")
-    predecessor = _load_adoption(previous_ref, "predecessor governance authority adoption")
-    core.require(predecessor.get("release_sequence") == sequence - 1, "predecessor authority release sequence mismatch")
-    snapshot_ref = predecessor.get("authority_snapshot")
-    core.require(isinstance(snapshot_ref, dict), "predecessor release lacks immutable authority snapshot")
-    snapshot, rules = validate_authority_snapshot(snapshot_ref, predecessor, "predecessor governance authority snapshot")
-
-    authority_status = copy.deepcopy(status)
-    authority_status["governance_version"] = predecessor.get("governance_version")
-    authority_status["effective_date"] = predecessor.get("effective_date")
-    authority_status["activation_evidence"] = snapshot["activation_evidence"]
-    return authority_status, rules, predecessor, previous_ref
+    chain = release_history.release_chain(status)
+    core.require(len(chain) >= 2, "predecessor authority exists only for later releases")
+    predecessor, previous_ref = chain[-2]
+    contract = status["governance_release_contract"]
+    core.require(contract.get("previous_adoption_record") == previous_ref, "release contract predecessor mismatch")
+    return authority_context_for_release(status, predecessor, previous_ref, "predecessor governance release")
 
 
 def _proposed_release_bindings(status: dict) -> dict[str, str]:
@@ -144,9 +161,6 @@ def _proposed_release_bindings(status: dict) -> dict[str, str]:
         "proposed decision-rules sha256",
     )
 
-    # Resolve both proposed machine artifacts now. This prevents ballots from
-    # authenticating a human-text-only proposal while the machine authority
-    # package is swapped before adoption.
     validate_authority_snapshot(snapshot_ref, adoption, "proposed governance authority snapshot")
 
     return {
@@ -167,6 +181,13 @@ def _authority_bound_artifacts(status: dict, bindings: dict | None) -> dict:
     return result
 
 
+def _approval_decision_date(ref, expected_decision_date: str | None, label: str) -> date:
+    if expected_decision_date is not None:
+        return core.parse_iso_date(expected_decision_date, f"{label} expected decision_date")
+    data, _ = core.validate_content_ref(ref, f"{label} authority-date envelope", "records/evidence")
+    return core.parse_iso_date(data.get("decision_date"), f"{label} decision_date")
+
+
 def validate_approval_evidence(
     ref,
     label: str,
@@ -181,42 +202,74 @@ def validate_approval_evidence(
     legal_entity: dict | None = None,
     expected_signed_payload_sha256: str | None = None,
 ) -> dict:
-    release = status.get("governance_release_contract")
-    sequence = release.get("current_release_sequence") if isinstance(release, dict) else None
-    later_governance_adoption = label == "governance adoption approval" and isinstance(sequence, int) and sequence >= 2
-    protected_amendment_vote = expected_rule_id in AMENDMENT_KINDS and isinstance(sequence, int) and sequence >= 2
-
-    if later_governance_adoption or protected_amendment_vote:
-        authority_status, authority_rules, _, _ = predecessor_authority_context(status)
-        rule_id = release.get("current_release_kind") if later_governance_adoption else expected_rule_id
-        core.require(rule_id in AMENDMENT_KINDS, "later governance adoption must use predecessor amendment authority")
-        bound_artifacts = _authority_bound_artifacts(status, expected_artifact_bindings)
-        return release_lifecycle.ORIG_VALIDATE_APPROVAL_EVIDENCE(
+    if status.get("operative") is not True:
+        return release_lifecycle.validate_approval_evidence(
             ref,
             label,
             expected_decision_id,
-            authority_status,
-            authority_rules,
+            status,
+            rules,
             membership,
-            expected_rule_id=rule_id,
-            expected_artifact_bindings=bound_artifacts,
+            expected_rule_id=expected_rule_id,
+            expected_artifact_bindings=expected_artifact_bindings,
             expected_decision_date=expected_decision_date,
-            allow_constitutive=False,
+            allow_constitutive=allow_constitutive,
             legal_entity=legal_entity,
             expected_signed_payload_sha256=expected_signed_payload_sha256,
         )
 
-    return release_lifecycle.validate_approval_evidence(
+    release = status.get("governance_release_contract")
+    sequence = release.get("current_release_sequence") if isinstance(release, dict) else None
+    initial_governance_adoption = label == "governance adoption approval" and sequence == 1
+    if initial_governance_adoption:
+        return release_lifecycle.validate_approval_evidence(
+            ref,
+            label,
+            expected_decision_id,
+            status,
+            rules,
+            membership,
+            expected_rule_id=expected_rule_id,
+            expected_artifact_bindings=expected_artifact_bindings,
+            expected_decision_date=expected_decision_date,
+            allow_constitutive=allow_constitutive,
+            legal_entity=legal_entity,
+            expected_signed_payload_sha256=expected_signed_payload_sha256,
+        )
+
+    decision_date = _approval_decision_date(ref, expected_decision_date, label)
+    authority_status, authority_rules, authority_adoption, authority_ref = authority_context_as_of(status, decision_date)
+    protected_current_amendment = (
+        isinstance(sequence, int)
+        and sequence >= 2
+        and expected_rule_id in AMENDMENT_KINDS
+        and authority_adoption.get("release_sequence") == sequence - 1
+    )
+    later_governance_adoption = (
+        label == "governance adoption approval"
+        and isinstance(sequence, int)
+        and sequence >= 2
+    )
+
+    rule_id = expected_rule_id
+    bindings = expected_artifact_bindings
+    if later_governance_adoption or protected_current_amendment:
+        core.require(authority_ref == status["governance_release_contract"]["previous_adoption_record"], "governance amendment vote must be authorized by exact predecessor release")
+        rule_id = release.get("current_release_kind") if later_governance_adoption else expected_rule_id
+        core.require(rule_id in AMENDMENT_KINDS, "later governance adoption must use predecessor amendment authority")
+        bindings = _authority_bound_artifacts(status, expected_artifact_bindings)
+
+    return release_lifecycle.ORIG_VALIDATE_APPROVAL_EVIDENCE(
         ref,
         label,
         expected_decision_id,
-        status,
-        rules,
+        authority_status,
+        authority_rules,
         membership,
-        expected_rule_id=expected_rule_id,
-        expected_artifact_bindings=expected_artifact_bindings,
+        expected_rule_id=rule_id,
+        expected_artifact_bindings=bindings,
         expected_decision_date=expected_decision_date,
-        allow_constitutive=allow_constitutive,
+        allow_constitutive=False,
         legal_entity=legal_entity,
         expected_signed_payload_sha256=expected_signed_payload_sha256,
     )
@@ -282,6 +335,7 @@ def validate_adoption_record(
     if status.get("operative") is not True:
         return result
 
+    chain = release_history.release_chain(status)
     adoption, _, current_rules = current_authority_snapshot(status)
     core.require(
         current_rules.get("governance_version") == status.get("governance_version"),
@@ -293,6 +347,7 @@ def validate_adoption_record(
     else:
         _, _, predecessor, previous_ref = predecessor_authority_context(status)
         core.require(adoption.get("previous_adoption_record") == previous_ref, "current release authority predecessor mismatch")
+        core.require(chain[-2][0] == predecessor and chain[-2][1] == previous_ref, "predecessor authority diverges from release history")
         core.require(
             core.parse_iso_date(predecessor.get("effective_date"), "predecessor governance effective_date")
             < core.parse_iso_date(status.get("effective_date"), "current governance effective_date"),
