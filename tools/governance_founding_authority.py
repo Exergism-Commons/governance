@@ -4,10 +4,14 @@ import validate_governance as core
 import validate_governance_lifecycle as life
 import governance_temporal_phase as phase
 import governance_founding_lifecycle as founding_lifecycle
+import governance_release_authority as release_authority
 
 
 def _require_f0_signature_chronology(ref, label: str, status: dict, founding: dict, rules: dict, membership: dict, decision_id: str, payload_hash: str, context_type: str, decision_date) -> None:
     founder_id = founding["founding_steward"]["person_id"]
+    authority_status, authority_rules, _, _ = release_authority.authority_context_as_of(status, decision_date)
+    event_version = authority_status["governance_version"]
+    authority_effective = core.parse_iso_date(authority_status["effective_date"], f"{label} authority release effective_date")
     signature = core.validate_signature_ref(
         ref,
         label,
@@ -15,21 +19,20 @@ def _require_f0_signature_chronology(ref, label: str, status: dict, founding: di
         decision_id,
         payload_hash,
         context_type,
-        status["governance_version"],
-        status["governance_version"],
+        event_version,
+        event_version,
     )
     signed_date = core.parse_iso_date(signature.get("signed_date"), f"{label}.signed_date")
-    governance_effective = core.parse_iso_date(status["effective_date"], "governance effective_date")
     core.require(
-        governance_effective <= signed_date <= decision_date,
-        f"{label} must be signed no later than the F0 action date",
+        authority_effective <= signed_date <= decision_date,
+        f"{label} must be signed under the same operative governance release and no later than the F0 action date",
     )
     core.require(
-        founding_lifecycle.founding_steward_active_on(status, founding, rules, membership, signed_date),
+        founding_lifecycle.founding_steward_active_on(status, founding, authority_rules, membership, signed_date),
         f"{label} signer was not the operative Founding Steward on signed_date",
     )
     core.require(
-        founding_lifecycle.founding_steward_active_on(status, founding, rules, membership, decision_date),
+        founding_lifecycle.founding_steward_active_on(status, founding, authority_rules, membership, decision_date),
         f"{label} action occurred outside the Founding Steward authority interval",
     )
 
