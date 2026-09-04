@@ -64,6 +64,27 @@ def reviewer_binding_sha256(reviewers: list[dict], label: str) -> str:
     return core.sha256_json(_signed_reviewer_projection(reviewers, label))
 
 
+def require_reviewer_binding_digest(
+    review: dict,
+    label: str,
+    *,
+    field: str = "reviewer_authentication_sha256",
+) -> str:
+    """Require a legacy review envelope to bind reviewer identity/qualification.
+
+    The returned digest deliberately excludes signature references. Callers must
+    additionally ensure `field` itself belongs to the primary signed review
+    payload; this helper centralizes the exact reviewer projection so no legacy
+    review type can invent a weaker or incompatible binding convention.
+    """
+    core.require(isinstance(review, dict), f"{label} review object required")
+    reviewers = review.get("reviewers")
+    core.require(isinstance(reviewers, list) and reviewers, f"{label} reviewers required")
+    digest = reviewer_binding_sha256(reviewers, label)
+    core.require(review.get(field) == digest, f"{label} reviewer authentication digest mismatch")
+    return digest
+
+
 def signed_review_payload(review: dict, label: str) -> tuple[dict, list[dict]]:
     """Build the exact review payload authenticated by every reviewer.
 
