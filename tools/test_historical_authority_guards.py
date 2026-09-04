@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import copy
+from datetime import date
 
 import governance_cla_review_hardening as cla_hardening
+import governance_membership_roster as membership_roster
 import governance_release_authority as authority
 import governance_release_evidence_hardening as historical
 import governance_release_proof as release_proof
@@ -173,6 +175,64 @@ def validate_historical_separation_semantics() -> int:
         "historical vote separation cannot fall below constitutional floor",
         lambda: release_proof.historical_mission_vote_separation_days(weakened, "weakened predecessor"),
     )
+
+    unsupported_count = copy.deepcopy(baseline)
+    mission = next(item for item in unsupported_count["rules"] if item["id"] == "mission-locked-amendment")
+    mission["successful_votes_required"] = 3
+    # A declarative strengthening is not enough if the current release-record
+    # schema can authenticate only first+final. Fail closed until the schema has
+    # an explicit authenticated vote-sequence representation.
+    expect_failure(
+        "historical three-vote rule cannot be accepted by a two-vote proof schema",
+        lambda: release_proof.historical_mission_vote_separation_days(unsupported_count, "unsupported three-vote predecessor"),
+    )
+    return 4
+
+
+def _synthetic_roster_membership() -> dict:
+    return {
+        "members": [
+            {
+                "record_id": "member-record-a",
+                "person_id": "person-a",
+                "admission_mode": "member-ordinary-approval",
+                "candidate_since": "2026-01-01",
+                "active_since": "2026-02-01",
+                "admission_record": {"path": "records/decisions/admission-a.json", "sha256": "a" * 64},
+                "state_transition_records": [],
+            },
+            {
+                "record_id": "member-record-b",
+                "person_id": "person-b",
+                "admission_mode": "member-ordinary-approval",
+                "candidate_since": "2026-01-02",
+                "active_since": "2026-02-02",
+                "admission_record": {"path": "records/decisions/admission-b.json", "sha256": "b" * 64},
+                "state_transition_records": [],
+            },
+        ]
+    }
+
+
+def validate_historical_roster_guards() -> int:
+    target = date.fromisoformat("2026-06-01")
+    membership = _synthetic_roster_membership()
+    frozen = membership_roster.roster_projection_as_of(membership, target, "synthetic release roster")
+    membership_roster.validate_roster_members(frozen, membership, target, "synthetic release roster")
+
+    pruned = copy.deepcopy(membership)
+    pruned["members"] = [pruned["members"][0]]
+    expect_failure(
+        "current registry cannot prune a Member frozen into predecessor release roster",
+        lambda: membership_roster.validate_roster_members(frozen, pruned, target, "pruned predecessor roster"),
+    )
+
+    rewritten = copy.deepcopy(membership)
+    rewritten["members"][1]["active_since"] = "2026-05-31"
+    expect_failure(
+        "current registry cannot rewrite historical admission epoch frozen into predecessor roster",
+        lambda: membership_roster.validate_roster_members(frozen, rewritten, target, "rewritten predecessor roster"),
+    )
     return 3
 
 
@@ -212,6 +272,7 @@ def main() -> None:
     total += validate_historical_rule_guards()
     total += validate_historical_membership_guards()
     total += validate_historical_separation_semantics()
+    total += validate_historical_roster_guards()
     total += validate_cla_adopter_authority_guards()
     print(f"Historical authority hardening guards: PASS ({total} cases)")
 
