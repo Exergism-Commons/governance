@@ -22,6 +22,7 @@ def require_authority_provenance_contract(status: dict) -> None:
             "proposed_rules_cannot_authorize_their_own_adoption": True,
             "predecessor_activation_processes_control_amendment_vote": True,
             "approval_ballots_bind_predecessor_authority": True,
+            "approval_ballots_bind_proposed_release_payload": True,
         },
         "governance authority-provenance contract missing/weakened",
     )
@@ -117,6 +118,44 @@ def predecessor_authority_context(status: dict) -> tuple[dict, dict, dict, dict]
     return authority_status, rules, predecessor, previous_ref
 
 
+def _proposed_release_bindings(status: dict) -> dict[str, str]:
+    adoption = _load_adoption(status.get("adoption_record"), "proposed governance amendment adoption")
+    release = status.get("governance_release_contract")
+    core.require(isinstance(release, dict), "governance release contract required")
+    sequence = release.get("current_release_sequence")
+    kind = release.get("current_release_kind")
+    core.require(isinstance(sequence, int) and sequence >= 2 and kind in AMENDMENT_KINDS, "proposed release binding requires a later governance amendment")
+    core.require(adoption.get("release_sequence") == sequence and adoption.get("release_kind") == kind, "proposed release metadata mismatch")
+
+    _, amendment_hash = release_lifecycle._amendment_payload(adoption)
+    core.require(
+        adoption.get("amendment_payload_sha256") == amendment_hash,
+        "proposed governance amendment payload hash mismatch before voting",
+    )
+
+    snapshot_ref = adoption.get("authority_snapshot")
+    core.require(isinstance(snapshot_ref, dict), "proposed governance release must bind its authority snapshot before voting")
+    proposed_snapshot_sha = core.require_sha256(snapshot_ref.get("sha256"), "proposed authority snapshot sha256")
+
+    normative = adoption.get("normative_machine_bindings")
+    core.require(isinstance(normative, dict), "proposed governance release normative machine bindings required")
+    proposed_rules_sha = core.require_sha256(
+        normative.get("policy/decision-rules.json"),
+        "proposed decision-rules sha256",
+    )
+
+    # Resolve both proposed machine artifacts now. This prevents ballots from
+    # authenticating a human-text-only proposal while the machine authority
+    # package is swapped before adoption.
+    validate_authority_snapshot(snapshot_ref, adoption, "proposed governance authority snapshot")
+
+    return {
+        "governance_amendment_payload_sha256": amendment_hash,
+        "proposed_authority_snapshot_sha256": proposed_snapshot_sha,
+        "proposed_decision_rules_sha256": proposed_rules_sha,
+    }
+
+
 def _authority_bound_artifacts(status: dict, bindings: dict | None) -> dict:
     core.require(isinstance(bindings, dict) and bindings, "amendment approval requires exact proposed artifact bindings")
     _, _, predecessor, previous_ref = predecessor_authority_context(status)
@@ -124,6 +163,7 @@ def _authority_bound_artifacts(status: dict, bindings: dict | None) -> dict:
     result = dict(bindings)
     result["authority_predecessor_adoption_sha256"] = previous_ref["sha256"]
     result["authority_predecessor_snapshot_sha256"] = snapshot_ref["sha256"]
+    result.update(_proposed_release_bindings(status))
     return result
 
 
