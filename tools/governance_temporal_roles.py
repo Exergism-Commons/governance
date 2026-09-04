@@ -3,6 +3,8 @@ from __future__ import annotations
 import validate_governance as core
 import validate_governance_lifecycle as life
 import governance_founding_lifecycle as founding_lifecycle
+import governance_release_authority as release_authority
+import governance_release_history as release_history
 
 
 def validate_mission_guardian_assignment(status, founding, rules, membership, phase_evidence) -> None:
@@ -26,14 +28,16 @@ def validate_mission_guardian_assignment(status, founding, rules, membership, ph
     core.require(all(isinstance(x, str) and x.strip() for x in (person_id, record_id, guardian.get("display_name"))), "operative Mission Guardian requires identified holder")
     record, _ = core.validate_content_ref(guardian.get("assignment_record"), "Mission Guardian assignment", "records/decisions")
     core.require(record.get("record_type") == "mission-guardian-assignment" and record.get("status") == "adopted", "Mission Guardian assignment invalid")
-    core.require(record.get("governance_version") == status["governance_version"], "Mission Guardian assignment version mismatch")
     core.require(record.get("guardian_person_id") == person_id and record.get("guardian_record_id") == record_id, "Mission Guardian assignment identity mismatch")
     decision_id = record.get("decision_id")
     decision_date_text = record.get("decision_date")
     decision_date = core.parse_iso_date(decision_date_text, "Mission Guardian assignment decision_date")
     effective = core.parse_iso_date(record.get("effective_date"), "Mission Guardian assignment effective_date")
-    governance_effective = core.parse_iso_date(status["effective_date"], "governance effective_date")
-    core.require(governance_effective <= decision_date <= effective, "Mission Guardian assignment decision postdates effective date")
+    authority_status, authority_rules, _, _ = release_authority.authority_context_as_of(status, decision_date)
+    event_version = authority_status["governance_version"]
+    authority_effective = core.parse_iso_date(authority_status["effective_date"], "Mission Guardian authority release effective_date")
+    core.require(record.get("governance_version") == event_version, "Mission Guardian assignment must use governance version operative on decision_date")
+    core.require(authority_effective <= decision_date <= effective, "Mission Guardian assignment chronology invalid")
     if status["institutional_phase"] == "F2-distributed-institution":
         core.require(effective <= core.parse_iso_date(phase_evidence["phase_effective_date"], "phase_effective_date"), "F2 Mission Guardian must be assigned by F2 effective date")
     payload = {k: v for k, v in record.items() if k not in {"approval_evidence", "process_evidence", "assignment_payload_sha256"}}
@@ -47,7 +51,7 @@ def validate_mission_guardian_assignment(status, founding, rules, membership, ph
             "Mission Guardian appointment approval",
             decision_id,
             status,
-            rules,
+            authority_rules,
             membership,
             expected_rule_id="qualified-approval",
             expected_artifact_bindings={"assignment_payload_sha256": payload_hash},
@@ -58,7 +62,7 @@ def validate_mission_guardian_assignment(status, founding, rules, membership, ph
         core.require(isinstance(founder, dict), "succession Guardian requires Founding Steward projection")
         cessation_ref = founder.get("cessation_record")
         core.require(isinstance(cessation_ref, dict), "succession Guardian requires content-addressed Founding Steward cessation")
-        cessation_effective = founding_lifecycle.validate_founding_steward_lifecycle(status, founding, rules, membership)
+        cessation_effective = founding_lifecycle.validate_founding_steward_lifecycle(status, founding, authority_rules, membership)
         core.require(cessation_effective is not None, "succession Guardian cannot coexist with an unceased Founding Steward assignment")
         core.require(cessation_effective <= effective, "succession Guardian assignment cannot predate Founding Steward cessation")
         cessation, _ = core.validate_content_ref(cessation_ref, "Mission Guardian linked Founding Steward cessation", "records/decisions")
@@ -70,7 +74,7 @@ def validate_mission_guardian_assignment(status, founding, rules, membership, ph
             record.get("process_evidence"),
             "Mission Guardian succession evidence",
             "mission-guardian-succession-evidence",
-            status["governance_version"],
+            event_version,
             f"mission-guardian-assignment:{person_id}",
         )
         core.require(process.get("decision_id") == decision_id, "Mission Guardian succession evidence decision mismatch")
@@ -83,7 +87,7 @@ def validate_mission_guardian_assignment(status, founding, rules, membership, ph
         core.require(process.get("founding_steward_cessation_effective_date") == cessation.get("effective_date"), "Mission Guardian succession evidence cessation chronology mismatch")
         completed = core.parse_iso_date(process.get("completed_date"), "Mission Guardian succession evidence completed_date")
         core.require(
-            governance_effective <= cessation_effective <= completed <= decision_date <= effective,
+            authority_effective <= cessation_effective <= completed <= decision_date <= effective,
             "Mission Guardian succession process must be complete after founder cessation and no later than assignment decision/effective date",
         )
         supporting = process.get("supporting_evidence")
@@ -92,15 +96,19 @@ def validate_mission_guardian_assignment(status, founding, rules, membership, ph
             support = core.validate_supporting_evidence_ref(
                 support_ref,
                 f"Mission Guardian succession supporting evidence {index}",
-                status["governance_version"],
+                event_version,
             )
             captured = core.parse_iso_date(
                 support.get("captured_date"),
                 f"Mission Guardian succession supporting evidence {index}.captured_date",
             )
             core.require(
-                governance_effective <= captured <= completed,
-                "Mission Guardian succession supporting evidence cannot be captured after process completion",
+                authority_effective <= captured <= completed,
+                "Mission Guardian succession supporting evidence cannot predate the governing release or postdate completion",
+            )
+            core.require(
+                release_history.governance_version_as_of(status, captured) == event_version,
+                "Mission Guardian succession evidence crosses a governance release boundary",
             )
     else:
         raise SystemExit("governance integrity failure: Mission Guardian authority_mode unsupported")
