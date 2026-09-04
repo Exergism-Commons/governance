@@ -3,16 +3,18 @@ from __future__ import annotations
 from datetime import date
 
 import validate_governance as core
+import governance_release_history as release_history
 
 
 def _assignment_payload(status: dict, founding: dict) -> dict:
     founder = founding["founding_steward"]
+    founding_adoption, _ = release_history.founding_adoption(status)
     return {
         "founding_steward_record_id": founder["record_id"],
         "founding_steward_person_id": founder["person_id"],
         "assignment_effective_date": founder["assignment_effective_date"],
         "assignment_authority_record": founder["assignment_authority_record"],
-        "governance_version": status["governance_version"],
+        "governance_version": founding_adoption["governance_version"],
     }
 
 
@@ -54,14 +56,15 @@ def validate_founding_steward_lifecycle(status: dict, founding: dict, rules: dic
         core.require(founder["assignment_effective_date"] is None and founder["assignment_authority_record"] is None and founder["cessation_record"] is None, "draft cannot fabricate Founding Steward lifecycle")
         return None
 
-    core.require(founder["assignment_effective_date"] == status["effective_date"], "Founding Steward assignment must begin with operative governance")
-    core.require(founder["assignment_authority_record"] == status["adoption_record"], "Founding Steward initial assignment must resolve to exact governance adoption")
-    adoption, _ = core.validate_content_ref(founder["assignment_authority_record"], "Founding Steward assignment authority", "records/adoptions")
-    core.require(adoption.get("record_type") == "governance-adoption" and adoption.get("status") == "adopted", "Founding Steward assignment authority must be adopted governance")
-    core.require(adoption.get("governance_version") == status["governance_version"], "Founding Steward assignment governance version mismatch")
-    core.require(adoption.get("effective_date") == founder["assignment_effective_date"], "Founding Steward assignment effective date mismatch")
-    core.require(adoption.get("founding_steward_person_id") == founder["person_id"], "Founding Steward assignment identity mismatch")
-    core.require(adoption.get("initial_phase") == "F0-founder-led-bootstrap", "Founding Steward assignment must originate in constitutive F0 adoption")
+    founding_adoption, founding_ref = release_history.founding_adoption(status)
+    founding_effective_text = founding_adoption.get("effective_date")
+    founding_effective = core.parse_iso_date(founding_effective_text, "founding governance effective_date")
+    founding_version = founding_adoption.get("governance_version")
+    core.require(founder["assignment_effective_date"] == founding_effective_text, "Founding Steward assignment must remain anchored to release #1 effective date")
+    core.require(founder["assignment_authority_record"] == founding_ref, "Founding Steward initial assignment must retain exact release #1 adoption authority")
+    core.require(founding_adoption.get("founding_steward_person_id") == founder["person_id"], "Founding Steward assignment identity mismatch")
+    core.require(founding_adoption.get("initial_phase") == "F0-founder-led-bootstrap", "Founding Steward assignment must originate in constitutive F0 adoption")
+    core.require(isinstance(founding_version, str) and founding_version, "Founding Steward founding governance version missing")
     assignment_hash = core.sha256_json(_assignment_payload(status, founding))
 
     ref = founder.get("cessation_record")
@@ -97,7 +100,6 @@ def validate_founding_steward_lifecycle(status: dict, founding: dict, rules: dic
         raise SystemExit("governance integrity failure: unsupported Founding Steward cessation authority_mode")
     core.require(set(record) == required_record, "Founding Steward cessation fields incomplete/unexpected")
     core.require(record["record_type"] == "founding-steward-cessation" and record["status"] == "adopted", "Founding Steward cessation record invalid")
-    core.require(record["governance_version"] == status["governance_version"], "Founding Steward cessation governance version mismatch")
     core.require(record["founding_steward_person_id"] == founder["person_id"] and record["founding_steward_record_id"] == founder["record_id"], "Founding Steward cessation identity mismatch")
     core.require(record["founding_assignment_payload_sha256"] == assignment_hash, "Founding Steward cessation does not bind exact initial assignment")
     decision_id = record["decision_id"]
@@ -105,8 +107,9 @@ def validate_founding_steward_lifecycle(status: dict, founding: dict, rules: dic
     decision_date_text = record["decision_date"]
     decision_date = core.parse_iso_date(decision_date_text, "Founding Steward cessation decision_date")
     effective = core.parse_iso_date(record["effective_date"], "Founding Steward cessation effective_date")
-    assignment_effective = core.parse_iso_date(founder["assignment_effective_date"], "Founding Steward assignment_effective_date")
-    core.require(assignment_effective <= decision_date <= effective, "Founding Steward cessation chronology invalid")
+    event_version = release_history.governance_version_as_of(status, decision_date)
+    core.require(record["governance_version"] == event_version, "Founding Steward cessation must use governance version operative on decision date")
+    core.require(founding_effective <= decision_date <= effective, "Founding Steward cessation chronology invalid")
     core.require(isinstance(record["reason"], str) and record["reason"].strip(), "Founding Steward cessation reason required")
 
     payload = {k: v for k, v in record.items() if k not in {"signature_evidence", "process_evidence", "approval_evidence", "cessation_payload_sha256"}}
@@ -122,8 +125,8 @@ def validate_founding_steward_lifecycle(status: dict, founding: dict, rules: dic
             decision_id,
             payload_hash,
             "founding-steward-cessation",
-            status["governance_version"],
-            status["governance_version"],
+            event_version,
+            event_version,
         )
         core.require(signature.get("signed_date") == decision_date_text, "Founding Steward resignation signature must bind decision date")
     elif mode == "succession-process":
@@ -132,7 +135,7 @@ def validate_founding_steward_lifecycle(status: dict, founding: dict, rules: dic
             record["process_evidence"],
             "Founding Steward succession-trigger evidence",
             "founding-steward-succession-evidence",
-            status["governance_version"],
+            event_version,
             f"founding-steward-cessation:{founder['person_id']}",
         )
         core.require(process.get("decision_id") == decision_id, "Founding Steward succession evidence decision mismatch")
@@ -141,7 +144,7 @@ def validate_founding_steward_lifecycle(status: dict, founding: dict, rules: dic
         core.require(process.get("effective_date") == record["effective_date"] and process.get("cessation_type") == record["cessation_type"], "Founding Steward succession evidence chronology/type mismatch")
         completed = core.parse_iso_date(process.get("completed_date"), "Founding Steward succession evidence completed_date")
         core.require(
-            assignment_effective <= completed <= decision_date <= effective,
+            founding_effective <= completed <= decision_date <= effective,
             "Founding Steward succession evidence must be complete no later than the cessation decision/effective boundary",
         )
         supporting = process.get("supporting_evidence")
@@ -150,14 +153,14 @@ def validate_founding_steward_lifecycle(status: dict, founding: dict, rules: dic
             support = core.validate_supporting_evidence_ref(
                 support_ref,
                 f"Founding Steward succession supporting evidence {index}",
-                status["governance_version"],
+                event_version,
             )
             captured = core.parse_iso_date(
                 support.get("captured_date"),
                 f"Founding Steward succession supporting evidence {index}.captured_date",
             )
             core.require(
-                assignment_effective <= captured <= completed,
+                founding_effective <= captured <= completed,
                 "Founding Steward succession supporting evidence cannot be captured after process completion",
             )
     else:
@@ -184,7 +187,7 @@ def founding_steward_active_on(status: dict, founding: dict, rules: dict, member
     if status.get("operative") is not True:
         return False
     cessation = validate_founding_steward_lifecycle(status, founding, rules, membership)
-    start = core.parse_iso_date(founding["founding_steward"]["assignment_effective_date"], "Founding Steward assignment_effective_date")
+    start = release_history.founding_effective_date(status)
     if target < start:
         return False
     return cessation is None or target < cessation
