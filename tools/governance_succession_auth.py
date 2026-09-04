@@ -5,6 +5,8 @@ from datetime import date
 import validate_governance as core
 import governance_founding_lifecycle as founding_lifecycle
 import governance_temporal_roles as temporal_roles
+import governance_release_authority as release_authority
+import governance_release_history as release_history
 
 
 ORIG_VALIDATE_FOUNDING_STEWARD_LIFECYCLE = founding_lifecycle.validate_founding_steward_lifecycle
@@ -15,7 +17,7 @@ def _require_contract(founding: dict) -> None:
     contract = founding.get("succession_authentication_contract")
     core.require(
         contract == {
-            "adopted_process_reference": "policy/governance-status.json#activation_evidence.succession_process",
+            "adopted_process_reference": "operative-release-authority-snapshot#activation_evidence.succession_process",
             "adopted_process_requires_authenticated_authorized_reviewers": True,
             "cessation_event_must_bind_exact_adopted_process": True,
             "guardian_assignment_event_must_bind_exact_adopted_process": True,
@@ -27,23 +29,24 @@ def _require_contract(founding: dict) -> None:
     )
 
 
-def _adopted_process(status: dict) -> tuple[dict, dict, set[str]]:
-    activation = status.get("activation_evidence")
-    core.require(isinstance(activation, dict), "governance activation_evidence missing")
+def _adopted_process(status: dict, target: date) -> tuple[dict, dict, set[str], dict]:
+    authority_status, _, _, _ = release_authority.authority_context_as_of(status, target)
+    activation = authority_status.get("activation_evidence")
+    core.require(isinstance(activation, dict), "historical governance activation_evidence missing")
     ref = activation.get("succession_process")
-    core.require(isinstance(ref, dict), "succession authority requires adopted succession_process reference")
+    core.require(isinstance(ref, dict), "succession authority requires adopted succession_process reference in release authority snapshot")
     process = core.validate_process_evidence_ref(
         ref,
         "adopted succession process",
         "succession-process-evidence",
-        status["governance_version"],
+        authority_status["governance_version"],
         "succession-process",
     )
     process_id = process.get("process_id")
     core.require(isinstance(process_id, str) and process_id.strip(), "adopted succession process_id required")
     completed = core.parse_iso_date(process.get("completed_date"), "adopted succession process completed_date")
-    effective = core.parse_iso_date(status["effective_date"], "governance effective_date")
-    core.require(completed <= effective, "adopted succession process must be complete by governance effective date")
+    authority_effective = core.parse_iso_date(authority_status["effective_date"], "succession authority release effective_date")
+    core.require(completed <= authority_effective, "adopted succession process must be complete by the release effective date that activates it")
 
     authorized = process.get("authorized_reviewer_person_ids")
     core.require(
@@ -87,8 +90,8 @@ def _adopted_process(status: dict) -> tuple[dict, dict, set[str]]:
             process_id,
             payload_hash,
             "succession-process-authority",
-            status["governance_version"],
-            status["governance_version"],
+            authority_status["governance_version"],
+            authority_status["governance_version"],
         )
         signed = core.parse_iso_date(
             signature.get("signed_date"),
@@ -97,7 +100,7 @@ def _adopted_process(status: dict) -> tuple[dict, dict, set[str]]:
         core.require(signed <= completed, "adopted succession process signature postdates process completion")
         seen.add(person_id)
     core.require(seen == set(authorized), "adopted succession process missing authorized reviewer signature")
-    return process, ref, set(authorized)
+    return process, ref, set(authorized), authority_status
 
 
 def _validate_event(
@@ -105,25 +108,29 @@ def _validate_event(
     process: dict,
     label: str,
     decision_id: str,
+    decision_date: date,
     completed: date,
     earliest: date,
 ) -> None:
-    adopted, adopted_ref, authorized = _adopted_process(status)
+    adopted, adopted_ref, authorized, authority_status = _adopted_process(status, decision_date)
+    event_version = authority_status["governance_version"]
+    authority_effective = core.parse_iso_date(authority_status["effective_date"], f"{label} authority effective_date")
     core.require(
         process.get("adopted_succession_process") == adopted_ref,
-        f"{label} must bind exact status.activation_evidence.succession_process",
+        f"{label} must bind the exact succession process of the release operative on decision_date",
     )
     core.require(
         process.get("adopted_succession_process_id") == adopted.get("process_id"),
         f"{label} adopted succession process identity mismatch",
     )
+    core.require(process.get("governance_version") == event_version, f"{label} must use governance version operative on decision_date")
     reviewers = process.get("reviewer_ids")
     core.require(
         isinstance(reviewers, list)
         and reviewers
         and len(reviewers) == len(set(reviewers))
         and set(reviewers).issubset(authorized),
-        f"{label} reviewers must be authorized participants of the adopted succession process",
+        f"{label} reviewers must be authorized participants of the succession process then in force",
     )
 
     payload = {
@@ -140,6 +147,7 @@ def _validate_event(
         f"{label} requires one signature per participating reviewer",
     )
     seen: set[str] = set()
+    lower_bound = max(earliest, authority_effective)
     for index, sig_ref in enumerate(signatures):
         envelope, _ = core.validate_content_ref(
             sig_ref,
@@ -155,11 +163,15 @@ def _validate_event(
             decision_id,
             payload_hash,
             "succession-process-event",
-            status["governance_version"],
-            status["governance_version"],
+            event_version,
+            event_version,
         )
         signed = core.parse_iso_date(signature.get("signed_date"), f"{label} reviewer signature {index}.signed_date")
-        core.require(earliest <= signed <= completed, f"{label} reviewer signature chronology invalid")
+        core.require(lower_bound <= signed <= completed, f"{label} reviewer signature chronology invalid")
+        core.require(
+            release_history.governance_version_as_of(status, signed) == event_version,
+            f"{label} reviewer signature crosses a governance release boundary",
+        )
         seen.add(person_id)
     core.require(seen == set(reviewers), f"{label} missing authenticated reviewer signature")
 
@@ -177,23 +189,23 @@ def validate_founding_steward_lifecycle(status: dict, founding: dict, rules: dic
     if record.get("authority_mode") != "succession-process":
         return result
 
+    decision_date = core.parse_iso_date(record.get("decision_date"), "Founding Steward succession decision_date")
+    event_version = release_history.governance_version_as_of(status, decision_date)
     process = core.validate_process_evidence_ref(
         record.get("process_evidence"),
         "authenticated Founding Steward succession trigger",
         "founding-steward-succession-evidence",
-        status["governance_version"],
+        event_version,
         f"founding-steward-cessation:{record.get('founding_steward_person_id')}",
     )
     completed = core.parse_iso_date(process.get("completed_date"), "Founding Steward succession process completed_date")
-    assignment_effective = core.parse_iso_date(
-        founding["founding_steward"]["assignment_effective_date"],
-        "Founding Steward assignment effective date",
-    )
+    assignment_effective = release_history.founding_effective_date(status)
     _validate_event(
         status,
         process,
         "Founding Steward succession trigger",
         record["decision_id"],
+        decision_date,
         completed,
         assignment_effective,
     )
@@ -214,11 +226,13 @@ def validate_mission_guardian_assignment(status, founding, rules, membership, ph
     if record.get("authority_mode") != "succession-process":
         return
 
+    decision_date = core.parse_iso_date(record.get("decision_date"), "Mission Guardian succession decision_date")
+    event_version = release_history.governance_version_as_of(status, decision_date)
     process = core.validate_process_evidence_ref(
         record.get("process_evidence"),
         "authenticated Mission Guardian succession event",
         "mission-guardian-succession-evidence",
-        status["governance_version"],
+        event_version,
         f"mission-guardian-assignment:{record.get('guardian_person_id')}",
     )
     completed = core.parse_iso_date(process.get("completed_date"), "Mission Guardian succession process completed_date")
@@ -231,6 +245,7 @@ def validate_mission_guardian_assignment(status, founding, rules, membership, ph
         process,
         "Mission Guardian succession event",
         record["decision_id"],
+        decision_date,
         completed,
         cessation_effective,
     )
