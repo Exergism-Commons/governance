@@ -1,64 +1,22 @@
 /* Shared Exergism Commons header/footer wordmark treatment. */
 .brand {
   align-items: center;
-  gap: 4px !important;
 }
 
-.brand-logo {
-  display: block;
-  width: 38px !important;
-  height: 38px !important;
-  flex: 0 0 38px;
-  padding: 4px;
-  object-fit: contain;
-  border-radius: 13px 4px 4px 13px !important;
-  background: #f9f9f9 !important;
-  box-shadow: none !important;
-}
-
-.brand-copy {
-  display: grid;
-  justify-items: start;
-  gap: 3px;
-  line-height: .98;
-}
-
-.brand-copy strong {
-  display: block;
-  width: max-content;
-  max-width: 100%;
-  padding: 4px 10px 3px;
-  border-radius: 4px 15px 4px 4px;
-  background: #f9f9f9;
-  color: #111512;
-  font-size: .97rem !important;
-  font-weight: 820;
-  letter-spacing: -.035em;
-  white-space: nowrap;
-}
-
-.brand-copy span {
-  display: block;
-  width: fit-content;
-  max-width: 100%;
-  margin-top: 0 !important;
-  padding: 3px 10px 4px;
-  border-radius: 4px 4px 12px 4px;
-  background: #f9f9f9;
-  color: #4f5650 !important;
-  font-size: .62rem !important;
-  font-weight: 820 !important;
-  letter-spacing: .17em !important;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
+/*
+ * Header rule: one physical plate only. The Commons symbol asset has a white
+ * background, so the whole signature uses that same solid white. Children
+ * never create their own tiles, bands or colour planes.
+ */
 .site-header .brand {
+  display: inline-flex;
   width: fit-content;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  gap: 8px !important;
+  padding: 6px 13px 6px 6px;
+  overflow: hidden;
+  border: 1px solid rgba(17, 21, 18, .08);
+  border-radius: 16px;
+  background: #fff;
   box-shadow: 0 5px 16px rgba(17, 21, 18, .065);
 }
 
@@ -67,9 +25,55 @@
   content: none !important;
 }
 
-/* The source PNG has a white square; multiply makes it inherit #f9f9f9. */
 .site-header .brand-logo {
-  mix-blend-mode: multiply;
+  display: block;
+  width: 38px !important;
+  height: 38px !important;
+  flex: 0 0 38px;
+  padding: 0;
+  object-fit: contain;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  mix-blend-mode: normal;
+}
+
+.site-header .brand-copy {
+  display: grid;
+  justify-items: start;
+  align-content: center;
+  gap: 3px;
+  line-height: .98;
+  background: transparent;
+}
+
+.site-header .brand-copy strong,
+.site-header .brand-copy span {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  margin: 0 !important;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.site-header .brand-copy strong {
+  color: #111512;
+  font-size: .97rem !important;
+  font-weight: 820;
+  letter-spacing: -.035em;
+}
+
+.site-header .brand-copy span {
+  color: #4f5650 !important;
+  font-size: .62rem !important;
+  font-weight: 820 !important;
+  letter-spacing: .17em !important;
+  text-transform: uppercase;
 }
 
 .brand-footer .brand-logo {
@@ -81,24 +85,21 @@
 }
 
 @media (max-width: 650px) {
-  .brand { gap: 3px !important; }
+  .site-header .brand {
+    gap: 7px !important;
+    padding: 5px 11px 5px 5px;
+    border-radius: 14px;
+  }
 
-  .brand-logo {
+  .site-header .brand-logo {
     width: 36px !important;
     height: 36px !important;
     flex-basis: 36px;
-    padding: 4px;
   }
 
-  .brand-copy { gap: 2px; }
-
-  .brand-copy strong {
-    padding: 3px 8px 3px;
-    font-size: .94rem !important;
-  }
-
-  .brand-copy span {
-    padding: 2px 8px 3px;
+  .site-header .brand-copy { gap: 2px; }
+  .site-header .brand-copy strong { font-size: .94rem !important; }
+  .site-header .brand-copy span {
     color: #4b524c !important;
     font-size: .59rem !important;
   }
