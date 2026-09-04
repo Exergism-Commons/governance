@@ -20,6 +20,7 @@ import governance_founding_authority as founding_authority
 import governance_cla_schedule_binding as cla_schedule_binding
 import governance_phase_maturity_chronology as maturity_chronology
 import governance_adoption_chronology as adoption_chronology
+import governance_strict_json as strict_json
 import governance_strict_yaml as strict_yaml
 import governance_signature_chronology as signature_chronology
 import governance_membership_process_chronology as process_chronology
@@ -30,6 +31,7 @@ import governance_release_history as release_history
 import governance_release_membership as release_membership
 import governance_guardian_consent as guardian_consent
 import governance_release_authority as release_authority
+import governance_release_proof as release_proof
 import governance_succession_auth as succession_auth
 import governance_open_knowledge as open_knowledge
 
@@ -67,6 +69,10 @@ def validate_membership_registry(*args, **kwargs):
 
 
 def main() -> None:
+    # JSON ambiguity is a parser-level authority bug, so duplicate-name
+    # rejection must be installed before *any* repository/record/embedded JSON
+    # is decoded by the canonical verdict.
+    strict_json.install()
     validate_saved_base_callbacks()
     strict_yaml.install()
     signature_chronology.install()
@@ -109,15 +115,21 @@ def main() -> None:
 
     core.main()
 
+    status = core.load_json("policy/governance-status.json")
+    membership = core.load_json("policy/membership-status.json")
+
+    # A structurally contiguous hash chain is not enough. Prove release #1 and
+    # then every amendment, in order, under its predecessor's frozen authority
+    # before any descendant snapshot is accepted as an authority source.
+    release_proof.validate_release_proof_chain(status, membership)
+
     # Open Knowledge is a constitutional activation dependency, not an optional
     # descriptive sidecar. Its draft/operative state, exact policy bytes,
-    # rights-review binding, anti-enclosure taxonomy and governance-adoption
-    # binding are checked after the core authority chain has been validated.
+    # authenticated rights-review binding, anti-enclosure taxonomy and full
+    # release-history binding are checked after the core authority chain.
     open_knowledge.validate_open_knowledge()
 
-    status = core.load_json("policy/governance-status.json")
     rules = core.load_json("policy/decision-rules.json")
-    membership = core.load_json("policy/membership-status.json")
     founding = core.load_json("policy/founding-stewardship.json")
     phase_evidence = core.load_json("policy/phase-evidence.json")
     adoption_chronology.validate_governance_adoption_chronology(status)
