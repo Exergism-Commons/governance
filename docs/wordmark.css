@@ -107,11 +107,20 @@
   }
 }
 
-/* Footer remains deliberately lighter than the title stamp. */
+/* Footer uses the transparent Commons symbol with no tile, disc or backing. */
 .brand-footer .brand-logo {
+  display: block;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px;
   padding: 0;
-  background: transparent !important;
-  filter: grayscale(1) invert(1) brightness(1.16);
+  object-fit: none;
+  object-position: 9999px 9999px;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: url("https://www.exergism.org/assets/brand/exergism-symbol.svg") center / 32px auto no-repeat !important;
+  box-shadow: none !important;
+  filter: invert(1) brightness(1.16);
   mix-blend-mode: normal;
   opacity: .94;
 }
@@ -160,5 +169,12 @@
     font-size: .44rem !important;
     font-weight: 500 !important;
     letter-spacing: .34em !important;
+  }
+
+  .brand-footer .brand-logo {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px;
+    background-size: 29px auto !important;
   }
 }
