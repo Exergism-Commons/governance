@@ -51,6 +51,13 @@
     "mission_locked_requires_minimum_vote_separation_days": 60,
     "mission_locked_requires_guardian_consent_during_founding_period": true
   },
+  "authority_provenance_contract": {
+    "release_authority_snapshot_required": true,
+    "amendment_authorized_by_predecessor_release": true,
+    "proposed_rules_cannot_authorize_their_own_adoption": true,
+    "predecessor_activation_processes_control_amendment_vote": true,
+    "approval_ballots_bind_predecessor_authority": true
+  },
   "adoption_binding_contract": {
     "immutable_normative_machine_paths": [
       "policy/decision-rules.json"
@@ -85,5 +92,5 @@
   "succession_process_adopted": false,
   "qualified_legal_review_complete": false,
   "integrated_architecture_pr": 2,
-  "notes": "Draft architecture only. GitHub organization/repository state does not constitute legal adoption or institutional authority. Operative state requires adopted non-draft human artifacts bound by SHA-256, a committed content-addressed governance-adoption record, structured legal identity, constitutive signatures bound to the exact founding-adoption payload, and content-addressed implementation/legal-review evidence. Constitutive adoption is reserved permanently for release #1 (version 1.0). Every later governance release must form a contiguous content-addressed predecessor chain and use either Constitutional Amendment or Mission-Locked Amendment authority; Mission-Locked releases additionally require two successful votes separated by at least 60 days, signed independent classification/review, and Founding-Period guardian consent. Governance activation is prospective. The immutable founding adoption anchors initial constitutive authority; later mutable state transitions and later governance releases must prove their own adopted authority."
+  "notes": "Draft architecture only. GitHub organization/repository state does not constitute legal adoption or institutional authority. Operative state requires adopted non-draft human artifacts bound by SHA-256, a committed content-addressed governance-adoption record, structured legal identity, constitutive signatures bound to the exact founding-adoption payload, and content-addressed implementation/legal-review evidence. Constitutive adoption is reserved permanently for release #1 (version 1.0). Every operative release must bind an immutable authority snapshot. Every later governance release is authorized exclusively by the predecessor release's bound decision rules and activation-process references; proposed replacement rules cannot authorize their own adoption, and authenticated ballots bind both the proposed artifacts and the predecessor authority digests. Every later release must form a contiguous content-addressed predecessor chain and use either Constitutional Amendment or Mission-Locked Amendment authority; Mission-Locked releases additionally require two successful votes separated by at least 60 days, signed independent classification/review, and Founding-Period guardian consent. Governance activation is prospective. The immutable founding adoption anchors initial constitutive authority; later mutable state transitions and later governance releases must prove their own adopted authority."
 }
