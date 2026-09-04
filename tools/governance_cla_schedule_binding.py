@@ -1,8 +1,16 @@
 from __future__ import annotations
 
+import json
 import re
 
 import validate_governance as core
+
+
+SENSITIVE_MATERIAL_RIGHTS_FIELDS = {
+    "cla_outbound_family",
+    "knowledge_outbound_family",
+    "capability_license_boundary",
+}
 
 
 def block_scalar(text: str, parent: str, key: str):
@@ -31,11 +39,7 @@ def block_list(text: str, parent: str, key: str) -> list[str]:
     """Read exactly one direct child sequence from a named top-level mapping block."""
     block = core.yaml_block(text, parent)
     lines = block.splitlines()
-    roots = [
-        index
-        for index, raw in enumerate(lines)
-        if raw == f"{key}:"
-    ]
+    roots = [index for index, raw in enumerate(lines) if raw == f"{key}:"]
     core.require(len(roots) == 1, f"YAML requires exactly one direct {parent}.{key}")
     values: list[str] = []
     for raw in lines[roots[0] + 1 :]:
@@ -89,6 +93,38 @@ def parse_schedule_coverage(text: str) -> dict[str, set[str]]:
     return result
 
 
+def parse_schedule_rights_manifest(text: str) -> dict[str, dict]:
+    begin = "<!-- EC-SCHEDULE-BINDING-MANIFEST:BEGIN -->"
+    end = "<!-- EC-SCHEDULE-BINDING-MANIFEST:END -->"
+    core.require(text.count(begin) == 1 and text.count(end) == 1, "Project Schedule requires exactly one rights-binding manifest")
+    payload = text.split(begin, 1)[1].split(end, 1)[0].strip()
+    core.require(payload.startswith("```json") and payload.endswith("```"), "Project Schedule rights manifest must be a fenced JSON block")
+    payload = payload[len("```json") : -len("```")].strip()
+    try:
+        manifest = json.loads(payload)
+    except json.JSONDecodeError as exc:
+        raise SystemExit("governance integrity failure: Project Schedule rights manifest is not valid JSON") from exc
+
+    core.require(isinstance(manifest, dict) and manifest.get("schema_version") == 1, "unsupported Project Schedule rights manifest schema")
+    repositories = manifest.get("repositories")
+    core.require(isinstance(repositories, dict) and repositories, "Project Schedule rights manifest has no repositories")
+
+    for repository, repo_data in repositories.items():
+        core.require(isinstance(repository, str) and repository, "Project Schedule rights manifest repository id invalid")
+        core.require(isinstance(repo_data, dict), f"Project Schedule rights manifest repository invalid: {repository}")
+        core.require(set(repo_data) == {"cla_patent_grant", "material_classes"}, f"Project Schedule rights manifest repository fields invalid: {repository}")
+        core.require(repo_data["cla_patent_grant"] == "none", f"Project Schedule must not infer CLA patent grants: {repository}")
+        material_classes = repo_data["material_classes"]
+        core.require(isinstance(material_classes, dict) and material_classes, f"Project Schedule rights manifest material classes missing: {repository}")
+        for material_id, rights in material_classes.items():
+            core.require(isinstance(material_id, str) and material_id, f"Project Schedule rights manifest material id invalid: {repository}")
+            core.require(isinstance(rights, dict) and rights, f"Project Schedule rights manifest empty rights fields: {repository}/{material_id}")
+            core.require(set(rights).issubset(SENSITIVE_MATERIAL_RIGHTS_FIELDS), f"Project Schedule rights manifest contains unsupported rights field: {repository}/{material_id}")
+            core.require("cla_outbound_family" in rights, f"Project Schedule rights manifest requires cla_outbound_family: {repository}/{material_id}")
+            core.require(all(isinstance(value, str) and value for value in rights.values()), f"Project Schedule rights manifest values must be non-empty strings: {repository}/{material_id}")
+    return repositories
+
+
 def parse_projection_repositories(text: str) -> dict[str, dict]:
     """Parse only authoritative direct fields beneath the top-level repositories sequence."""
     lines = text.splitlines()
@@ -97,6 +133,7 @@ def parse_projection_repositories(text: str) -> dict[str, dict]:
 
     result: dict[str, dict] = {}
     current_repo: str | None = None
+    current_material: str | None = None
     material_block_open = False
     material_block_seen: set[str] = set()
 
@@ -114,7 +151,13 @@ def parse_projection_repositories(text: str) -> dict[str, dict]:
             repository = stripped.split(":", 1)[1].strip().strip("'\"")
             core.require(repository and repository not in result, f"covered-projects duplicate/invalid repository: {repository}")
             current_repo = repository
-            result[current_repo] = {"cla_coverage": None, "material_ids": set()}
+            current_material = None
+            result[current_repo] = {
+                "cla_coverage": None,
+                "cla_patent_grant": None,
+                "material_ids": set(),
+                "material_rights": {},
+            }
             material_block_open = False
             continue
 
@@ -127,42 +170,62 @@ def parse_projection_repositories(text: str) -> dict[str, dict]:
             core.require(state, f"covered-projects empty cla_coverage: {current_repo}")
             result[current_repo]["cla_coverage"] = state
             material_block_open = False
+            current_material = None
+            continue
+
+        if stripped.startswith("cla_patent_grant:"):
+            core.require(indent == 4, f"covered-projects {current_repo}.cla_patent_grant must be a direct repository child")
+            core.require(result[current_repo]["cla_patent_grant"] is None, f"covered-projects duplicate cla_patent_grant: {current_repo}")
+            value = stripped.split(":", 1)[1].strip().strip("'\"")
+            core.require(value, f"covered-projects empty cla_patent_grant: {current_repo}")
+            result[current_repo]["cla_patent_grant"] = value
+            material_block_open = False
+            current_material = None
             continue
 
         if indent == 4 and stripped == "material_classes:":
             core.require(current_repo not in material_block_seen, f"covered-projects duplicate material_classes block: {current_repo}")
             material_block_seen.add(current_repo)
             material_block_open = True
+            current_material = None
             continue
+
+        if material_block_open and stripped.startswith("- id:"):
+            core.require(indent == 6, f"covered-projects material id must be a direct item of {current_repo}.material_classes")
+            material_id = stripped.split(":", 1)[1].strip().strip("'\"")
+            core.require(material_id and material_id not in result[current_repo]["material_ids"], f"covered-projects duplicate/invalid material class: {current_repo}/{material_id}")
+            result[current_repo]["material_ids"].add(material_id)
+            result[current_repo]["material_rights"][material_id] = {}
+            current_material = material_id
+            continue
+
+        if ":" in stripped:
+            key = stripped.split(":", 1)[0]
+            if key in SENSITIVE_MATERIAL_RIGHTS_FIELDS:
+                core.require(material_block_open and current_material is not None and indent == 8, f"covered-projects {key} must be a direct material-class child")
+                rights = result[current_repo]["material_rights"][current_material]
+                core.require(key not in rights, f"covered-projects duplicate {key}: {current_repo}/{current_material}")
+                value = stripped.split(":", 1)[1].strip().strip("'\"")
+                core.require(value, f"covered-projects empty {key}: {current_repo}/{current_material}")
+                rights[key] = value
+                continue
 
         if indent <= 4:
             material_block_open = False
-
-        if stripped.startswith("- id:"):
-            core.require(
-                material_block_open and indent == 6,
-                f"covered-projects material id must be a direct item of {current_repo}.material_classes",
-            )
-            material_id = stripped.split(":", 1)[1].strip().strip("'\"")
-            core.require(
-                material_id and material_id not in result[current_repo]["material_ids"],
-                f"covered-projects duplicate/invalid material class: {current_repo}/{material_id}",
-            )
-            result[current_repo]["material_ids"].add(material_id)
+            current_material = None
 
     core.require(result, "covered-projects contains no repository coverage")
     core.require(set(result) == material_block_seen, "every covered-projects repository requires exactly one material_classes block")
     for repository, data in result.items():
         core.require(data["cla_coverage"] is not None, f"covered-projects repository missing direct cla_coverage: {repository}")
+        core.require(data["cla_patent_grant"] is not None, f"covered-projects repository missing direct cla_patent_grant: {repository}")
         core.require(data["material_ids"], f"covered-projects repository has no material classes: {repository}")
+        core.require(set(data["material_rights"]) == data["material_ids"], f"covered-projects material rights map incomplete: {repository}")
     return result
 
 
 def parse_projection_coverage(text: str) -> dict[str, set[str]]:
-    return {
-        repository: set(data["material_ids"])
-        for repository, data in parse_projection_repositories(text).items()
-    }
+    return {repository: set(data["material_ids"]) for repository, data in parse_projection_repositories(text).items()}
 
 
 def validate_schedule_projection_manifest(status_text: str | None = None, projects_text: str | None = None) -> None:
@@ -176,18 +239,31 @@ def validate_schedule_projection_manifest(status_text: str | None = None, projec
     schedule_text = core.repo_file(schedule_artifact, "project_schedule_artifact").read_text(encoding="utf-8")
 
     schedule = parse_schedule_coverage(schedule_text)
-    projection = parse_projection_coverage(projects_text)
+    rights_manifest = parse_schedule_rights_manifest(schedule_text)
+    projection = parse_projection_repositories(projects_text)
+
     core.require(set(projection) == set(schedule), "covered-projects repository set does not exactly match Project Schedule")
+    core.require(set(rights_manifest) == set(schedule), "Project Schedule rights manifest repository set does not match human Schedule")
     for repository in sorted(schedule):
+        core.require(projection[repository]["material_ids"] == schedule[repository], f"covered-projects material-class set does not match Project Schedule for {repository}")
+        manifest_materials = rights_manifest[repository]["material_classes"]
+        core.require(set(manifest_materials) == schedule[repository], f"Project Schedule rights manifest material set mismatch for {repository}")
         core.require(
-            projection[repository] == schedule[repository],
-            f"covered-projects material-class set does not match Project Schedule for {repository}",
+            projection[repository]["cla_patent_grant"] == rights_manifest[repository]["cla_patent_grant"],
+            f"covered-projects patent-grant boundary does not match Project Schedule for {repository}",
         )
+        for material_id in sorted(schedule[repository]):
+            core.require(
+                projection[repository]["material_rights"][material_id] == manifest_materials[material_id],
+                f"covered-projects rights fields do not match Project Schedule for {repository}/{material_id}",
+            )
 
     contract = block_scalar(projects_text, "schedule_binding_contract", "authoritative_schedule_artifact")
     core.require(contract == schedule_artifact, "covered-projects schedule binding points to wrong artifact")
     core.require(block_scalar(projects_text, "schedule_binding_contract", "exact_repository_set_required") is True, "covered-projects exact repository-set binding disabled")
     core.require(block_scalar(projects_text, "schedule_binding_contract", "exact_material_class_id_set_per_repository_required") is True, "covered-projects exact material-class binding disabled")
+    core.require(block_scalar(projects_text, "schedule_binding_contract", "exact_repository_rights_fields_required") is True, "covered-projects repository rights-field binding disabled")
+    core.require(block_scalar(projects_text, "schedule_binding_contract", "exact_material_rights_fields_required") is True, "covered-projects material rights-field binding disabled")
 
 
 def validate_covered_projects(status_text: str, projects_text: str) -> str:
@@ -209,10 +285,7 @@ def validate_covered_projects(status_text: str, projects_text: str) -> str:
     repositories = parse_projection_repositories(projects_text)
     for repository, data in repositories.items():
         state = data["cla_coverage"]
-        core.require(
-            state in final_states and state not in provisional_states,
-            f"covered-projects repository not final: {repository}={state}",
-        )
+        core.require(state in final_states and state not in provisional_states, f"covered-projects repository not final: {repository}={state}")
 
     core.require(
         "current_outbound: unresolved" not in projects_text and "cla_outbound_family: unresolved" not in projects_text,
