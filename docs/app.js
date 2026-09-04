@@ -31,14 +31,68 @@ viewportFix.textContent = `
     min-width: 0;
   }
 
-  /* Keep the Samsung-width fix without turning every shell-backed panel
-     into a full-bleed block. The gutter now lives outside the shell, as on
-     the other Commons sites. */
   .shell {
     width: calc(100% - 40px) !important;
     max-width: 1180px;
     margin-inline: auto;
     padding-inline: 0;
+  }
+
+  /* Governance uses the same centered content rail as the other Commons
+     sites. Colored section surfaces are panels on that rail, not full-bleed
+     bands across the viewport. */
+  .statement,
+  .how-section,
+  .section-dark,
+  .section-decisions,
+  .vote-section,
+  .example-section,
+  .machine-section,
+  .cla-section {
+    position: relative;
+    isolation: isolate;
+    background: transparent !important;
+    border: 0 !important;
+  }
+
+  .statement::before,
+  .how-section::before,
+  .section-dark::before,
+  .section-decisions::before,
+  .vote-section::before,
+  .example-section::before,
+  .machine-section::before,
+  .cla-section::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset-block: 0;
+    left: 50%;
+    width: calc(100% - 40px);
+    max-width: 1180px;
+    transform: translateX(-50%);
+    box-sizing: border-box;
+    border-radius: 24px;
+  }
+
+  .statement::before,
+  .how-section::before,
+  .section-decisions::before {
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+
+  .section-dark::before,
+  .vote-section::before,
+  .cla-section::before {
+    background: var(--dark);
+    border: 1px solid var(--dark-line);
+  }
+
+  .example-section::before,
+  .machine-section::before {
+    background: var(--soft-green);
+    border: 1px solid #c2c8bd;
   }
 
   .hero-grid,
@@ -64,6 +118,19 @@ viewportFix.textContent = `
       max-width: 1180px;
       padding-inline: 0;
     }
+
+    .statement::before,
+    .how-section::before,
+    .section-dark::before,
+    .section-decisions::before,
+    .vote-section::before,
+    .example-section::before,
+    .machine-section::before,
+    .cla-section::before {
+      width: calc(100% - 30px);
+      max-width: 1180px;
+      border-radius: 20px;
+    }
   }
 
   @media (max-width: 650px) {
@@ -71,6 +138,19 @@ viewportFix.textContent = `
       width: calc(100% - 24px) !important;
       max-width: 1180px;
       padding-inline: 0;
+    }
+
+    .statement::before,
+    .how-section::before,
+    .section-dark::before,
+    .section-decisions::before,
+    .vote-section::before,
+    .example-section::before,
+    .machine-section::before,
+    .cla-section::before {
+      width: calc(100% - 24px);
+      max-width: 1180px;
+      border-radius: 18px;
     }
 
     .status-panel,
