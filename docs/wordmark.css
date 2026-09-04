@@ -35,6 +35,67 @@
   text-transform: uppercase;
 }
 
+/*
+ * The source Commons mark contains a white square. Instead of fighting that
+ * pixel background, the header turns it into the first plane of a single,
+ * auto-sizing institutional signature.
+ */
+.site-header .brand {
+  position: relative;
+  isolation: isolate;
+  width: fit-content;
+  gap: 7px !important;
+  padding: 4px 11px 4px 4px;
+  overflow: hidden;
+  border: 1px solid rgba(17, 21, 18, .09);
+  border-radius: 7px 18px 11px 7px;
+  background: #fff;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .88) inset,
+    0 5px 16px rgba(17, 21, 18, .075);
+}
+
+/* Warmer second plane behind the title/subtitle. */
+.site-header .brand::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 3px 3px 3px 36px;
+  border-radius: 3px 14px 8px 4px;
+  background: #f4f3ee;
+}
+
+/* Slight lower tonal step gives the plate depth without looking glossy. */
+.site-header .brand::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 39px;
+  right: 7px;
+  bottom: 3px;
+  height: 8px;
+  border-radius: 0 0 7px 3px;
+  background: rgba(226, 226, 220, .58);
+}
+
+.site-header .brand-logo,
+.site-header .brand-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.site-header .brand-logo {
+  background: #fff !important;
+}
+
+.site-header .brand-copy strong {
+  color: #111512;
+}
+
+.site-header .brand-copy span {
+  color: #697068;
+}
+
 .brand-footer .brand-logo {
   filter: grayscale(1) invert(1) brightness(1.16);
   opacity: .94;
@@ -49,4 +110,20 @@
   }
   .brand-copy strong { font-size: .94rem !important; }
   .brand-copy span { font-size: .59rem !important; }
+
+  .site-header .brand {
+    gap: 6px !important;
+    padding: 4px 9px 4px 4px;
+    border-radius: 7px 16px 10px 7px;
+  }
+
+  .site-header .brand::before {
+    inset: 3px 3px 3px 34px;
+    border-radius: 3px 12px 7px 4px;
+  }
+
+  .site-header .brand::after {
+    left: 37px;
+    right: 6px;
+  }
 }
