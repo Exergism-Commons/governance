@@ -1,46 +1,53 @@
 /* Shared Exergism Commons header/footer wordmark treatment. */
-.brand {
-  align-items: center;
-}
+.brand { align-items: center; }
 
 /*
- * Selected brand direction: concept 3 — Stamp Lockup.
- * The header identity is an outlined institutional stamp: symbol compartment
- * on the left, typographic identity on the right, no filled backing plate.
+ * Concept 3 — Stamp Lockup.
+ * Shared geometry is intentionally identical across every public EC surface so
+ * the identity remains visually fixed while moving between sites.
  */
+.site-header .shell {
+  width: min(1180px, calc(100% - 40px)) !important;
+  max-width: 1180px !important;
+  margin-inline: auto !important;
+  padding-inline: 0 !important;
+}
+.site-header .nav-wrap,
+.site-header .header-inner { min-height: 76px; }
+
 .site-header .brand {
   display: inline-grid;
-  grid-template-columns: 64px auto;
+  grid-template-columns: 66px 1fr;
   align-items: stretch;
-  width: max-content;
+  width: 300px;
+  height: 60px;
   gap: 0 !important;
   padding: 0;
   overflow: hidden;
-  border: 1.5px solid #111512;
+  border: 2px solid #111512;
   border-radius: 6px;
   background: transparent;
   clip-path: none;
   filter: none;
   box-shadow: none;
+  text-decoration: none;
   transition: transform .16s ease, border-color .16s ease;
 }
 
 .site-header .brand::before,
-.site-header .brand::after {
-  content: none !important;
-}
+.site-header .brand::after { content: none !important; }
 
 .site-header .brand-logo {
   display: block;
   box-sizing: border-box;
-  width: 64px !important;
-  height: 58px !important;
-  min-width: 64px;
+  width: 66px !important;
+  height: 56px !important;
+  min-width: 66px;
   padding: 0;
   object-fit: none;
   object-position: 9999px 9999px;
   border: 0 !important;
-  border-right: 1.5px solid #111512 !important;
+  border-right: 2px solid #111512 !important;
   border-radius: 0 !important;
   background: url("https://www.exergism.org/assets/brand/exergism-symbol.svg") center / 42px auto no-repeat !important;
   box-shadow: none !important;
@@ -52,9 +59,9 @@
   display: grid;
   justify-items: start;
   align-content: center;
-  gap: 4px;
+  gap: 5px;
   min-width: 0;
-  padding: 8px 17px 8px 15px;
+  padding: 8px 16px 8px 15px;
   line-height: .96;
   background: transparent;
 }
@@ -80,10 +87,11 @@
 }
 
 .site-header .brand-copy span {
-  color: #3f4740 !important;
-  font-size: .56rem !important;
-  font-weight: 780 !important;
-  letter-spacing: .29em !important;
+  color: #4b534c !important;
+  font-size: .53rem !important;
+  font-weight: 500 !important;
+  letter-spacing: .38em !important;
+  line-height: 1;
   text-transform: uppercase;
 }
 
@@ -99,7 +107,7 @@
   }
 }
 
-/* Footer stays lighter-weight; the stamp treatment is the site title identity. */
+/* Footer remains deliberately lighter than the title stamp. */
 .brand-footer .brand-logo {
   padding: 0;
   background: transparent !important;
@@ -112,31 +120,45 @@
   .site-header .brand { transition: none; }
 }
 
+@media (max-width: 900px) {
+  .site-header .shell {
+    width: calc(100% - 30px) !important;
+    max-width: none !important;
+  }
+}
+
 @media (max-width: 650px) {
+  .site-header .shell { width: calc(100% - 24px) !important; }
+  .site-header .nav-wrap,
+  .site-header .header-inner { min-height: 68px; }
+
   .site-header .brand {
-    grid-template-columns: 52px auto;
+    grid-template-columns: 54px 1fr;
+    width: 224px;
+    height: 52px;
     border-radius: 5px;
   }
 
   .site-header .brand-logo {
-    width: 52px !important;
-    height: 50px !important;
-    min-width: 52px;
+    width: 54px !important;
+    height: 48px !important;
+    min-width: 54px;
     background-size: 34px auto !important;
   }
 
   .site-header .brand-copy {
-    gap: 3px;
-    padding: 7px 12px 7px 11px;
+    gap: 4px;
+    padding: 7px 10px 7px 10px;
   }
 
   .site-header .brand-copy strong {
-    font-size: .84rem !important;
+    font-size: .82rem !important;
     letter-spacing: -.03em;
   }
 
   .site-header .brand-copy span {
-    font-size: .48rem !important;
-    letter-spacing: .24em !important;
+    font-size: .44rem !important;
+    font-weight: 500 !important;
+    letter-spacing: .34em !important;
   }
 }
