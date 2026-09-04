@@ -15,6 +15,7 @@ import governance_temporal_phase as phase
 import governance_temporal_evidence as evidence
 import governance_temporal_roles as roles
 import governance_cla_review_hardening as cla_review_hardening
+import governance_cla_steward_history as cla_steward_history
 import governance_founding_lifecycle as founding_lifecycle
 import governance_delegation_lifecycle as delegation_lifecycle
 import governance_founding_authority as founding_authority
@@ -53,6 +54,7 @@ def validate_saved_base_callbacks() -> None:
         "phase evidence": getattr(life, "ORIG_VALIDATE_PHASE_EVIDENCE", None),
         "CLA status": getattr(life, "ORIG_VALIDATE_CLA_STATUS", None),
         "CLA reviewer binding": getattr(cla_review_hardening, "validate_cla_status", None),
+        "historical CLA Steward authority": getattr(cla_steward_history, "validate_cla_steward_authority", None),
         "release approval evidence": getattr(release_lifecycle, "ORIG_VALIDATE_APPROVAL_EVIDENCE", None),
         "release adoption authority": getattr(release_authority, "ORIG_VALIDATE_ADOPTION_RECORD", None),
         "release classification authority": getattr(release_authority, "ORIG_VALIDATE_CLASSIFICATION", None),
@@ -110,7 +112,14 @@ def main() -> None:
     founding_lifecycle.validate_founding_steward_lifecycle = succession_auth.validate_founding_steward_lifecycle
     roles.validate_mission_guardian_assignment = succession_auth.validate_mission_guardian_assignment
     life.validate_mission_guardian_assignment = succession_auth.validate_mission_guardian_assignment
-    life.validate_cla_steward_authority = roles.validate_cla_steward_authority
+
+    # CLA Steward appointments are historical governance acts. Do not route an
+    # old appointment through current release/version state, and do not alias the
+    # lifecycle callback back to roles.validate_cla_steward_authority (which
+    # would recurse in operative mode). Both consumers use the same release-aware
+    # implementation instead.
+    roles.validate_cla_steward_authority = cla_steward_history.validate_cla_steward_authority
+    life.validate_cla_steward_authority = cla_steward_history.validate_cla_steward_authority
 
     core.active_members_as_of = life.historical_active_members_as_of
     core.validate_member_admission_record = founding_authority.validate_member_admission_record
