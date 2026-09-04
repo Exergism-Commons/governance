@@ -9,6 +9,8 @@ A machine-readable projection is maintained at `../policy/covered-projects.yaml`
 
 For deterministic integrity checking, every scheduled repository declares explicit **Schedule material class IDs**. These IDs are part of the Schedule-to-projection binding contract: an operative `covered-projects.yaml` must contain exactly the same repository set and, for every repository, exactly the same material-class ID set. A projection may not silently omit a scheduled repository or scheduled material class merely by recomputing its own hash.
 
+The Schedule also carries a machine-binding manifest for rights-sensitive fields. Repository-level patent-grant state and material-level outbound/knowledge/capability boundaries are part of the exact Schedule contract. The projection may add descriptive fields, but it may not change, omit or relocate these rights-sensitive values while still claiming to represent this Schedule.
+
 ## Open Knowledge family
 
 For this Schedule, the proposed **EC Open Knowledge family** means an outbound family that preserves the freedoms and anti-enclosure constraints in `../OPEN-KNOWLEDGE-POLICY.md`: public knowledge remains inspectable, reproducible, modifiable, forkable and redistributable, with attribution/provenance and share-alike obligations permitted, and EC's own practical Source Form kept available.
@@ -175,3 +177,82 @@ Adding a project does not retroactively expand rights in older Contributions.
 If this Schedule conflicts with an explicit license notice governing Target Material, maintainers must stop and resolve the conflict rather than silently choosing whichever term is broader.
 
 No automation may infer a patent grant, copyright assignment, trademark grant, canonical authority or new outbound license from this Schedule.
+
+## 10. Machine-binding rights manifest
+
+The following manifest is normative for the Schedule-to-projection integrity check. It intentionally contains only rights-sensitive fields that must not be weakened or substituted by `policy/covered-projects.yaml`. The human sections above remain authoritative context for their meaning.
+
+<!-- EC-SCHEDULE-BINDING-MANIFEST:BEGIN -->
+```json
+{
+  "schema_version": 1,
+  "repositories": {
+    "Exergism-Commons/exergism": {
+      "cla_patent_grant": "none",
+      "material_classes": {
+        "corpus-and-documentation": {
+          "cla_outbound_family": "target-license-and-permitted-successors-compatible-with-open-knowledge"
+        },
+        "software-and-tooling": {
+          "cla_outbound_family": "target-license-and-permitted-successors"
+        }
+      }
+    },
+    "Exergism-Commons/exergic-commons-license": {
+      "cla_patent_grant": "none",
+      "material_classes": {
+        "ecl-project-lineage": {
+          "cla_outbound_family": "ECL-project-purpose-plus-open-knowledge-family",
+          "knowledge_outbound_family": "EC-open-knowledge-family-after-valid-project-adoption",
+          "capability_license_boundary": "exact-ECL-Bundle-is-separate-from-supporting-public-knowledge"
+        }
+      }
+    },
+    "Exergism-Commons/ecl-patent-license": {
+      "cla_patent_grant": "none",
+      "material_classes": {
+        "ecl-pl-project-lineage": {
+          "cla_outbound_family": "ECL-PL-development-plus-open-knowledge-family",
+          "knowledge_outbound_family": "EC-open-knowledge-family-after-valid-project-adoption"
+        }
+      }
+    },
+    "Exergism-Commons/.github": {
+      "cla_patent_grant": "none",
+      "material_classes": {
+        "organization-profile-and-community-health": {
+          "cla_outbound_family": "EC-open-knowledge-family-after-valid-outbound-adoption"
+        }
+      }
+    },
+    "Exergism-Commons/governance": {
+      "cla_patent_grant": "none",
+      "material_classes": {
+        "organization-governance-and-legal-templates": {
+          "cla_outbound_family": "EC-open-knowledge-family-after-valid-outbound-adoption"
+        }
+      }
+    },
+    "Exergism-Commons/funding": {
+      "cla_patent_grant": "none",
+      "material_classes": {
+        "funding-governance-and-semantic-records": {
+          "cla_outbound_family": "EC-open-knowledge-family-for-public-knowledge-with-explicit-software-license-for-tooling"
+        }
+      }
+    },
+    "Exergism-Commons/id.exergism-commons.github.io": {
+      "cla_patent_grant": "none",
+      "material_classes": {
+        "identifier-resolver-software-and-site": {
+          "cla_outbound_family": "explicit-software-tooling-license-plus-open-knowledge-family-for-public-documentation"
+        },
+        "identifier-published-representation-metadata": {
+          "cla_outbound_family": "source-project-terms-plus-EC-open-knowledge-for-resolver-local-provenance-metadata"
+        }
+      }
+    }
+  }
+}
+```
+<!-- EC-SCHEDULE-BINDING-MANIFEST:END -->
