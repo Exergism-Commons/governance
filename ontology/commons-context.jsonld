@@ -1,7 +1,7 @@
 {
   "@context": {
-    "ec": {"@id": "https://id.exergism.org/commons#", "@prefix": true},
-    "xsd": {"@id": "http://www.w3.org/2001/XMLSchema#", "@prefix": true},
+    "ec": "https://id.exergism.org/commons#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
     "id": "@id",
     "type": "@type",
     "Actor": "ec:Actor",
