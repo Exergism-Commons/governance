@@ -45,14 +45,18 @@ jobs:
   validate:
     runs-on: ubuntu-24.04
     steps:
-      # Pin third-party actions to immutable commit SHAs; comments record the
-      # verified upstream stable release represented by each SHA.
+      # Full history is required because content-addressed governance records and
+      # established Member provenance are append-only across merged history.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12'
       - name: Validate governance invariants and adversarial mutation classes
         shell: bash
+        env:
+          EC_GOVERNANCE_HISTORY_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           set -o pipefail
           {
@@ -60,6 +64,7 @@ jobs:
             python tools/test_governance_mutation_guards.py
             python tools/test_historical_authority_guards.py
             python tools/test_event_release_authority_guards.py
+            python tools/test_interrelease_integrity_guards.py
           } 2>&1 | tee governance-integrity.log
       - name: Persist validator diagnostics
         if: always()
