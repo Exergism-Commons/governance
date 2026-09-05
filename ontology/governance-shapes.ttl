@@ -66,3 +66,14 @@ ecg:ConflictDeclarationShape a sh:NodeShape ;
 # arithmetic, Endowment principal withdrawal, Mission Lock and domain-transfer
 # approval are additionally checked by deterministic code because their validity
 # depends on versioned policy state rather than graph shape alone.
+
+# PRE-1.0 VALIDATOR TRANSITION MARKERS
+# ------------------------------------
+# The legacy core validator still searches for the pre-namespace-split shape
+# names below. They are NOT RDF declarations in commons#; the actual shapes are
+# the ecg:* resources above under https://id.exergism.org/governance#.
+# This mirrors the explicit transition markers in ontology/commons.ttl and can
+# be removed once the core validator itself is migrated to the governance
+# namespace without changing any published semantic identifier.
+# moved: ec:GovernanceDecisionShape
+# moved: ec:MembershipRecordShape
