@@ -58,7 +58,7 @@ jobs:
         env:
           EC_GOVERNANCE_HISTORY_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          set -o pipefail
+          set -euo pipefail
           {
             python tools/validate.py
             python tools/test_governance_mutation_guards.py
