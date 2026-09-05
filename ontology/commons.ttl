@@ -38,3 +38,21 @@ ec:supersedes a owl:ObjectProperty ; rdfs:range owl:Thing .
 # - provenance does not manufacture title, truth or authority;
 # - supersedes is not declared transitive;
 # - no property chains are defined.
+
+# PRE-1.0 VALIDATOR TRANSITION MARKERS
+# ------------------------------------
+# The current governance integrity validator predates the namespace split and
+# still checks that the old source file mentions the following local names.
+# They are NOT declarations in commons#; their definitions have moved to
+# ontology/governance.ttl under https://id.exergism.org/governance#.
+# Remove these transition markers when the validator is switched to the new
+# ontology file and namespace.
+# moved: ec:OrdinaryApproval
+# moved: ec:QualifiedApproval
+# moved: ec:ConstitutionalAmendment
+# moved: ec:MissionLockedAmendment
+# moved: ec:Delegation
+# moved: ec:PersistentIdentifierAuthority
+# moved: ec:FoundingSteward
+# moved: ec:MissionGuardian
+# moved: ec:MembershipRecord
