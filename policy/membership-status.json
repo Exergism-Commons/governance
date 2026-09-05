@@ -1,0 +1,123 @@
+{
+  "schema_version": 4,
+  "governance_version": "0.1-DRAFT",
+  "operative": false,
+  "registry_state": "bootstrap",
+  "one_person_one_vote": true,
+  "natural_person_voting_members_only": true,
+  "candidate_period_days": 30,
+  "voting_seasoning_days": {
+    "ordinary-approval": 30,
+    "qualified-approval": 90,
+    "constitutional-amendment": 90,
+    "mission-locked-amendment": 180
+  },
+  "voting_window_contract": {
+    "eligibility_fixed_at_window_open": true,
+    "content_addressed_open_record_required": true,
+    "late_admissions_cannot_join_open_vote": true
+  },
+  "voting_window_authenticity_contract": {
+    "opening_recorded_on_opened_date": true,
+    "active_member_opener_required": true,
+    "exact_opening_payload_signature_required": true,
+    "opening_signature_must_be_on_opened_date": true,
+    "supporting_evidence_captured_no_later_than_opened_date": true
+  },
+  "ballot_authentication_contract": {
+    "content_addressed_authentication_required": true,
+    "member_signature_required": true,
+    "signature_context_type": "member-ballot",
+    "ballot_payload_fields": [
+      "decision_id",
+      "decision_class",
+      "voting_window_open_date",
+      "person_id",
+      "vote"
+    ],
+    "authentication_must_occur_within_voting_window": true
+  },
+  "ballot_proposal_binding_contract": {
+    "exact_artifact_bindings_required": true,
+    "artifact_bindings_sha256_in_signed_ballot_payload": true,
+    "ballot_reuse_across_rewritten_proposals_prohibited": true
+  },
+  "conflict_determination_contract": {
+    "content_addressed_record_required": true,
+    "self_recusal_requires_subject_signature": true,
+    "independent_determination_requires_adopted_conflict_process": true,
+    "independent_determiners_must_be_active_members": true,
+    "independent_determiners_must_exclude_subject": true,
+    "independent_determiners_must_sign_exact_payload": true,
+    "signatures_must_not_postdate_determination": true,
+    "determination_must_not_postdate_decision": true
+  },
+  "f0_signature_chronology_contract": {
+    "signed_date_required": true,
+    "signature_no_later_than_action_decision_date": true,
+    "founding_steward_must_be_operative_on_signed_date": true,
+    "founding_steward_must_be_operative_on_action_date": true
+  },
+  "admission_modes": {
+    "constitutive-initial-member": {
+      "allowed_only_at_initial_governance_adoption": true,
+      "candidate_period_applies": false,
+      "authority": "competent-constitutive-adoption"
+    },
+    "f0-founding-steward-admission": {
+      "candidate_period_applies": true,
+      "authority": "operative-founding-steward",
+      "signed_decision_required": true
+    },
+    "member-ordinary-approval": {
+      "candidate_period_applies": true,
+      "authority": "ordinary-approval",
+      "approval_evidence_required": true,
+      "allowed_from_phase": "F1-early-institution"
+    }
+  },
+  "state_transition_contract": {
+    "content_addressed_records_required": true,
+    "registry_edit_alone_cannot_change_voting_state": true,
+    "historical_state_must_be_reconstructable": true,
+    "historical_phase_authority_required": true,
+    "process_evidence_must_bind_exact_transition_payload": true,
+    "process_evidence_completed_no_later_than_decision_date": true,
+    "process_supporting_evidence_captured_no_later_than_completion": true,
+    "resignation_signature_no_later_than_decision_date": true,
+    "approval_backed_removal_effective_after_voting_window_open": true,
+    "supported_transition_types": [
+      "resignation",
+      "inactivity",
+      "suspension",
+      "reactivation",
+      "termination"
+    ],
+    "f1_plus_termination_authority": "qualified-approval",
+    "f0_termination_authority": "founding-steward-signed-decision"
+  },
+  "registry_history_contract": {
+    "adopted_membership_records_discovered_repository_wide": true,
+    "orphan_admission_or_transition_records_prohibited": true,
+    "established_member_rows_cannot_be_pruned": true,
+    "established_admission_provenance_is_immutable": true,
+    "state_transition_history_is_append_only": true,
+    "committed_content_addressed_records_are_append_only": true
+  },
+  "members": [
+    {
+      "record_id": "ec-member-bootstrap-001",
+      "person_id": "ec-person-dml-001",
+      "display_name": "Daniel Molinero Lucas",
+      "state": "designated-bootstrap",
+      "operative_membership": false,
+      "candidate_since": null,
+      "active_since": null,
+      "admission_mode": "bootstrap-designation",
+      "admission_record": null,
+      "state_transition_records": [],
+      "founding_steward": true
+    }
+  ],
+  "notes": "Bootstrap projection only. This record does not create operative membership or voting authority. Operative admission and lifecycle authority are derived from the validated institutional phase timeline at the decision date; a record cannot obtain obsolete F0 authority by self-labeling its phase. Initial formation Members may arise only from the exact competent constitutive adoption; later F0 admissions require a signed, then-operative Founding Steward act after the Candidate period; F1+ admissions require Ordinary Approval. F0 Founding Steward signatures must be dated no later than the action decision date, with the Steward operative both when signing and when the action occurs. Every later change that removes, suspends, inactivates, restores or terminates voting state must be represented by a content-addressed lifecycle decision/evidence record bound to the exact transition payload; editing the registry row alone is never authority. A resignation signature must exist no later than the resignation decision/effective boundary, so a later signature cannot retroactively remove a Member from an earlier electorate. Inactivity, suspension and reactivation process evidence must be complete no later than the transition decision, with all supporting evidence captured no later than process completion; later-created proof cannot retroactively rewrite a historical electorate. Historical Member state must remain reconstructable so prior electorates, constitutive membership and phase-transition counts are evaluated as of their actual effective dates. Adopted membership-admission and membership-state-transition records are discovered repository-wide and must remain referenced by the registry even between governance releases; established Member provenance cannot be pruned or rewritten, transition histories are append-only, and committed records/** bytes are append-only across the repository history used by the canonical CI verdict. Voting eligibility is frozen when the formal voting window opens through a content-addressed opening record; that opening must itself be recorded and signed by an Active Member on the opening date, bind the exact decision/class/electorate payload, and rely only on supporting evidence captured by that date. Later admissions or seasoning cannot retroactively join that vote. An F1+ approval-backed termination/removal cannot take effect on or before its own voting-window opening date, so the transition being authorized cannot shrink the electorate snapshot that authorizes it. Every recorded Member ballot must additionally resolve to content-addressed authentication and a Member signature binding the exact decision, decision class, voting-window opening date, person identity and vote value. In addition, every ballot signature binds the SHA-256 of the exact proposal artifact_bindings being approved, so authenticated votes cannot be replayed after rewriting an admission, delegation, termination, phase transition, appointment or other approved payload while retaining the same decision ID. A bare person_id/vote pair is never sufficient authority for a tally. Every recusal that changes a denominator is content-addressed: self-recusal requires the subject's signature, while an independent determination must bind the adopted conflict process, use Active Member determiners distinct from the subject, and carry each determiner's signature over the exact conflict-determination payload. Those signatures must exist no later than the determination date, and the determination itself cannot postdate the decision whose denominator it changes."
+}

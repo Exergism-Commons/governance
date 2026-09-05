@@ -1,0 +1,79 @@
+@prefix ec: <https://id.exergism.org/commons#> .
+@prefix ecg: <https://id.exergism.org/governance#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Draft structural constraints. Legal/institutional validity remains external.
+
+ecg:GovernanceDecisionShape a sh:NodeShape ;
+    sh:targetClass ecg:GovernanceDecision ;
+    sh:property [
+        sh:path ecg:decisionClass ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:class ecg:DecisionClass
+    ] ;
+    sh:property [
+        sh:path ec:operative ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:boolean
+    ] ;
+    sh:property [
+        sh:path ecg:governanceVersion ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ecg:DelegationShape a sh:NodeShape ;
+    sh:targetClass ecg:Delegation ;
+    sh:or (
+      [ sh:property [ sh:path ecg:delegatedTo ; sh:minCount 1 ] ]
+      [ sh:property [ sh:path ecg:delegatedRole ; sh:minCount 1 ] ]
+    ) .
+
+ecg:MembershipRecordShape a sh:NodeShape ;
+    sh:targetClass ecg:MembershipRecord ;
+    sh:property [
+        sh:path ecg:memberRecordId ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ec:operative ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:boolean
+    ] .
+
+ecg:VoteShape a sh:NodeShape ;
+    sh:targetClass ecg:Vote ;
+    sh:property [ sh:path ecg:voter ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ; sh:class ec:Person ] ;
+    sh:property [ sh:path ecg:voteValue ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "approve" "reject" "abstain" ) ] .
+
+ecg:ConflictDeclarationShape a sh:NodeShape ;
+    sh:targetClass ecg:ConflictDeclaration ;
+    sh:property [ sh:path ecg:interestedParty ; sh:minCount 1 ; sh:nodeKind sh:IRI ; sh:class ec:Person ] ;
+    sh:property [ sh:path ec:rationale ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] .
+
+# Membership itself never creates economic ownership. This is deliberately a
+# Governance invariant rather than a Funding vocabulary property. Any future
+# machine representation of economic rights must use an independently defined
+# legal/economic instrument and must not be inferred from ecg:Member.
+
+# Policy-sensitive constraints such as exact threshold arithmetic, membership
+# seasoning, bootstrap operativity, founder phase transitions, conflict-recusal
+# arithmetic, Endowment principal withdrawal, Mission Lock and domain-transfer
+# approval are additionally checked by deterministic code because their validity
+# depends on versioned policy state rather than graph shape alone.
+
+# PRE-1.0 VALIDATOR TRANSITION MARKERS
+# ------------------------------------
+# The legacy core validator still searches for the pre-namespace-split shape
+# names below. They are NOT RDF declarations in commons#; the actual shapes are
+# the ecg:* resources above under https://id.exergism.org/governance#.
+# This mirrors the explicit transition markers in ontology/commons.ttl and can
+# be removed once the core validator itself is migrated to the governance
+# namespace without changing any published semantic identifier.
+# moved: ec:GovernanceDecisionShape
+# moved: ec:MembershipRecordShape

@@ -1,0 +1,24 @@
+{
+  "@context": {
+    "ec": "https://id.exergism.org/commons#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "id": "@id",
+    "type": "@type",
+    "Actor": "ec:Actor",
+    "Person": "ec:Person",
+    "Organization": "ec:Organization",
+    "Artifact": "ec:Artifact",
+    "ReleaseArtifact": "ec:ReleaseArtifact",
+    "EvidenceRecord": "ec:EvidenceRecord",
+    "stableId": "ec:stableId",
+    "title": "ec:title",
+    "status": "ec:status",
+    "rationale": "ec:rationale",
+    "operative": {"@id": "ec:operative", "@type": "xsd:boolean"},
+    "effectiveDate": {"@id": "ec:effectiveDate", "@type": "xsd:dateTime"},
+    "provenance": "ec:provenance",
+    "sha256": "ec:sha256",
+    "reviewDue": {"@id": "ec:reviewDue", "@type": "xsd:date"},
+    "supersedes": {"@id": "ec:supersedes", "@type": "@id"}
+  }
+}

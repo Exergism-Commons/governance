@@ -1,0 +1,90 @@
+{
+  "schema_version": 4,
+  "governance_version": "0.1-DRAFT",
+  "operative": false,
+  "phase": "F0-founder-led-bootstrap",
+  "founding_period": {
+    "applies_in_phases": [
+      "F0-founder-led-bootstrap",
+      "F1-early-institution"
+    ],
+    "ends_only_on_valid_transition_to_phase": "F2-distributed-institution",
+    "valid_transition_requires_phase_evidence": true,
+    "founder_vacancy_does_not_end_period": true,
+    "mission_guardian_succeeds_protection_if_founder_unavailable": true
+  },
+  "founding_steward": {
+    "record_id": "ec-founding-steward-001",
+    "person_id": "ec-person-dml-001",
+    "display_name": "Daniel Molinero Lucas",
+    "github_identity": "Papishushi",
+    "operative_assignment": false,
+    "assignment_effective_date": null,
+    "assignment_authority_record": null,
+    "cessation_record": null
+  },
+  "founding_steward_lifecycle_contract": {
+    "initial_assignment_authority": "governance-adoption",
+    "assignment_effective_date_equals_governance_effective_date": true,
+    "content_addressed_cessation_required": true,
+    "registry_edit_alone_cannot_end_or_restore_authority": true,
+    "historical_authority_must_be_reconstructable": true,
+    "reactivation_after_cessation_prohibited": true,
+    "allowed_cessation_authority_modes": [
+      "self-resignation",
+      "succession-process",
+      "qualified-approval"
+    ]
+  },
+  "mission_guardian": {
+    "record_id": null,
+    "person_id": null,
+    "display_name": null,
+    "operative_assignment": false,
+    "assignment_record": null
+  },
+  "mission_guardian_assignment_contract": {
+    "identified_holder_required": true,
+    "content_addressed_assignment_record_required": true,
+    "allowed_authority_modes": [
+      "qualified-approval",
+      "succession-process"
+    ],
+    "f2_requires_assignment_effective_by_phase_date": true,
+    "succession_mode_requires_validated_founding_steward_cessation": true,
+    "succession_assignment_must_not_predate_cessation": true,
+    "succession_evidence_must_bind_cessation_digest": true,
+    "succession_process_completed_no_later_than_assignment_decision": true,
+    "succession_supporting_evidence_captured_no_later_than_completion": true
+  },
+  "succession_authentication_contract": {
+    "adopted_process_reference": "operative-release-authority-snapshot#activation_evidence.succession_process",
+    "adopted_process_authenticated_under_release_of_origin": true,
+    "adopted_process_requires_authenticated_authorized_reviewers": true,
+    "cessation_event_must_bind_exact_adopted_process": true,
+    "guardian_assignment_event_must_bind_exact_adopted_process": true,
+    "event_reviewers_must_be_authorized_by_adopted_process": true,
+    "event_requires_signature_from_every_participating_reviewer": true,
+    "event_signatures_bind_exact_process_payload": true
+  },
+  "mission_lock": {
+    "operative": false,
+    "amendment_rule_id": "mission-locked-amendment",
+    "guardian_consent_required_during_founding_period": true,
+    "negative_veto_only": true,
+    "founder_economic_privilege": false
+  },
+  "phase_transition": {
+    "self_declared_by_founder_prohibited": true,
+    "requires_decision_record": true,
+    "requires_evidence_record": true,
+    "evidence_policy": "policy/phase-evidence.json",
+    "approval_rule_must_be_explicit_in_decision_record": true,
+    "approval_rule_id": "qualified-approval",
+    "mission_veto_cannot_block_valid_maturity_transition": true,
+    "f1_min_active_members": 3,
+    "f2_min_active_members": 7,
+    "f2_min_operational_months": 12
+  },
+  "source": "FOUNDING-STEWARDSHIP.md"
+}

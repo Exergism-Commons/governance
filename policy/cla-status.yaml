@@ -1,0 +1,51 @@
+schema_version: 5
+policy: exergism-commons-contributor-license-agreement
+agreement_family: EC-CLA
+status: draft
+operative: false
+individual_version: EC-ICLA-1.0-DRAFT
+individual_artifact: cla/CLA-1.0-DRAFT.md
+individual_sha256: null
+entity_version: EC-ECLA-1.0-DRAFT
+entity_artifact: cla/ENTITY-CLA-1.0-DRAFT.md
+entity_sha256: null
+project_schedule_version: 0.1-DRAFT
+project_schedule_artifact: cla/PROJECT-SCHEDULE.md
+project_schedule_sha256: null
+covered_projects_artifact: policy/covered-projects.yaml
+covered_projects_sha256: null
+legal_steward: null
+legal_steward_authority_artifact: null
+legal_steward_authority_sha256: null
+governing_law: null
+forum: null
+effective_date: null
+acceptance_methods: []
+privacy_records_policy: null
+privacy_records_policy_artifact: null
+privacy_records_policy_sha256: null
+legal_review:
+  required: true
+  complete: false
+  records: []
+legal_review_manifest_artifact: null
+legal_review_manifest_sha256: null
+adoption_record_artifact: null
+adoption_record_sha256: null
+activation_blockers:
+  - CLA-01-legal-steward
+  - CLA-02-governing-law
+  - CLA-03-qualified-legal-review
+  - CLA-04-project-schedule-ratification
+  - CLA-05-privacy-records
+  - CLA-06-acceptance-mechanism
+  - CLA-07-contributor-status-automation
+  - CLA-08-legacy-rights-inventory
+notes:
+  - File presence does not imply legal effect.
+  - Automation must fail closed and must not infer an operative CLA from a mutable branch or latest pointer.
+  - Operative acceptance requires exact final agreement, Project Schedule, covered-project projection and privacy/records-policy bytes bound by SHA-256 in this record.
+  - The legal Steward identifier must resolve to a content-addressed authority record proving the receiving party/role and scope for the same operative terms.
+  - Qualified legal review must bind the same Steward, Steward-authority record, governing law, forum, privacy policy, acceptance methods and exact legal artifacts; reviewer signatures must bind the exact review payload.
+  - CLA adoption must bind those same terms and exact bytes, the approving legal-review manifest and adopter signatures over the exact adoption payload.
+  - The CLA itself grants no patent rights.

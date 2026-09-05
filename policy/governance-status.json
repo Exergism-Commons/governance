@@ -1,0 +1,107 @@
+{
+  "schema_version": 6,
+  "governance_version": "0.1-DRAFT",
+  "operative": false,
+  "institutional_state": "bootstrap",
+  "institutional_phase": "F0-founder-led-bootstrap",
+  "legal_entity": null,
+  "governing_law": null,
+  "effective_date": null,
+  "constitution": "CONSTITUTION.md",
+  "membership_policy": "MEMBERSHIP.md",
+  "founding_stewardship_policy": "FOUNDING-STEWARDSHIP.md",
+  "phase_evidence": "policy/phase-evidence.json",
+  "governance_artifacts": {
+    "constitution": {
+      "path": "CONSTITUTION.md",
+      "version": "0.1-DRAFT",
+      "status": "draft",
+      "sha256": null
+    },
+    "membership_policy": {
+      "path": "MEMBERSHIP.md",
+      "version": "0.1-DRAFT",
+      "status": "draft",
+      "sha256": null
+    },
+    "founding_stewardship_policy": {
+      "path": "FOUNDING-STEWARDSHIP.md",
+      "version": "0.1-DRAFT",
+      "status": "draft",
+      "sha256": null
+    }
+  },
+  "ontology_iri": "https://id.exergism.org/ontology/commons",
+  "vocabulary_namespace": "https://id.exergism.org/commons#",
+  "adoption_record": null,
+  "governance_release_contract": {
+    "initial_operative_version": "1.0",
+    "current_release_sequence": 0,
+    "current_release_kind": "draft",
+    "founding_adoption_record": null,
+    "previous_adoption_record": null,
+    "constitutive_adoption_reserved_for_initial_release": true,
+    "later_release_classes": [
+      "constitutional-amendment",
+      "mission-locked-amendment"
+    ],
+    "later_release_requires_predecessor": true,
+    "amendment_classification_requires_independent_signed_review": true,
+    "mission_locked_requires_two_successful_votes": true,
+    "mission_locked_requires_minimum_vote_separation_days": 60,
+    "mission_locked_requires_guardian_consent_during_founding_period": true
+  },
+  "authority_provenance_contract": {
+    "release_authority_snapshot_required": true,
+    "amendment_authorized_by_predecessor_release": true,
+    "proposed_rules_cannot_authorize_their_own_adoption": true,
+    "predecessor_activation_processes_control_amendment_vote": true,
+    "membership_policy_frozen_in_release_snapshot": true,
+    "historical_decisions_use_release_in_force": true,
+    "approval_ballots_bind_predecessor_authority": true,
+    "approval_ballots_bind_proposed_release_payload": true
+  },
+  "interrelease_authority_contract": {
+    "membership_records_repository_wide_and_append_only": true,
+    "membership_registry_provenance_append_only": true,
+    "delegation_policy_snapshot_bound_in_every_release": true,
+    "delegation_creation_validated_against_creation_release_policy": true,
+    "current_delegation_policy_matches_current_release_snapshot": true,
+    "later_release_effective_date_strictly_after_completed_date": true
+  },
+  "adoption_binding_contract": {
+    "immutable_normative_machine_paths": [
+      "policy/decision-rules.json"
+    ],
+    "mutable_state_paths_excluded": [
+      "policy/membership-status.json",
+      "policy/delegations.json",
+      "policy/founding-stewardship.json",
+      "policy/phase-evidence.json"
+    ],
+    "mutable_state_must_be_authorized_by_own_decision_records": true
+  },
+  "adoption_chronology_contract": {
+    "prospective_effect_required": true,
+    "legal_review_completed_no_later_than_adoption_decision": true,
+    "all_activation_evidence_completed_no_later_than_effective_date": true,
+    "all_reviewer_and_adopter_signatures_no_later_than_effective_date": true,
+    "adoption_decision_no_later_than_effective_date": true
+  },
+  "activation_evidence": {
+    "conflict_process": null,
+    "records_privacy_process": null,
+    "treasury_controls": null,
+    "succession_process": null,
+    "qualified_legal_review": null
+  },
+  "initial_member_registry_adopted": false,
+  "conflict_process_adopted": false,
+  "records_privacy_process_adopted": false,
+  "treasury_controls_adopted": false,
+  "founding_steward_assignment_adopted": false,
+  "succession_process_adopted": false,
+  "qualified_legal_review_complete": false,
+  "integrated_architecture_pr": 2,
+  "notes": "Draft architecture only. GitHub organization/repository state does not constitute legal adoption or institutional authority. Operative state requires adopted non-draft human artifacts bound by SHA-256, a committed content-addressed governance-adoption record, structured legal identity, constitutive signatures bound to the exact founding-adoption payload, and content-addressed implementation/legal-review evidence. Constitutive adoption is reserved permanently for release #1 (version 1.0). Every operative release must bind an immutable authority snapshot and a content-addressed delegation-policy snapshot. Every later governance release is authorized exclusively by the predecessor release's bound decision rules, membership-policy rules and activation-process references; proposed replacement rules cannot authorize their own adoption or change the electorate that authorizes them. Historical decisions are evaluated under the release in force on their decision date. Adopted membership records are repository-wide, append-only provenance: an established Member/admission/transition cannot disappear between release checkpoints merely because the mutable registry is edited. Authenticated amendment ballots bind the exact predecessor authority, the complete proposed amendment payload, the proposed authority snapshot, and the proposed decision-rule bytes, so neither side of the authority transition can be swapped after voting. Delegation grants are validated against the exact delegation-policy snapshot of their creation release rather than current mutable vocabulary/reserved-action state. Every later release must form a contiguous content-addressed predecessor chain rooted at the permanent founding adoption and use either Constitutional Amendment or Mission-Locked Amendment authority; Mission-Locked releases additionally require two successful votes separated by at least 60 days, signed independent classification/review, and Founding-Period guardian consent. A later release's effective date must be strictly after its completed adoption date, removing same-day predecessor/current authority ambiguity at day-level chronology. Governance activation is prospective. The immutable founding adoption anchors the governance epoch, initial constitutive membership and Founding Steward assignment; later mutable state transitions and later governance releases preserve that history and must prove their own adopted authority."
+}

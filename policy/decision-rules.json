@@ -1,0 +1,85 @@
+{
+  "schema_version": 3,
+  "governance_version": "0.1-DRAFT",
+  "operative": false,
+  "rules": [
+    {
+      "id": "ordinary-approval",
+      "iri": "https://id.exergism.org/commons#OrdinaryApproval",
+      "name": "Ordinary Approval",
+      "quorum": {"type": "fraction_of_effective_eligible", "comparison": "strictly_greater_than", "numerator": 1, "denominator": 2},
+      "approval": {"type": "votes_for_vs_against", "comparison": "strictly_greater_than"},
+      "abstentions_count_toward_approval": false,
+      "zero_valid_for_against_result": "fail",
+      "minimum_affirmative_votes": 1
+    },
+    {
+      "id": "qualified-approval",
+      "iri": "https://id.exergism.org/commons#QualifiedApproval",
+      "name": "Qualified Approval",
+      "quorum": {"type": "fraction_of_effective_eligible", "comparison": "at_least", "numerator": 2, "denominator": 3},
+      "approval": {"type": "fraction_of_valid_for_against", "comparison": "at_least", "numerator": 2, "denominator": 3},
+      "abstentions_count_toward_approval": false,
+      "zero_valid_for_against_result": "fail",
+      "minimum_affirmative_votes": 1
+    },
+    {
+      "id": "constitutional-amendment",
+      "iri": "https://id.exergism.org/commons#ConstitutionalAmendment",
+      "name": "Constitutional Amendment",
+      "quorum": {"type": "fraction_of_effective_eligible", "comparison": "at_least", "numerator": 2, "denominator": 3},
+      "approval": {"type": "fraction_of_valid_for_against", "comparison": "at_least", "numerator": 3, "denominator": 4},
+      "abstentions_count_toward_approval": false,
+      "zero_valid_for_against_result": "fail",
+      "minimum_affirmative_votes": 1
+    },
+    {
+      "id": "mission-locked-amendment",
+      "iri": "https://id.exergism.org/commons#MissionLockedAmendment",
+      "name": "Mission-Locked Amendment",
+      "classification": {
+        "trigger": "any_operative_effect_alters_weakens_removes_excepts_or_bypasses_mission_lock_invariant",
+        "bundled_or_secondary_effects_included": true,
+        "proposal_label_cannot_downgrade": true
+      },
+      "quorum": {"type": "fraction_of_effective_eligible", "comparison": "at_least", "numerator": 3, "denominator": 4},
+      "approval": {"type": "fraction_of_valid_for_against", "comparison": "at_least", "numerator": 9, "denominator": 10},
+      "abstentions_count_toward_approval": false,
+      "zero_valid_for_against_result": "fail",
+      "minimum_affirmative_votes": 1,
+      "minimum_days_between_successful_votes": 60,
+      "successful_votes_required": 2,
+      "guardian_consent_required_in_phases": [
+        "F0-founder-led-bootstrap",
+        "F1-early-institution"
+      ],
+      "founding_period_ends_on_valid_transition_to_phase": "F2-distributed-institution",
+      "independent_review_required": true
+    }
+  ],
+  "mandatory_qualified_subjects": [
+    "endowment-principal-withdrawal",
+    "persistent-domain-transfer",
+    "identifier-authority-transfer",
+    "legal-steward-appointment-or-removal",
+    "organization-wide-exclusive-ip-transfer",
+    "institutional-merger-dissolution-or-succession"
+  ],
+  "mission_locked_subjects": [
+    "repurpose-exergism-commons-away-from-exergism",
+    "remove-project-authority-separation",
+    "create-membership-economic-ownership",
+    "permit-funding-to-purchase-organization-governance",
+    "permit-retroactive-fabrication-of-contributor-rights",
+    "permit-silent-persistent-identifier-repurposing",
+    "remove-structural-contestability-or-anti-capture-commitment",
+    "permit-enclosure-of-established-ec-public-knowledge"
+  ],
+  "conflict_rules": {
+    "self_compensation_recusal_required": true,
+    "self_contract_approval_prohibited": true,
+    "conflicted_voters_excluded_from_effective_eligible_denominator": true,
+    "funding_does_not_create_governance_rights": true,
+    "founder_status_does_not_override_conflict_recusal": true
+  }
+}
