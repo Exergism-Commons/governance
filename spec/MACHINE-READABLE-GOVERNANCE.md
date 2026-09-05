@@ -204,7 +204,7 @@ F1/F2 transition records must bind:
 
 The F2 time clock is anchored to the governance effective date.
 
-Delegations used to prove F1/F2 capacity count only if they were actually effective on the target phase-effective date: creation must already be effective, natural expiry must not have passed, and any content-addressed revocation must not yet have become effective. Revoked delegations remain in the registry so historical maturity can be reconstructed rather than rewritten by current state.
+Delegations used to prove F1/F2 capacity count only if they were actually effective on the target phase-effective date: creation must already be effective, natural expiry must not have passed, any content-addressed revocation must not yet have become effective, and any action newly reserved by the governance policy then in force must no longer remain exercisable through an older retained grant. Revoked or prospectively constrained grants remain historically attributable rather than being rewritten under later policy.
 
 ## 10. Delegations
 
@@ -225,6 +225,8 @@ A delegation record must identify:
 A delegation may not grant authority that the source does not possess. Technical repository/admin access is never automatically converted into a delegation.
 
 Reserved constitutional actions cannot be smuggled into `allowed_actions`. The decision record must bind the exact delegation payload and the applicable approval evidence. Changing `operative` to false without a valid revocation record cannot remove institutional authority or erase the delegation's historical effective interval.
+
+A later governance release may reserve an action that an older immutable grant once allowed. That later restriction applies **prospectively** from the later release's effective date: the old grant bytes remain preserved as history, but the newly reserved action cannot continue to be exercised through that grant. The operative projection must therefore show the conflicting delegation revoked no later than the new policy's effective date, and historical activity checks evaluate the reservation set that was actually in force on the target date.
 
 ## 11. Evidence and signature binding
 
@@ -267,6 +269,8 @@ Released decision records should be content-addressable or otherwise bound to im
 
 A Mission Veto or Mission Guardian concurrence required by the governing rule should be represented explicitly rather than inferred from the identity of a committer or merger.
 
+Committed governance evidence has a stronger repository-history requirement than a final-tree hash alone. When CI supplies a trusted merge/push base, the canonical verdict walks **every committed parent→child transition** in the ancestry from that boundary to `HEAD`: an established Member row/provenance cannot be pruned at an intermediate commit, and a path under `records/**` may be introduced but not subsequently rewritten, renamed or deleted. This prevents an add-then-delete sequence inside a multi-commit range from disappearing from the endpoint `base..HEAD` diff.
+
 ## 14. SHACL boundary
 
 SHACL should enforce structural and policy invariants that can be stated deterministically, including:
@@ -295,9 +299,11 @@ This remains an integrity check, not legal advice or legal review.
 
 ## 16. Validation and CI
 
-`tools/validate_governance_temporal.py` is the CI entry point. It composes the base fail-closed checks with lifecycle and temporal-authority validation for Membership, ballots, Founding Stewardship, Delegations, phase transitions, Mission Guardian authority and CLA status.
+`python tools/validate.py` is the **sole documented complete fail-closed governance verdict**. It installs strict parsing, temporal/lifecycle authority, release-history proof, Open Knowledge validation, repository-history integrity and inter-release delegation-policy hardening before it can report PASS.
 
-CI runs it on changes to constitutional policy, founding/membership policy, CLA material, machine records including `records/**`, ontology, specifications or validator code. Validator diagnostics are persisted as workflow artifacts so a failed integrity gate is auditable.
+`tools/validate_governance_temporal.py` is an internal composition component of that verdict. It **MUST NOT** be treated as a standalone activation validator: executing it directly does not install or execute the repository-history/inter-release hardening layer that is intentionally owned by `tools/validate.py`.
+
+CI runs the canonical `tools/validate.py` verdict plus adversarial mutation/authority guard suites on changes to constitutional policy, founding/membership policy, CLA material, machine records including `records/**`, ontology, specifications or validator code. Full Git history is checked out and the workflow supplies the trusted PR-base or previous-push commit through `EC_GOVERNANCE_HISTORY_BASE`, allowing the canonical verdict to inspect every committed transition rather than only the final tree. Validator diagnostics are persisted as workflow artifacts so a failed integrity gate is auditable.
 
 The validator intentionally does not claim to perform legal review.
 
