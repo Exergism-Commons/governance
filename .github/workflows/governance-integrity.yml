@@ -65,6 +65,7 @@ jobs:
             python tools/test_historical_authority_guards.py
             python tools/test_event_release_authority_guards.py
             python tools/test_interrelease_integrity_guards.py
+            python tools/test_interrelease_hardening_guards.py
           } 2>&1 | tee governance-integrity.log
       - name: Persist validator diagnostics
         if: always()
