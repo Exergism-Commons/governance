@@ -1,15 +1,17 @@
 @prefix ec: <https://id.exergism.org/commons#> .
+@prefix ecg: <https://id.exergism.org/governance#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 # Draft structural constraints. Legal/institutional validity remains external.
 
-ec:GovernanceDecisionShape a sh:NodeShape ;
-    sh:targetClass ec:GovernanceDecision ;
+ecg:GovernanceDecisionShape a sh:NodeShape ;
+    sh:targetClass ecg:GovernanceDecision ;
     sh:property [
-        sh:path ec:decisionClass ;
+        sh:path ecg:decisionClass ;
         sh:minCount 1 ;
-        sh:maxCount 1
+        sh:maxCount 1 ;
+        sh:class ecg:DecisionClass
     ] ;
     sh:property [
         sh:path ec:operative ;
@@ -18,22 +20,22 @@ ec:GovernanceDecisionShape a sh:NodeShape ;
         sh:datatype xsd:boolean
     ] ;
     sh:property [
-        sh:path ec:governanceVersion ;
+        sh:path ecg:governanceVersion ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] .
 
-ec:DelegationShape a sh:NodeShape ;
-    sh:targetClass ec:Delegation ;
+ecg:DelegationShape a sh:NodeShape ;
+    sh:targetClass ecg:Delegation ;
     sh:or (
-      [ sh:property [ sh:path ec:delegatedTo ; sh:minCount 1 ] ]
-      [ sh:property [ sh:path ec:delegatedRole ; sh:minCount 1 ] ]
+      [ sh:property [ sh:path ecg:delegatedTo ; sh:minCount 1 ] ]
+      [ sh:property [ sh:path ecg:delegatedRole ; sh:minCount 1 ] ]
     ) .
 
-ec:MembershipRecordShape a sh:NodeShape ;
-    sh:targetClass ec:MembershipRecord ;
+ecg:MembershipRecordShape a sh:NodeShape ;
+    sh:targetClass ecg:MembershipRecord ;
     sh:property [
-        sh:path ec:memberRecordId ;
+        sh:path ecg:memberRecordId ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
@@ -43,6 +45,21 @@ ec:MembershipRecordShape a sh:NodeShape ;
         sh:maxCount 1 ;
         sh:datatype xsd:boolean
     ] .
+
+ecg:VoteShape a sh:NodeShape ;
+    sh:targetClass ecg:Vote ;
+    sh:property [ sh:path ecg:voter ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ; sh:class ec:Person ] ;
+    sh:property [ sh:path ecg:voteValue ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "approve" "reject" "abstain" ) ] .
+
+ecg:ConflictDeclarationShape a sh:NodeShape ;
+    sh:targetClass ecg:ConflictDeclaration ;
+    sh:property [ sh:path ecg:interestedParty ; sh:minCount 1 ; sh:nodeKind sh:IRI ; sh:class ec:Person ] ;
+    sh:property [ sh:path ec:rationale ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] .
+
+# Membership itself never creates economic ownership. This is deliberately a
+# Governance invariant rather than a Funding vocabulary property. Any future
+# machine representation of economic rights must use an independently defined
+# legal/economic instrument and must not be inferred from ecg:Member.
 
 # Policy-sensitive constraints such as exact threshold arithmetic, membership
 # seasoning, bootstrap operativity, founder phase transitions, conflict-recusal
