@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 
 import governance_interrelease_integrity as interrelease
+import governance_release_lifecycle as release_lifecycle
 import validate_governance as core
 
 
@@ -117,6 +118,38 @@ def validate_delegation_policy_snapshot_guards() -> int:
     return 3
 
 
+def validate_delegation_snapshot_amendment_binding() -> int:
+    """The immutable snapshot reference must itself be inside signed/voted release bytes."""
+    record = {
+        "record_type": "governance-adoption",
+        "status": "adopted",
+        "release_sequence": 2,
+        "release_kind": "constitutional-amendment",
+        "governance_version": "EC-GOV-2.0",
+        "decision_id": "gov-release-2",
+        "delegation_policy_snapshot": {
+            "path": "records/snapshots/delegation-policy-release-2.json",
+            "sha256": "a" * 64,
+        },
+        "approval_evidence": {"path": "records/evidence/approval.json", "sha256": "b" * 64},
+        "amendment_payload_sha256": None,
+    }
+    payload, digest = release_lifecycle._amendment_payload(record)
+    core.require(
+        payload.get("delegation_policy_snapshot") == record["delegation_policy_snapshot"],
+        "delegation policy snapshot ref must be part of governance amendment payload",
+    )
+
+    swapped = copy.deepcopy(record)
+    swapped["delegation_policy_snapshot"]["sha256"] = "c" * 64
+    _, swapped_digest = release_lifecycle._amendment_payload(swapped)
+    core.require(
+        swapped_digest != digest,
+        "swapping delegation policy snapshot must invalidate amendment payload digest and bound ballots",
+    )
+    return 1
+
+
 def validate_strict_amendment_chronology_guards() -> int:
     valid = {
         "release_sequence": 2,
@@ -167,6 +200,7 @@ def main() -> None:
     total = 0
     total += validate_membership_record_closure_guards()
     total += validate_delegation_policy_snapshot_guards()
+    total += validate_delegation_snapshot_amendment_binding()
     total += validate_strict_amendment_chronology_guards()
     total += validate_repository_membership_extension_guards()
     print(f"Inter-release integrity guards: PASS ({total} cases)")
