@@ -28,21 +28,21 @@ def _history_base() -> str | None:
         interrelease._git(["cat-file", "-e", f"{base}^{{commit}}"], check=False).returncode == 0,
         "repository-history base commit is unavailable",
     )
-    merge_base = interrelease._git(["merge-base", base, "HEAD"]).stdout.strip()
-    core.require(bool(merge_base), "repository-history base has no merge-base with HEAD")
-    return merge_base
+    merge_base = interrelease._git(["merge-base", base, "HEAD"], check=False)
+    core.require(
+        merge_base.returncode == 0 and bool(merge_base.stdout.strip()),
+        "repository-history base has no merge-base with HEAD",
+    )
+    # Keep the caller-supplied trusted commit as the exclusion boundary. Using
+    # only its merge-base would lose side-branch commits that forked before the
+    # trusted base but were merged into HEAD afterward.
+    return base
 
 
 def _commit_parents(commit: str) -> list[str]:
     line = interrelease._git(["rev-list", "--parents", "-n", "1", commit]).stdout.strip().split()
     core.require(bool(line) and line[0] == commit, f"cannot resolve repository-history parents for {commit}")
     return line[1:]
-
-
-def _is_descendant_or_equal(ancestor: str, commit: str) -> bool:
-    if ancestor == commit:
-        return True
-    return interrelease._git(["merge-base", "--is-ancestor", ancestor, commit], check=False).returncode == 0
 
 
 def _require_records_transition_append_only(parent: str, commit: str) -> None:
@@ -83,24 +83,31 @@ def validate_commit_transition(parent: str, commit: str) -> None:
 
 
 def validate_every_commit_after_history_base(base: str) -> None:
+    """Validate every untrusted commit and every parent edge that introduced it.
+
+    The relevant set is all commits reachable from HEAD but not reachable from
+    the trusted base, not merely commits on an ancestry path from base to HEAD.
+    This includes a side branch that forked before the trusted base and was
+    merged later. Its internal add/rewrite/delete or Member-pruning edges are
+    therefore still inspected before the merge result can hide them.
+    """
     commits = [
         value.strip()
         for value in interrelease._git(
-            ["rev-list", "--reverse", "--topo-order", "--ancestry-path", f"{base}..HEAD"]
+            ["rev-list", "--reverse", "--topo-order", "HEAD", "--not", base]
         ).stdout.splitlines()
         if value.strip()
     ]
     for commit in commits:
         parents = _commit_parents(commit)
-        eligible = [parent for parent in parents if _is_descendant_or_equal(base, parent)]
         core.require(
-            bool(eligible),
-            f"repository-history commit {commit} has no parent inside the trusted ancestry",
+            bool(parents),
+            f"repository-history untrusted commit {commit} unexpectedly has no parent",
         )
-        # A merge must preserve the append-only history of every in-range parent,
-        # not merely its first parent. This prevents a merge resolution from
-        # dropping a record or established Member that existed on one side.
-        for parent in eligible:
+        # Validate every parent edge, including an edge whose parent is already
+        # reachable from the trusted base. That edge is precisely where the
+        # first untrusted change on a pre-base side branch is introduced.
+        for parent in parents:
             validate_commit_transition(parent, commit)
 
 
@@ -144,20 +151,81 @@ def _reserved_actions_as_of(target: date) -> frozenset[str]:
     return result
 
 
+def _reserved_actions_encountered_by(item: dict, target: date) -> frozenset[str]:
+    """Return reservations that this retained grant has encountered by target.
+
+    A reservation removed by a later release cannot resurrect an older grant:
+    that older grant had to cease being usable at the first conflicting policy
+    boundary. A genuinely new grant created after the reservation was removed is
+    unaffected because the historical reservation predates its effective date.
+    """
+    start = core.parse_iso_date(
+        item.get("effective_date"),
+        f"delegation {item.get('delegation_id')} effective_date",
+    )
+    if target < start:
+        return frozenset()
+
+    encountered = set(_reserved_actions_as_of(start))
+    for effective, reserved in _DELEGATION_POLICY_TIMELINE:
+        if effective <= start:
+            continue
+        if effective > target:
+            break
+        encountered.update(reserved)
+    return frozenset(encountered)
+
+
 def delegation_active_on(item: dict, target: date) -> bool:
     """Return whether a retained grant still supplies usable delegated authority.
 
     The immutable grant is interpreted under its creation release, but a later
-    release may reserve an action prospectively. Once that release is effective,
-    a still-unrevoked grant containing a now-reserved allowed action cannot be
-    treated as an active delegation. Historical dates remain evaluated against
-    the policy actually effective at those dates.
+    release may reserve an action prospectively. Once this retained grant has
+    encountered such a reservation, a still-unrevoked grant cannot regain that
+    authority merely because an even later release removes the reservation.
+    Historical dates before the first conflicting boundary remain evaluated
+    under the policy then in force, while a new post-removal grant may be valid.
     """
     if not ORIG_DELEGATION_ACTIVE_ON(item, target):
         return False
     allowed = item.get("allowed_actions")
     core.require(isinstance(allowed, list), f"delegation {item.get('delegation_id')} allowed_actions invalid")
-    return not bool(set(allowed).intersection(_reserved_actions_as_of(target)))
+    return not bool(set(allowed).intersection(_reserved_actions_encountered_by(item, target)))
+
+
+def _require_reservation_boundary_compliance(item: dict) -> None:
+    allowed = item.get("allowed_actions")
+    core.require(isinstance(allowed, list), f"delegation {item.get('delegation_id')} allowed_actions invalid")
+    allowed_set = set(allowed)
+    start = core.parse_iso_date(
+        item.get("effective_date"),
+        f"delegation {item.get('delegation_id')} effective_date",
+    )
+
+    # If the grant becomes effective while an action is already reserved, it
+    # must not supply authority at its own start boundary. The historical
+    # creation-policy validator should reject this independently; retaining the
+    # check here keeps the prospective layer fail-closed as well.
+    start_conflict = sorted(allowed_set.intersection(_reserved_actions_as_of(start)))
+    if start_conflict and ORIG_DELEGATION_ACTIVE_ON(item, start):
+        core.require(
+            False,
+            f"delegation {item.get('delegation_id')} is active while its effective-date policy already reserves allowed action(s): {', '.join(start_conflict)}",
+        )
+
+    # Check every later release boundary, not only the latest one. A revocation
+    # after R2 cannot cure authority that remained live when R2 first reserved
+    # the action, and R3 removing the reservation cannot resurrect the old grant.
+    for effective, reserved in _DELEGATION_POLICY_TIMELINE:
+        if effective <= start:
+            continue
+        conflict = sorted(allowed_set.intersection(reserved))
+        if not conflict:
+            continue
+        core.require(
+            not ORIG_DELEGATION_ACTIVE_ON(item, effective),
+            f"delegation {item.get('delegation_id')} remained active at the first applicable policy boundary {effective.isoformat()} reserving allowed action(s): {', '.join(conflict)}; revoke it no later than that boundary",
+        )
 
 
 def validate_delegations(delegations: dict, status: dict, rules: dict, membership: dict):
@@ -166,25 +234,12 @@ def validate_delegations(delegations: dict, status: dict, rules: dict, membershi
     if status.get("operative") is not True:
         return validated
 
-    chain = release_history.release_chain(status)
-    core.require(bool(chain), "operative governance requires release chain for prospective delegation constraints")
-    current, _ = chain[-1]
-    current_effective = core.parse_iso_date(
-        current.get("effective_date"),
-        "current governance release delegation-policy effective_date",
+    core.require(
+        bool(_DELEGATION_POLICY_TIMELINE),
+        "operative governance requires release chain for prospective delegation constraints",
     )
-    current_reserved = _reserved_actions_as_of(current_effective)
     for item in validated:
-        # Use the underlying grant lifecycle here so a revocation effective by
-        # the new policy date satisfies the gate. If the grant would otherwise
-        # still be active, no newly reserved action may remain exercisable.
-        if not ORIG_DELEGATION_ACTIVE_ON(item, current_effective):
-            continue
-        conflict = sorted(set(item.get("allowed_actions", [])).intersection(current_reserved))
-        core.require(
-            not conflict,
-            f"delegation {item.get('delegation_id')} remains active when current policy reserves allowed action(s): {', '.join(conflict)}; revoke it no later than the policy effective date",
-        )
+        _require_reservation_boundary_compliance(item)
     return validated
 
 
