@@ -27,6 +27,13 @@
     "revocation_validated_under_release_in_force_on_decision_date": true,
     "governing_rule_version_is_creation_release": true
   },
+  "interrelease_policy_contract": {
+    "policy_snapshot_bound_in_every_governance_release": true,
+    "creation_uses_policy_snapshot_of_release_in_force": true,
+    "retained_grant_bytes_never_rewritten_for_later_policy": true,
+    "current_projection_matches_current_release_policy_snapshot": true,
+    "later_policy_changes_apply_prospectively_without_reversioning_history": true
+  },
   "delegations": [],
   "reserved_non_delegable_actions": [
     "constitutional-amendment",
@@ -36,5 +43,5 @@
     "persistent-domain-transfer-without-qualified-approval",
     "identifier-authority-transfer-without-qualified-approval"
   ],
-  "notes": "No operative institutional delegations exist in this bootstrap record. Technical repository permissions are not delegations. An operative delegation must identify a unique delegation_id, holder_person_id, a structured source authority resolving to the adopted decision that creates the delegation, exact scope types and resources, allowed actions, explicit prohibitions, governing rule version, effective/expiry dates, a revocation contract, decision_record and revocation_record. Active delegations set revocation_record to null. A delegation may become operative=false only through a content-addressed adopted delegation-revocation decision using the declared governance approval authority; editing the registry flag alone is invalid. Revoked delegations remain in the registry so their historical effective interval remains reconstructable. Each creation is validated under the governance release operative on its own decision date, and any later revocation is independently validated under the release operative on the revocation decision date; retained immutable records are never re-versioned merely because Governance later amends. Maturity gates count a delegation only when its creation date has passed, its expiry has not passed, and no revocation was yet effective on the target phase-effective date."
+  "notes": "No operative institutional delegations exist in this bootstrap record. Technical repository permissions are not delegations. An operative delegation must identify a unique delegation_id, holder_person_id, a structured source authority resolving to the adopted decision that creates the delegation, exact scope types and resources, allowed actions, explicit prohibitions, governing-rule version, effective/expiry dates, a revocation contract, decision_record and revocation_record. Active delegations set revocation_record to null. A delegation may become operative=false only through a content-addressed adopted delegation-revocation decision using the declared governance approval authority; editing the registry flag alone is invalid. Revoked delegations remain in the registry so their historical effective interval remains reconstructable. Every operative governance release must bind a content-addressed governance-delegation-policy-snapshot containing the release's source-authority contract, scope vocabulary and reserved non-delegable actions. Each delegation creation is validated against the exact policy snapshot of the governance release operative on its own decision date, while any later revocation is independently validated under the release operative on the revocation decision date. Later changes to scope vocabulary or reserved actions therefore do not require rewriting the immutable grant bytes; the current projection must instead match the current release's own policy snapshot and later restrictions apply prospectively. Maturity gates count a delegation only when its creation date has passed, its expiry has not passed, and no revocation was yet effective on the target phase-effective date."
 }
