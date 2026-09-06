@@ -117,6 +117,37 @@ def validate_reviewer_qualification_guards() -> int:
             ),
         )
         cases += 1
+
+        current.update(_qualification(
+            purpose="reviewer-qualification",
+            subject="reviewer-1",
+            scopes=["governance-amendment-classification"],
+        ))
+        current["qualification_kind"] = "affirmatively-unqualified"
+        expect_failure(
+            "negative/free-form qualification kind cannot establish competence",
+            lambda: review_auth.validate_reviewer_qualification_ref(
+                ref,
+                "negative-kind qualification",
+                "EC-GOV-1.0",
+                "reviewer-1",
+                "governance-amendment-classification",
+            ),
+        )
+        cases += 1
+
+        current["qualification_kind"] = "unknown-positive-sounding-kind"
+        expect_failure(
+            "unrecognized qualification kind cannot extend the authority schema",
+            lambda: review_auth.validate_reviewer_qualification_ref(
+                ref,
+                "unknown-kind qualification",
+                "EC-GOV-1.0",
+                "reviewer-1",
+                "governance-amendment-classification",
+            ),
+        )
+        cases += 1
         return cases
     finally:
         core.validate_supporting_evidence_ref = original
