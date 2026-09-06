@@ -76,12 +76,34 @@ def validate_clean_checkout_guards() -> int:
         )
         git(root, "restore", "policy.json")
 
-        (root / "records.json").write_text('{"record_type": "evidence"}\n', encoding="utf-8")
+        untracked = root / "records.json"
+        untracked.write_text('{"record_type": "evidence"}\n', encoding="utf-8")
         expect_failure(
             "untracked authority bytes",
             lambda: path_integrity.require_clean_git_checkout(root),
         )
-    return 3
+        untracked.unlink()
+
+        # `git status` normally trusts assume-unchanged and can hide this edit.
+        # The canonical validator must reject the index flag itself.
+        git(root, "update-index", "--assume-unchanged", "policy.json")
+        tracked.write_text('{"operative": true}\n', encoding="utf-8")
+        expect_failure(
+            "assume-unchanged cannot hide authority bytes",
+            lambda: path_integrity.require_clean_git_checkout(root),
+        )
+        git(root, "update-index", "--no-assume-unchanged", "policy.json")
+        git(root, "restore", "policy.json")
+
+        # A sparse/skip-worktree entry is equally incompatible with asserting
+        # that the checked-out bytes exactly represent HEAD.
+        git(root, "update-index", "--skip-worktree", "policy.json")
+        expect_failure(
+            "skip-worktree authority path",
+            lambda: path_integrity.require_clean_git_checkout(root),
+        )
+        git(root, "update-index", "--no-skip-worktree", "policy.json")
+    return 5
 
 
 def main() -> None:
