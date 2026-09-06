@@ -49,7 +49,7 @@ ecg:MembershipRecordShape a sh:NodeShape ;
 ecg:VoteShape a sh:NodeShape ;
     sh:targetClass ecg:Vote ;
     sh:property [ sh:path ecg:voter ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ; sh:class ec:Person ] ;
-    sh:property [ sh:path ecg:voteValue ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "approve" "reject" "abstain" ) ] .
+    sh:property [ sh:path ecg:voteValue ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "for" "against" "abstain" ) ] .
 
 ecg:ConflictDeclarationShape a sh:NodeShape ;
     sh:targetClass ecg:ConflictDeclaration ;
