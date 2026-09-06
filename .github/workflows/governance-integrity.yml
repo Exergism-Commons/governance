@@ -81,6 +81,7 @@ jobs:
             python tools/test_interrelease_integrity_guards.py
             python tools/test_interrelease_hardening_guards.py
             python tools/test_path_integrity_guards.py
+            python tools/test_reviewer_and_membership_discovery_guards.py
           } 2>&1 | tee "${LOG_PATH}"
       - name: Persist validator diagnostics
         if: always()
