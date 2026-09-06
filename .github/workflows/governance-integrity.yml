@@ -56,10 +56,19 @@ jobs:
       - name: Validate governance invariants and adversarial mutation classes
         shell: bash
         env:
-          EC_GOVERNANCE_HISTORY_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          EC_GOVERNANCE_PUSH_BASE: ${{ github.event.before }}
           PYTHONDONTWRITEBYTECODE: '1'
         run: |
           set -euo pipefail
+          # On pull_request GitHub checks out its synthetic merge commit. Its
+          # first parent is the exact base revision against which this verdict
+          # is being produced; event payload base.sha can lag behind main after
+          # the PR was opened. Push runs instead compare with event.before.
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            export EC_GOVERNANCE_HISTORY_BASE="$(git rev-parse HEAD^1)"
+          else
+            export EC_GOVERNANCE_HISTORY_BASE="${EC_GOVERNANCE_PUSH_BASE}"
+          fi
           LOG_PATH="${RUNNER_TEMP}/governance-integrity.log"
           {
             python tools/validate.py
