@@ -47,6 +47,30 @@ def _git(root: Path, args: list[str]) -> subprocess.CompletedProcess[str]:
         raise SystemExit(f"governance integrity failure: git unavailable for repository path integrity: {exc}") from exc
 
 
+def _require_literal_index_entries(root: Path) -> None:
+    """Reject index flags that can make worktree changes invisible to status.
+
+    `assume-unchanged` and `skip-worktree` are useful Git performance/sparse
+    checkout mechanisms, but they are incompatible with an authority validator
+    whose security boundary is "the bytes in HEAD". `git ls-files -v` renders
+    ordinary tracked entries as `H`; assume-unchanged uses a lowercase tag and
+    skip-worktree uses `S`. Requiring ordinary entries prevents those flags from
+    manufacturing a falsely clean checkout.
+    """
+    listed = _git(root, ["ls-files", "-v"])
+    core.require(listed.returncode == 0, "cannot inspect governance Git index flags")
+    nonliteral = [
+        line
+        for line in listed.stdout.splitlines()
+        if line.strip() and not line.startswith("H ")
+    ]
+    core.require(
+        not nonliteral,
+        "canonical governance validation forbids Git index shortcuts such as "
+        f"assume-unchanged/skip-worktree: {'; '.join(nonliteral[:10])}",
+    )
+
+
 def require_clean_git_checkout(root: Path) -> None:
     """Require every repository byte consumed by the canonical verdict to be in HEAD.
 
@@ -62,6 +86,7 @@ def require_clean_git_checkout(root: Path) -> None:
         head.returncode == 0 and bool(head.stdout.strip()),
         "canonical governance validation requires a Git checkout with a committed HEAD",
     )
+    _require_literal_index_entries(root)
     status = _git(
         root,
         ["status", "--porcelain=v1", "--untracked-files=all", "--ignore-submodules=none"],
