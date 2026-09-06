@@ -64,7 +64,8 @@ def validate_clean_checkout_guards() -> int:
         git(root, "config", "user.name", "Governance Guard")
         tracked = root / "policy.json"
         tracked.write_text('{"operative": false}\n', encoding="utf-8")
-        git(root, "add", "policy.json")
+        (root / ".gitignore").write_text("ignored.json\n", encoding="utf-8")
+        git(root, "add", "policy.json", ".gitignore")
         git(root, "commit", "-qm", "initial")
 
         path_integrity.require_clean_git_checkout(root)
@@ -83,6 +84,14 @@ def validate_clean_checkout_guards() -> int:
             lambda: path_integrity.require_clean_git_checkout(root),
         )
         untracked.unlink()
+
+        ignored = root / "ignored.json"
+        ignored.write_text('{"record_type": "evidence"}\n', encoding="utf-8")
+        expect_failure(
+            "ignored bytes cannot form a second authority layer",
+            lambda: path_integrity.require_clean_git_checkout(root),
+        )
+        ignored.unlink()
 
         # `git status` normally trusts assume-unchanged and can hide this edit.
         # The canonical validator must reject the index flag itself.
@@ -103,7 +112,7 @@ def validate_clean_checkout_guards() -> int:
             lambda: path_integrity.require_clean_git_checkout(root),
         )
         git(root, "update-index", "--no-skip-worktree", "policy.json")
-    return 5
+    return 6
 
 
 def main() -> None:
