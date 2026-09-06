@@ -8,6 +8,13 @@ history, prospective delegation-policy, repository path integrity, and other
 authority wrappers.
 """
 
+# The very first integrity check requires an exact clean HEAD checkout. Importing
+# validator modules must therefore not manufacture untracked __pycache__ bytes
+# before that check has a chance to run.
+import sys
+
+sys.dont_write_bytecode = True
+
 import governance_path_integrity as path_integrity
 
 
