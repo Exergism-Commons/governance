@@ -75,10 +75,10 @@ def require_clean_git_checkout(root: Path) -> None:
     """Require every repository byte consumed by the canonical verdict to be in HEAD.
 
     The history validator reasons about committed Git objects. Letting the final
-    verdict read staged, modified, deleted, or untracked worktree bytes would
-    create a second authority state that is absent from repository history and
-    may disappear on a clean checkout. Requiring a clean checkout is stronger
-    and easier to audit than maintaining a partial allow-list of authority paths.
+    verdict read staged, modified, deleted, untracked, or ignored worktree bytes
+    would create a second authority state that is absent from repository history
+    and may disappear on a clean checkout. Requiring an exact checkout is
+    stronger and easier to audit than maintaining path-specific exceptions.
     """
     root = root.resolve()
     head = _git(root, ["rev-parse", "--verify", "HEAD^{commit}"])
@@ -89,14 +89,20 @@ def require_clean_git_checkout(root: Path) -> None:
     _require_literal_index_entries(root)
     status = _git(
         root,
-        ["status", "--porcelain=v1", "--untracked-files=all", "--ignore-submodules=none"],
+        [
+            "status",
+            "--porcelain=v1",
+            "--untracked-files=all",
+            "--ignored=matching",
+            "--ignore-submodules=none",
+        ],
     )
     core.require(status.returncode == 0, "cannot inspect governance Git worktree state")
     dirty = [line for line in status.stdout.splitlines() if line.strip()]
     core.require(
         not dirty,
         "canonical governance validation requires an exact clean HEAD checkout; "
-        f"uncommitted/untracked repository bytes detected: {'; '.join(dirty[:10])}",
+        f"non-HEAD repository bytes detected: {'; '.join(dirty[:10])}",
     )
 
 
