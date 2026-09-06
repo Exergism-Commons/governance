@@ -34,6 +34,7 @@ import governance_release_membership as release_membership
 import governance_guardian_consent as guardian_consent
 import governance_release_authority as release_authority
 import governance_release_evidence_hardening as release_evidence_hardening
+import governance_classification_qualification_hardening as classification_qualification_hardening
 import governance_activation_origin as activation_origin
 import governance_release_proof as release_proof
 import governance_succession_auth as succession_auth
@@ -62,6 +63,7 @@ def validate_saved_base_callbacks() -> None:
         "release activation semantics": getattr(release_evidence_hardening, "validate_authority_snapshot", None),
         "current activation origin gate": getattr(activation_origin, "validate_activation_evidence", None),
         "review-bound amendment classification": getattr(release_evidence_hardening, "validate_classification_base", None),
+        "semantic amendment reviewer qualification": getattr(classification_qualification_hardening, "validate_classification", None),
         "release guardian consent": getattr(guardian_consent, "validate_guardian_consent", None),
         "founding succession lifecycle": getattr(succession_auth, "ORIG_VALIDATE_FOUNDING_STEWARD_LIFECYCLE", None),
         "guardian succession assignment": getattr(succession_auth, "ORIG_VALIDATE_MISSION_GUARDIAN_ASSIGNMENT", None),
@@ -92,6 +94,11 @@ def main() -> None:
     # one shared signed-review payload contract that includes reviewer identity
     # and exact qualification-evidence references.
     release_evidence_hardening.install()
+
+    # The signed-review layer proves which qualification evidence reviewers
+    # selected; this final classification wrapper proves those exact records
+    # actually qualify the named reviewers for amendment classification.
+    classification_qualification_hardening.install()
 
     # Current-state validation uses the very same release-of-origin semantics.
     # An unchanged content-addressed activation record may survive release N+1
