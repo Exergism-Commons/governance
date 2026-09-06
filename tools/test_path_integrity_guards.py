@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+"""Focused guards for repository path-integrity invariants."""
+
+from __future__ import annotations
+
+import subprocess
+import tempfile
+from pathlib import Path
+
+import governance_path_integrity as path_integrity
+
+
+def expect_failure(label: str, callback) -> None:
+    try:
+        callback()
+    except SystemExit:
+        return
+    raise SystemExit(f"path-integrity guard failure: {label} unexpectedly validated")
+
+
+def git(root: Path, *args: str) -> None:
+    result = subprocess.run(
+        ["git", *args],
+        cwd=root,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise SystemExit(f"path-integrity guard git failure: {result.stderr.strip() or result.stdout.strip()}")
+
+
+def validate_symlink_guards() -> int:
+    with tempfile.TemporaryDirectory() as temp:
+        root = Path(temp)
+        (root / "records" / "evidence").mkdir(parents=True)
+        (root / "mutable.json").write_text('{"value": 1}\n', encoding="utf-8")
+        (root / "records" / "evidence" / "regular.json").write_text('{"value": 1}\n', encoding="utf-8")
+        path_integrity.require_no_symlinks(root)
+
+        (root / "records" / "evidence" / "linked.json").symlink_to(root / "mutable.json")
+        expect_failure(
+            "content-addressed record symlink",
+            lambda: path_integrity.require_no_symlinks(root),
+        )
+        (root / "records" / "evidence" / "linked.json").unlink()
+
+        (root / "real-dir").mkdir()
+        (root / "real-dir" / "record.json").write_text('{"value": 1}\n', encoding="utf-8")
+        (root / "records" / "linked-dir").symlink_to(root / "real-dir", target_is_directory=True)
+        expect_failure(
+            "symlinked parent directory",
+            lambda: path_integrity.require_no_symlinks(root),
+        )
+    return 3
+
+
+def validate_clean_checkout_guards() -> int:
+    with tempfile.TemporaryDirectory() as temp:
+        root = Path(temp)
+        git(root, "init", "-q")
+        git(root, "config", "user.email", "governance-guard@example.invalid")
+        git(root, "config", "user.name", "Governance Guard")
+        tracked = root / "policy.json"
+        tracked.write_text('{"operative": false}\n', encoding="utf-8")
+        (root / ".gitignore").write_text("ignored.json\n", encoding="utf-8")
+        git(root, "add", "policy.json", ".gitignore")
+        git(root, "commit", "-qm", "initial")
+
+        path_integrity.require_clean_git_checkout(root)
+
+        tracked.write_text('{"operative": true}\n', encoding="utf-8")
+        expect_failure(
+            "dirty tracked authority bytes",
+            lambda: path_integrity.require_clean_git_checkout(root),
+        )
+        git(root, "restore", "policy.json")
+
+        untracked = root / "records.json"
+        untracked.write_text('{"record_type": "evidence"}\n', encoding="utf-8")
+        expect_failure(
+            "untracked authority bytes",
+            lambda: path_integrity.require_clean_git_checkout(root),
+        )
+        untracked.unlink()
+
+        ignored = root / "ignored.json"
+        ignored.write_text('{"record_type": "evidence"}\n', encoding="utf-8")
+        expect_failure(
+            "ignored bytes cannot form a second authority layer",
+            lambda: path_integrity.require_clean_git_checkout(root),
+        )
+        ignored.unlink()
+
+        # `git status` normally trusts assume-unchanged and can hide this edit.
+        # The canonical validator must reject the index flag itself.
+        git(root, "update-index", "--assume-unchanged", "policy.json")
+        tracked.write_text('{"operative": true}\n', encoding="utf-8")
+        expect_failure(
+            "assume-unchanged cannot hide authority bytes",
+            lambda: path_integrity.require_clean_git_checkout(root),
+        )
+        git(root, "update-index", "--no-assume-unchanged", "policy.json")
+        git(root, "restore", "policy.json")
+
+        # A sparse/skip-worktree entry is equally incompatible with asserting
+        # that the checked-out bytes exactly represent HEAD.
+        git(root, "update-index", "--skip-worktree", "policy.json")
+        expect_failure(
+            "skip-worktree authority path",
+            lambda: path_integrity.require_clean_git_checkout(root),
+        )
+        git(root, "update-index", "--no-skip-worktree", "policy.json")
+    return 6
+
+
+def main() -> None:
+    total = validate_symlink_guards() + validate_clean_checkout_guards()
+    print(f"Path-integrity guards: PASS ({total} cases)")
+
+
+if __name__ == "__main__":
+    main()

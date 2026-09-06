@@ -1,0 +1,134 @@
+schema_version: 2
+schedule_version: 0.1-DRAFT
+status: draft
+operative: false
+coverage_state_contract:
+  final_states:
+    - covered
+    - excluded
+  provisional_states:
+    - proposed
+    - proposed-after-outbound-review
+    - bootstrap-not-retroactive
+schedule_binding_contract:
+  authoritative_schedule_artifact: cla/PROJECT-SCHEDULE.md
+  exact_repository_set_required: true
+  exact_material_class_id_set_per_repository_required: true
+  exact_repository_rights_fields_required: true
+  exact_material_rights_fields_required: true
+repositories:
+  - repository: Exergism-Commons/exergism
+    cla_coverage: proposed
+    material_classes:
+      - id: corpus-and-documentation
+        paths:
+          - content/**
+          - books/**
+          - formal/**
+          - examples/**
+          - assets/**
+          - ontology.owl
+          - manifest.json
+          - README.md
+          - CONTRIBUTING.md
+          - GOVERNANCE.md
+          - docs/**
+          - reviews/**
+        current_outbound: CC-BY-SA-4.0-unless-file-says-otherwise
+        cla_outbound_family: target-license-and-permitted-successors-compatible-with-open-knowledge
+      - id: software-and-tooling
+        paths:
+          - scripts/**
+          - .github/**
+          - canonical_content_schema.json
+        current_outbound: Apache-2.0
+        cla_outbound_family: target-license-and-permitted-successors
+    cla_patent_grant: none
+    note: Any Apache-2.0 patent effect arises from Apache-2.0 itself, not the CLA.
+
+  - repository: Exergism-Commons/exergic-commons-license
+    cla_coverage: proposed
+    material_classes:
+      - id: ecl-project-lineage
+        paths:
+          - '**'
+        current_outbound: file-or-release-specific-and-not-normalized-here
+        existing_inbound: draft-CONTRIBUTING.md-contribution-rights-term
+        cla_outbound_family: ECL-project-purpose-plus-open-knowledge-family
+        knowledge_outbound_family: EC-open-knowledge-family-after-valid-project-adoption
+        capability_license_boundary: exact-ECL-Bundle-is-separate-from-supporting-public-knowledge
+    cla_patent_grant: none
+    note: ECL 0.3-DRAFT expressly grants no patent license; dossiers/evidence/ontology/reviews are targeted for open and contestable knowledge treatment without themselves acquiring licensing effect.
+
+  - repository: Exergism-Commons/ecl-patent-license
+    cla_coverage: proposed
+    material_classes:
+      - id: ecl-pl-project-lineage
+        paths:
+          - '**'
+        current_outbound: not-normalized-as-repository-wide-license
+        cla_outbound_family: ECL-PL-development-plus-open-knowledge-family
+        knowledge_outbound_family: EC-open-knowledge-family-after-valid-project-adoption
+    cla_patent_grant: none
+    note: Repository contribution or open publication of architecture/specification material must not itself create an ECL-PL patent grant.
+
+  - repository: Exergism-Commons/.github
+    cla_coverage: proposed-after-outbound-review
+    material_classes:
+      - id: organization-profile-and-community-health
+        paths:
+          - '**'
+        current_outbound: unresolved
+        cla_outbound_family: EC-open-knowledge-family-after-valid-outbound-adoption
+    cla_patent_grant: none
+
+  - repository: Exergism-Commons/governance
+    cla_coverage: bootstrap-not-retroactive
+    material_classes:
+      - id: organization-governance-and-legal-templates
+        paths:
+          - '**'
+        current_outbound: unresolved
+        cla_outbound_family: EC-open-knowledge-family-after-valid-outbound-adoption
+    cla_patent_grant: none
+    note: OPEN-KNOWLEDGE-POLICY.md is a non-operative policy proposal and does not relicense historical Governance material by itself.
+
+  - repository: Exergism-Commons/funding
+    cla_coverage: proposed-after-outbound-review
+    material_classes:
+      - id: funding-governance-and-semantic-records
+        paths:
+          - '**'
+        current_outbound: unresolved
+        cla_outbound_family: EC-open-knowledge-family-for-public-knowledge-with-explicit-software-license-for-tooling
+    cla_patent_grant: none
+    note: Funding remains authoritative for Funding-domain facts and governance; open copying does not transfer canonical decision authority.
+
+  - repository: Exergism-Commons/id.exergism-commons.github.io
+    cla_coverage: proposed-after-outbound-review
+    material_classes:
+      - id: identifier-resolver-software-and-site
+        paths:
+          - cmd/**
+          - internal/**
+          - deploy/**
+          - .github/**
+          - assets/**
+          - '*.html'
+          - '*.json'
+          - '*.md'
+        current_outbound: unresolved
+        cla_outbound_family: explicit-software-tooling-license-plus-open-knowledge-family-for-public-documentation
+      - id: identifier-published-representation-metadata
+        paths:
+          - resolver/**
+          - ontology/**
+          - funding/**
+        current_outbound: source-project-or-file-specific
+        cla_outbound_family: source-project-terms-plus-EC-open-knowledge-for-resolver-local-provenance-metadata
+    cla_patent_grant: none
+    note: The resolver does not relicense source-project representations and does not transfer canonical namespace authority to mirrors or forks.
+
+non_retroactivity:
+  schedule_updates_may_expand_rights_for_prior_contributions: false
+  exception: only-if-prior-agreement-already-authorized-successor-category-or-contributor-separately-consents
