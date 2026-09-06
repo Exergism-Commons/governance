@@ -7,6 +7,12 @@ import validate_governance as core
 
 REVIEWER_FIELDS = {"reviewer_id", "qualification_evidence", "signature_evidence"}
 
+# Closed-world vocabulary for the current reviewer-qualification evidence schema.
+# Free-form or negatively worded values are not evidence of competence. Adding a
+# new recognized kind is a semantic/schema change and must be reviewed here
+# explicitly rather than being accepted merely because it is non-empty.
+RECOGNIZED_REVIEWER_QUALIFICATION_KINDS = frozenset({"professional-competence"})
+
 
 def _signed_reviewer_projection(reviewers: list[dict], label: str) -> list[dict]:
     """Return the reviewer fields that must be covered by the review digest.
@@ -122,14 +128,15 @@ def validate_reviewer_qualification_ref(
     """Prove that qualification evidence qualifies this reviewer for this review.
 
     A generic supporting-evidence envelope is insufficient: the immutable record
-    must identify the reviewer as its subject and explicitly cover the review
-    scope being authorized. This prevents a reviewer from signing a review that
-    merely points at unrelated but otherwise well-formed evidence.
+    must identify the reviewer as its subject, use a recognized affirmative
+    qualification kind, and explicitly cover the review scope being authorized.
+    This prevents a reviewer from signing a review that merely points at
+    unrelated, negatively characterized, or otherwise unrecognized evidence.
 
     ``review_version`` is optional because some legal-review envelopes (notably
     the CLA compatibility format) use their own version context rather than a
     Governance release version. When present, the supporting evidence must match
-    it exactly; when absent, identity/purpose/scope semantics still apply.
+    it exactly; when absent, identity/purpose/kind/scope semantics still apply.
     """
     qualification = core.validate_supporting_evidence_ref(ref, label, review_version)
     core.require(
@@ -141,7 +148,10 @@ def validate_reviewer_qualification_ref(
         f"{label} does not qualify the claimed reviewer",
     )
     kind = qualification.get("qualification_kind")
-    core.require(isinstance(kind, str) and kind.strip(), f"{label} qualification_kind required")
+    core.require(
+        kind in RECOGNIZED_REVIEWER_QUALIFICATION_KINDS,
+        f"{label} qualification_kind is not a recognized affirmative qualification",
+    )
     scopes = qualification.get("qualification_scope")
     core.require(
         isinstance(scopes, list)
