@@ -50,12 +50,14 @@ A resource being published under `*.exergism.org` MUST NOT, by itself, imply end
 
 Persistent semantic identifiers SHOULD be minted under `https://id.exergism.org/` and MUST NOT expose implementation details such as repository names, branches, file extensions, static-site generators, or deployment providers.
 
-Reserved project vocabulary roots are:
+Reserved vocabulary roots include:
 
 ```text
-ex:  https://id.exergism.org/exergism#
-ecl: https://id.exergism.org/ecl#
-ec:  https://id.exergism.org/commons#
+ex:   https://id.exergism.org/exergism#
+ecl:  https://id.exergism.org/ecl#
+ec:   https://id.exergism.org/commons#
+ecg:  https://id.exergism.org/governance#
+fund: https://id.exergism.org/funding#
 ```
 
 Ontology document identifiers are distinct from vocabulary terms:
@@ -64,12 +66,13 @@ Ontology document identifiers are distinct from vocabulary terms:
 https://id.exergism.org/ontology/exergism
 https://id.exergism.org/ontology/ecl
 https://id.exergism.org/ontology/commons
+https://id.exergism.org/ontology/governance
 https://id.exergism.org/ontology/funding
 ```
 
 Version IRIs SHOULD be immutable. Cross-project relationships MUST be explicit assertions, mappings, imports, or documented dependencies rather than accidental identifier reuse.
 
-The `commons#` namespace is the organization-level vocabulary. Minting a term there does not make a policy operative; operativity is governed by the applicable adoption/status record.
+The `commons#` namespace is restricted to genuinely shared cross-project primitives. Organization-level institutional concepts — including Membership, GovernanceDecision, DecisionClass, `QualifiedApproval`, roles, delegations and conflicts — belong to `governance#`. Minting a term in either namespace does not make a policy operative; operativity is governed by the applicable adoption/status record.
 
 ## 5. Entity and registry identifiers
 
