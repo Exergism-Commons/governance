@@ -57,6 +57,7 @@ jobs:
         shell: bash
         env:
           EC_GOVERNANCE_HISTORY_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          PYTHONDONTWRITEBYTECODE: '1'
         run: |
           set -euo pipefail
           LOG_PATH="${RUNNER_TEMP}/governance-integrity.log"
