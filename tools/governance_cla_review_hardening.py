@@ -108,9 +108,12 @@ def validate_cla_reviewer_binding() -> None:
     for index, reviewer in enumerate(reviewers):
         reviewer_id = reviewer["reviewer_id"]
         core.require(reviewer_id not in forbidden, "CLA legal reviewer must be independent of Steward competent signatories")
-        qualification = core.validate_supporting_evidence_ref(
+        qualification = review_auth.validate_reviewer_qualification_ref(
             reviewer["qualification_evidence"],
             f"CLA reviewer-binding qualification {index}",
+            None,
+            reviewer_id,
+            "cla-legal-review",
         )
         captured = core.parse_iso_date(
             qualification.get("captured_date"),
