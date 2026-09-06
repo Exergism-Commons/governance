@@ -73,6 +73,25 @@ def main() -> int:
     ):
         changed.append(validator.relative_to(ROOT).as_posix())
 
+    # Human entry points must advertise the same namespace split as the machine
+    # artifacts, while keeping Commons clearly identified as shared vocabulary.
+    readme = ROOT / "README.md"
+    if rewrite(
+        readme,
+        (
+            (
+                "- [`ontology/commons.ttl`](ontology/commons.ttl) — organization governance vocabulary at `https://id.exergism.org/commons#`.\n- [`ontology/commons-context.jsonld`](ontology/commons-context.jsonld) — JSON-LD context.",
+                "- [`ontology/commons.ttl`](ontology/commons.ttl) — shared cross-project EC primitives at `https://id.exergism.org/commons#`.\n- [`ontology/governance.ttl`](ontology/governance.ttl) — organization governance vocabulary at `https://id.exergism.org/governance#`.\n- [`ontology/commons-context.jsonld`](ontology/commons-context.jsonld) — shared Commons JSON-LD context.\n- [`ontology/governance-context.jsonld`](ontology/governance-context.jsonld) — Governance JSON-LD context, with shared Commons primitives imported through the `ec` prefix.",
+            ),
+            ("Funding may require `ec:QualifiedApproval`", "Funding may require `ecg:QualifiedApproval`"),
+            (
+                "Persistent organization vocabulary:\n\n- vocabulary: `https://id.exergism.org/commons#`\n- ontology: `https://id.exergism.org/ontology/commons`",
+                "Persistent vocabularies:\n\n- shared Commons vocabulary: `https://id.exergism.org/commons#`\n- shared Commons ontology: `https://id.exergism.org/ontology/commons`\n- Governance vocabulary: `https://id.exergism.org/governance#`\n- Governance ontology: `https://id.exergism.org/ontology/governance`",
+            ),
+        ),
+    ):
+        changed.append(readme.relative_to(ROOT).as_posix())
+
     # Some deployments may also carry a generated explanatory site. It is not
     # part of the repository contract, so absence must not make materialization
     # fail. If present, keep its advertised Governance namespace consistent.
