@@ -27,12 +27,18 @@ def main() -> None:
     path_integrity.validate_repository_paths()
 
     import governance_interrelease_integrity as interrelease
+    import governance_membership_record_discovery as membership_record_discovery
     import validate_governance_temporal as temporal
 
     # Install the first inter-release wrappers before importing the final
     # hardening layer: it deliberately composes on top of the historical
     # creation-policy validator installed here.
     interrelease.install()
+
+    # Membership history closure is content-based rather than suffix-based. A
+    # valid adopted admission/transition under records/decisions cannot become
+    # invisible merely by using a non-.json filename.
+    membership_record_discovery.install()
 
     import governance_interrelease_hardening as interrelease_hardening
 
