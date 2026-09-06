@@ -19,7 +19,17 @@ GOVERNANCE_NAMESPACE = "https://id.exergism.org/governance#"
 GOVERNANCE_ONTOLOGY = "https://id.exergism.org/ontology/governance"
 
 
-def rewrite(path: Path, replacements: tuple[tuple[str, str], ...]) -> bool:
+def rewrite(
+    path: Path,
+    replacements: tuple[tuple[str, str], ...],
+    *,
+    optional: bool = False,
+) -> bool:
+    if not path.exists():
+        if optional:
+            return False
+        raise FileNotFoundError(f"required migration input is missing: {path.relative_to(ROOT)}")
+
     before = path.read_text(encoding="utf-8")
     after = before
     for old, new in replacements:
@@ -47,12 +57,25 @@ def main() -> int:
             (f'ONTOLOGY_IRI = "{OLD_ONTOLOGY}"', f'ONTOLOGY_IRI = "{GOVERNANCE_ONTOLOGY}"'),
             ('"ontology/commons.ttl"', '"ontology/governance.ttl"'),
             ('"ontology/commons-context.jsonld"', '"ontology/governance-context.jsonld"'),
+            (
+                'require(context["@context"]["ec"] == NS, "JSON-LD namespace mismatch")',
+                'require(context["@context"]["ecg"]["@id"] == NS, "JSON-LD namespace mismatch")',
+            ),
+            (
+                'require(f"ec:{term}" in ontology, f"ontology term missing: {term}")',
+                'require(f"ecg:{term}" in ontology, f"ontology term missing: {term}")',
+            ),
+            (
+                'require("ec:GovernanceDecisionShape" in shapes and "ec:MembershipRecordShape" in shapes, "governance SHACL shapes missing")',
+                'require("ecg:GovernanceDecisionShape" in shapes and "ecg:MembershipRecordShape" in shapes, "governance SHACL shapes missing")',
+            ),
         ),
     ):
         changed.append(validator.relative_to(ROOT).as_posix())
 
-    # The public explanatory page was still advertising commons# as the
-    # Governance vocabulary. Only that exact presentation string moves.
+    # Some deployments may also carry a generated explanatory site. It is not
+    # part of the repository contract, so absence must not make materialization
+    # fail. If present, keep its advertised Governance namespace consistent.
     site = ROOT / "docs" / "index.html"
     if rewrite(
         site,
@@ -62,6 +85,7 @@ def main() -> int:
                 "Governance vocabulary</span><code>https://id.exergism.org/governance#",
             ),
         ),
+        optional=True,
     ):
         changed.append(site.relative_to(ROOT).as_posix())
 
