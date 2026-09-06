@@ -187,4 +187,6 @@ Accordingly:
 
 The detailed domain, URI, namespace and persistence architecture is maintained in `architecture/DOMAIN-AND-URI-ARCHITECTURE.md`.
 
-Organization-level vocabulary uses `https://id.exergism.org/commons#`. Minting or resolving a term does not make the associated draft policy operative.
+Organization-level institutional vocabulary uses `https://id.exergism.org/governance#`. Shared cross-project primitives use `https://id.exergism.org/commons#`. Governance concepts such as `QualifiedApproval`, Membership, roles, delegations and conflicts MUST be minted in `governance#`, not `commons#`.
+
+Minting or resolving a term does not make the associated draft policy operative.
