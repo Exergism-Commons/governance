@@ -4,8 +4,8 @@
 Do not use validate_governance.py or validate_governance_temporal.py directly as
 an activation verdict: they are internal components extended here by temporal,
 release-history, lifecycle, strict parsing, Open Knowledge, inter-release
-history, prospective delegation-policy, repository path integrity, and other
-authority wrappers.
+history, prospective delegation-policy, repository path integrity, phase
+transition evidence binding, and other authority wrappers.
 """
 
 # The very first integrity check requires an exact clean HEAD checkout. Importing
@@ -41,8 +41,10 @@ def main() -> None:
     membership_record_discovery.install()
 
     import governance_interrelease_hardening as interrelease_hardening
+    import governance_phase_transition_hardening as phase_transition_hardening
 
     interrelease_hardening.install()
+    phase_transition_hardening.install()
 
     # Repository-history validation is part of the same canonical verdict.
     # It walks every committed transition after the trusted merge/push base,
@@ -51,8 +53,9 @@ def main() -> None:
     interrelease_hardening.validate_repository_history()
 
     # temporal.main() installs the remaining release/lifecycle wrappers. It
-    # consumes the hardened delegation callbacks above, including prospective
-    # policy reservation of actions granted by older releases.
+    # consumes the hardened delegation callbacks above and the phase-transition
+    # wrapper that binds exact maturity evidence into the Member-approved
+    # transition payload and proves a real F2 delegated-role replacement.
     temporal.main()
 
 
