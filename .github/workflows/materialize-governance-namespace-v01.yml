@@ -61,5 +61,6 @@ jobs:
           python tools/test_path_integrity_guards.py
           python tools/test_reviewer_and_membership_discovery_guards.py
           python tools/test_phase_transition_hardening_guards.py
+          python tools/test_membership_transition_authority_guards.py
 
           git push origin HEAD:cla-framework-v0.1
