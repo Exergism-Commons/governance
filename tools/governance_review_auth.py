@@ -115,7 +115,7 @@ def require_authentication_shape(review: dict, label: str) -> tuple[str, str, li
 def validate_reviewer_qualification_ref(
     ref: dict,
     label: str,
-    review_version: str,
+    review_version: str | None,
     reviewer_id: str,
     required_scope: str,
 ) -> dict:
@@ -125,6 +125,11 @@ def validate_reviewer_qualification_ref(
     must identify the reviewer as its subject and explicitly cover the review
     scope being authorized. This prevents a reviewer from signing a review that
     merely points at unrelated but otherwise well-formed evidence.
+
+    ``review_version`` is optional because some legal-review envelopes (notably
+    the CLA compatibility format) use their own version context rather than a
+    Governance release version. When present, the supporting evidence must match
+    it exactly; when absent, identity/purpose/scope semantics still apply.
     """
     qualification = core.validate_supporting_evidence_ref(ref, label, review_version)
     core.require(
