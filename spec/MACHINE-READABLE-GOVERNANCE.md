@@ -32,23 +32,32 @@ Likewise, a SHA-256 digest proves which bytes are referenced; it does not by its
 
 ## 2. Namespace
 
-Organization-level terms use:
+Governance-owned institutional terms use:
+
+```text
+ecg: https://id.exergism.org/governance#
+```
+
+Shared cross-project EC primitives, when needed, use:
 
 ```text
 ec: https://id.exergism.org/commons#
 ```
 
-Ontology document IRI:
+Ontology document IRIs:
 
 ```text
+https://id.exergism.org/ontology/governance
 https://id.exergism.org/ontology/commons
 ```
 
-The namespace is separate from Exergism, ECL and Funding. Cross-domain relationships must be explicit.
+`governance#` is the semantic authority for organization-level institutional terms such as `GovernanceDecision`, `DecisionClass`, `QualifiedApproval`, Membership, roles, delegations and conflicts. `commons#` is restricted to genuinely shared cross-project primitives and MUST NOT be used to mint Governance-owned institutional terms.
+
+Both namespaces are separate from Exergism, ECL and Funding. Cross-domain relationships must be explicit.
 
 ## 3. Core concepts
 
-The initial vocabulary includes:
+The initial Governance vocabulary includes:
 
 - `GovernanceRule`
 - `GovernanceDecision`
@@ -247,13 +256,15 @@ Process evidence must identify the exact subject, successful completion state, r
 
 ## 12. Cross-domain consumption
 
-Downstream repositories may reference EC governance terms without copying their definitions.
+Downstream repositories may reference EC Governance terms without copying their definitions.
 
 Examples:
 
-- Funding may state that a >50% concentration decision `requiresApprovalClass ec:QualifiedApproval`.
-- The identifier service may state that permanent domain transfer `requiresApprovalClass ec:QualifiedApproval`.
-- A future registry may record that a decision was `authorizedBy` a specific adopted EC decision.
+- Funding may state that a >50% concentration decision `requiresApprovalClass ecg:QualifiedApproval`.
+- The identifier service may state that permanent domain transfer `requiresApprovalClass ecg:QualifiedApproval`.
+- A future registry may record that a decision was `ecg:authorizedBy` a specific adopted EC decision.
+
+When a downstream serialization uses these compact terms, its context/prefix declarations MUST bind `ecg` to `https://id.exergism.org/governance#`. Shared primitives may separately use `ec` for `https://id.exergism.org/commons#`; those prefixes are not interchangeable.
 
 The downstream repository remains authoritative for its domain facts and implementation; Governance remains authoritative for the organization-level approval concept it references.
 
