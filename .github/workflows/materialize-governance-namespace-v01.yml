@@ -30,16 +30,34 @@ jobs:
       - name: Migrate Governance namespace
         run: python tools/migrate_governance_namespace_v01.py
 
-      - name: Commit transformed sources
+      - name: Commit, validate and push transformed sources
         shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
         run: |
           set -euo pipefail
           if [[ -z "$(git status --porcelain=v1 --untracked-files=all)" ]]; then
             echo 'Governance namespace already normalized'
             exit 0
           fi
+
+          # The canonical validator requires an exact committed HEAD checkout.
+          # Commit locally first, validate that materialized commit and only then
+          # publish it. A broken transformation must never reach the PR branch.
+          MATERIALIZATION_BASE="$(git rev-parse HEAD)"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           git commit -m 'Materialize Governance namespace split'
+          export EC_GOVERNANCE_HISTORY_BASE="${MATERIALIZATION_BASE}"
+
+          python tools/validate.py
+          python tools/test_governance_mutation_guards.py
+          python tools/test_namespace_materialization_guards.py
+          python tools/test_historical_authority_guards.py
+          python tools/test_event_release_authority_guards.py
+          python tools/test_interrelease_integrity_guards.py
+          python tools/test_interrelease_hardening_guards.py
+          python tools/test_path_integrity_guards.py
+
           git push origin HEAD:cla-framework-v0.1
