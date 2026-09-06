@@ -53,8 +53,10 @@ The machine layer enforces a reviewable subset of adopted rules. It cannot manuf
 - [`policy/founding-stewardship.json`](policy/founding-stewardship.json) — draft Founding Steward, Mission Lock and maturity-phase projection.
 - [`policy/delegations.json`](policy/delegations.json) — explicit delegation registry; currently empty/non-operative.
 - [`policy/open-knowledge-status.json`](policy/open-knowledge-status.json) — closed-world machine projection of the Open Knowledge/anti-enclosure contract.
-- [`ontology/commons.ttl`](ontology/commons.ttl) — organization governance vocabulary at `https://id.exergism.org/commons#`.
-- [`ontology/commons-context.jsonld`](ontology/commons-context.jsonld) — JSON-LD context.
+- [`ontology/commons.ttl`](ontology/commons.ttl) — shared cross-project EC primitives at `https://id.exergism.org/commons#`.
+- [`ontology/governance.ttl`](ontology/governance.ttl) — organization governance vocabulary at `https://id.exergism.org/governance#`.
+- [`ontology/commons-context.jsonld`](ontology/commons-context.jsonld) — shared Commons JSON-LD context.
+- [`ontology/governance-context.jsonld`](ontology/governance-context.jsonld) — Governance JSON-LD context, with shared Commons primitives imported through the `ec` prefix.
 - [`ontology/governance-shapes.ttl`](ontology/governance-shapes.ttl) — structural SHACL constraints.
 - [`tools/validate.py`](tools/validate.py) — **canonical complete fail-closed integrity entrypoint**. It installs strict parsing, lifecycle, temporal, release-history, authority, Open Knowledge and CLA/Schedule gates before returning PASS.
 - [`tools/validate_governance.py`](tools/validate_governance.py) — internal core validation library. Running/importing this module alone is **not** the supported activation verdict.
@@ -202,12 +204,14 @@ The conflict model expressly prevents a compensation beneficiary from substantiv
 
 Organization governance defines shared authority concepts; domain repositories implement them.
 
-Funding may require `ec:QualifiedApproval` for a concentration or Endowment decision while remaining authoritative for the funding facts and records that trigger that requirement. Likewise, `id.exergism.org` may consume the organization rule that permanent domain/identifier-authority transfer requires Qualified Approval while remaining only the resolver implementation.
+Funding may require `ecg:QualifiedApproval` for a concentration or Endowment decision while remaining authoritative for the funding facts and records that trigger that requirement. Likewise, `id.exergism.org` may consume the organization rule that permanent domain/identifier-authority transfer requires Qualified Approval while remaining only the resolver implementation.
 
-Persistent organization vocabulary:
+Persistent vocabularies:
 
-- vocabulary: `https://id.exergism.org/commons#`
-- ontology: `https://id.exergism.org/ontology/commons`
+- shared Commons vocabulary: `https://id.exergism.org/commons#`
+- shared Commons ontology: `https://id.exergism.org/ontology/commons`
+- Governance vocabulary: `https://id.exergism.org/governance#`
+- Governance ontology: `https://id.exergism.org/ontology/governance`
 
 Minting a term does not make a policy operative.
 
