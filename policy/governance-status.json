@@ -31,8 +31,8 @@
       "sha256": null
     }
   },
-  "ontology_iri": "https://id.exergism.org/ontology/commons",
-  "vocabulary_namespace": "https://id.exergism.org/commons#",
+  "ontology_iri": "https://id.exergism.org/ontology/governance",
+  "vocabulary_namespace": "https://id.exergism.org/governance#",
   "adoption_record": null,
   "governance_release_contract": {
     "initial_operative_version": "1.0",

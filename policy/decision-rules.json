@@ -5,7 +5,7 @@
   "rules": [
     {
       "id": "ordinary-approval",
-      "iri": "https://id.exergism.org/commons#OrdinaryApproval",
+      "iri": "https://id.exergism.org/governance#OrdinaryApproval",
       "name": "Ordinary Approval",
       "quorum": {"type": "fraction_of_effective_eligible", "comparison": "strictly_greater_than", "numerator": 1, "denominator": 2},
       "approval": {"type": "votes_for_vs_against", "comparison": "strictly_greater_than"},
@@ -15,7 +15,7 @@
     },
     {
       "id": "qualified-approval",
-      "iri": "https://id.exergism.org/commons#QualifiedApproval",
+      "iri": "https://id.exergism.org/governance#QualifiedApproval",
       "name": "Qualified Approval",
       "quorum": {"type": "fraction_of_effective_eligible", "comparison": "at_least", "numerator": 2, "denominator": 3},
       "approval": {"type": "fraction_of_valid_for_against", "comparison": "at_least", "numerator": 2, "denominator": 3},
@@ -25,7 +25,7 @@
     },
     {
       "id": "constitutional-amendment",
-      "iri": "https://id.exergism.org/commons#ConstitutionalAmendment",
+      "iri": "https://id.exergism.org/governance#ConstitutionalAmendment",
       "name": "Constitutional Amendment",
       "quorum": {"type": "fraction_of_effective_eligible", "comparison": "at_least", "numerator": 2, "denominator": 3},
       "approval": {"type": "fraction_of_valid_for_against", "comparison": "at_least", "numerator": 3, "denominator": 4},
@@ -35,7 +35,7 @@
     },
     {
       "id": "mission-locked-amendment",
-      "iri": "https://id.exergism.org/commons#MissionLockedAmendment",
+      "iri": "https://id.exergism.org/governance#MissionLockedAmendment",
       "name": "Mission-Locked Amendment",
       "classification": {
         "trigger": "any_operative_effect_alters_weakens_removes_excepts_or_bypasses_mission_lock_invariant",

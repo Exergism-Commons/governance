@@ -13,8 +13,8 @@ from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-NS = "https://id.exergism.org/commons#"
-ONTOLOGY_IRI = "https://id.exergism.org/ontology/commons"
+NS = "https://id.exergism.org/governance#"
+ONTOLOGY_IRI = "https://id.exergism.org/ontology/governance"
 CANONICAL_GOVERNANCE_PATHS = {
     "constitution": "CONSTITUTION.md",
     "membership_policy": "MEMBERSHIP.md",
@@ -1408,7 +1408,7 @@ def main() -> None:
     membership = load_json("policy/membership-status.json")
     founding = load_json("policy/founding-stewardship.json")
     phase_evidence = load_json("policy/phase-evidence.json")
-    context = load_json("ontology/commons-context.jsonld")
+    context = load_json("ontology/governance-context.jsonld")
 
     require(status["schema_version"] == 6, "unsupported governance status schema")
     require(rules["schema_version"] == 3, "unsupported decision rules schema")
@@ -1519,9 +1519,9 @@ def main() -> None:
     }:
         require(subject in mandatory_qualified, f"qualified-approval subject missing: {subject}")
     require(len(rules["mission_locked_subjects"]) >= 7, "Mission Lock subject set incomplete")
-    require(context["@context"]["ec"] == NS, "JSON-LD namespace mismatch")
+    require(context["@context"]["ecg"]["@id"] == NS, "JSON-LD namespace mismatch")
 
-    ontology = (ROOT / "ontology/commons.ttl").read_text(encoding="utf-8")
+    ontology = (ROOT / "ontology/governance.ttl").read_text(encoding="utf-8")
     shapes = (ROOT / "ontology/governance-shapes.ttl").read_text(encoding="utf-8")
     machine_spec = (ROOT / "spec/MACHINE-READABLE-GOVERNANCE.md").read_text(encoding="utf-8")
     individual_cla = (ROOT / "cla/CLA-1.0-DRAFT.md").read_text(encoding="utf-8")
@@ -1538,8 +1538,8 @@ def main() -> None:
         "MissionGuardian",
         "MembershipRecord",
     ):
-        require(f"ec:{term}" in ontology, f"ontology term missing: {term}")
-    require("ec:GovernanceDecisionShape" in shapes and "ec:MembershipRecordShape" in shapes, "governance SHACL shapes missing")
+        require(f"ecg:{term}" in ontology, f"ontology term missing: {term}")
+    require("ecg:GovernanceDecisionShape" in shapes and "ecg:MembershipRecordShape" in shapes, "governance SHACL shapes missing")
     require("conforming graph is not proof" in machine_spec.lower(), "machine/legal authority boundary missing")
     require("accepted contribution" in individual_cla.lower() and "accepted contribution" in entity_cla.lower() and "limited pre-acceptance review rights" in entity_cla.lower(), "CLA acceptance gate missing")
 
