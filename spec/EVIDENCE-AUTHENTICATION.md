@@ -56,6 +56,8 @@ Only signature references and the digest field itself are excluded to avoid self
 
 Qualification evidence is itself semantically bound. It must be final `supporting-evidence` whose `evidence_purpose` is `reviewer-qualification`, whose `subject_person_id` is the reviewer being qualified, and whose explicit `qualification_scope` covers the authority-bearing review being performed. A well-formed but unrelated evidence record cannot satisfy reviewer qualification merely because it has the right hash or date.
 
+`qualification_kind` is a closed-world machine vocabulary, not arbitrary descriptive text. In the current evidence schema the only recognized affirmative value is `professional-competence`. Any negative, unknown or merely positive-sounding free-form value is invalid. Adding another recognized qualification kind requires an explicit validator/schema change and review rather than silently extending authority through data alone. Free-text `claim` remains descriptive and cannot override the machine qualification kind/scope contract.
+
 Reviewer qualification evidence must exist no later than review completion. Where independence is required, a reviewer may not be one of the competent signatories/adopters whose act is being independently reviewed.
 
 ## 6. Legacy review envelopes
