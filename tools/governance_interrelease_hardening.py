@@ -16,7 +16,8 @@ import validate_governance as core
 ORIG_VALIDATE_DELEGATIONS = delegation_lifecycle.validate_delegations
 ORIG_DELEGATION_ACTIVE_ON = delegation_lifecycle.delegation_active_on
 
-_DELEGATION_POLICY_TIMELINE: list[tuple[date, frozenset[str]]] = []
+# (effective date, scope vocabulary, reserved non-delegable actions)
+_DELEGATION_POLICY_TIMELINE: list[tuple[date, frozenset[str], frozenset[str]]] = []
 _INSTALLED = False
 
 
@@ -136,15 +137,26 @@ def _build_delegation_policy_timeline(status: dict) -> None:
             adoption,
             f"governance release #{adoption.get('release_sequence')}",
         )
+        scopes = snapshot.get("scope_vocabulary")
         reserved = snapshot.get("reserved_non_delegable_actions")
+        core.require(isinstance(scopes, list), "delegation-policy snapshot scope vocabulary must be a list")
         core.require(isinstance(reserved, list), "delegation-policy snapshot reserved actions must be a list")
-        _DELEGATION_POLICY_TIMELINE.append((effective, frozenset(reserved)))
+        _DELEGATION_POLICY_TIMELINE.append((effective, frozenset(scopes), frozenset(reserved)))
         previous = effective
+
+
+def _scope_vocabulary_as_of(target: date) -> frozenset[str]:
+    result: frozenset[str] = frozenset()
+    for effective, scopes, _ in _DELEGATION_POLICY_TIMELINE:
+        if effective > target:
+            break
+        result = scopes
+    return result
 
 
 def _reserved_actions_as_of(target: date) -> frozenset[str]:
     result: frozenset[str] = frozenset()
-    for effective, reserved in _DELEGATION_POLICY_TIMELINE:
+    for effective, _, reserved in _DELEGATION_POLICY_TIMELINE:
         if effective > target:
             break
         result = reserved
@@ -167,7 +179,7 @@ def _reserved_actions_encountered_by(item: dict, target: date) -> frozenset[str]
         return frozenset()
 
     encountered = set(_reserved_actions_as_of(start))
-    for effective, reserved in _DELEGATION_POLICY_TIMELINE:
+    for effective, _, reserved in _DELEGATION_POLICY_TIMELINE:
         if effective <= start:
             continue
         if effective > target:
@@ -176,21 +188,50 @@ def _reserved_actions_encountered_by(item: dict, target: date) -> frozenset[str]
     return frozenset(encountered)
 
 
+def _removed_scopes_encountered_by(item: dict, target: date) -> frozenset[str]:
+    """Return grant scopes that ceased to exist after this grant became effective.
+
+    Removing a scope from a later release is a prospective withdrawal of that
+    authority category. Re-adding the same spelling in an even later release
+    cannot silently resurrect an older grant; a fresh grant is required under
+    the reintroduced policy.
+    """
+    start = core.parse_iso_date(
+        item.get("effective_date"),
+        f"delegation {item.get('delegation_id')} effective_date",
+    )
+    if target < start:
+        return frozenset()
+    scopes = item.get("scope_types")
+    core.require(isinstance(scopes, list), f"delegation {item.get('delegation_id')} scope_types invalid")
+    granted = set(scopes)
+    removed: set[str] = set()
+    for effective, vocabulary, _ in _DELEGATION_POLICY_TIMELINE:
+        if effective <= start:
+            continue
+        if effective > target:
+            break
+        removed.update(granted.difference(vocabulary))
+    return frozenset(removed)
+
+
 def delegation_active_on(item: dict, target: date) -> bool:
     """Return whether a retained grant still supplies usable delegated authority.
 
-    The immutable grant is interpreted under its creation release, but a later
-    release may reserve an action prospectively. Once this retained grant has
-    encountered such a reservation, a still-unrevoked grant cannot regain that
-    authority merely because an even later release removes the reservation.
-    Historical dates before the first conflicting boundary remain evaluated
-    under the policy then in force, while a new post-removal grant may be valid.
+    The immutable grant is interpreted under its creation release, but later
+    releases may reserve actions or remove scope categories prospectively. Once
+    this retained grant encounters either conflict, it cannot regain that
+    authority merely because an even later release relaxes policy again.
     """
     if not ORIG_DELEGATION_ACTIVE_ON(item, target):
         return False
     allowed = item.get("allowed_actions")
+    scopes = item.get("scope_types")
     core.require(isinstance(allowed, list), f"delegation {item.get('delegation_id')} allowed_actions invalid")
-    return not bool(set(allowed).intersection(_reserved_actions_encountered_by(item, target)))
+    core.require(isinstance(scopes, list), f"delegation {item.get('delegation_id')} scope_types invalid")
+    if set(allowed).intersection(_reserved_actions_encountered_by(item, target)):
+        return False
+    return not bool(_removed_scopes_encountered_by(item, target))
 
 
 def _require_reservation_boundary_compliance(item: dict) -> None:
@@ -202,10 +243,6 @@ def _require_reservation_boundary_compliance(item: dict) -> None:
         f"delegation {item.get('delegation_id')} effective_date",
     )
 
-    # If the grant becomes effective while an action is already reserved, it
-    # must not supply authority at its own start boundary. The historical
-    # creation-policy validator should reject this independently; retaining the
-    # check here keeps the prospective layer fail-closed as well.
     start_conflict = sorted(allowed_set.intersection(_reserved_actions_as_of(start)))
     if start_conflict and ORIG_DELEGATION_ACTIVE_ON(item, start):
         core.require(
@@ -213,10 +250,7 @@ def _require_reservation_boundary_compliance(item: dict) -> None:
             f"delegation {item.get('delegation_id')} is active while its effective-date policy already reserves allowed action(s): {', '.join(start_conflict)}",
         )
 
-    # Check every later release boundary, not only the latest one. A revocation
-    # after R2 cannot cure authority that remained live when R2 first reserved
-    # the action, and R3 removing the reservation cannot resurrect the old grant.
-    for effective, reserved in _DELEGATION_POLICY_TIMELINE:
+    for effective, _, reserved in _DELEGATION_POLICY_TIMELINE:
         if effective <= start:
             continue
         conflict = sorted(allowed_set.intersection(reserved))
@@ -224,7 +258,38 @@ def _require_reservation_boundary_compliance(item: dict) -> None:
             continue
         core.require(
             not ORIG_DELEGATION_ACTIVE_ON(item, effective),
-            f"delegation {item.get('delegation_id')} remained active at the first applicable policy boundary {effective.isoformat()} reserving allowed action(s): {', '.join(conflict)}; revoke it no later than that boundary",
+            f"delegation {item.get('delegation_id')} remained active at policy boundary {effective.isoformat()} reserving allowed action(s): {', '.join(conflict)}; revoke it no later than that boundary",
+        )
+
+
+def _require_scope_boundary_compliance(item: dict) -> None:
+    scopes = item.get("scope_types")
+    core.require(isinstance(scopes, list), f"delegation {item.get('delegation_id')} scope_types invalid")
+    granted = set(scopes)
+    start = core.parse_iso_date(
+        item.get("effective_date"),
+        f"delegation {item.get('delegation_id')} effective_date",
+    )
+
+    start_missing = sorted(granted.difference(_scope_vocabulary_as_of(start)))
+    if start_missing and ORIG_DELEGATION_ACTIVE_ON(item, start):
+        core.require(
+            False,
+            f"delegation {item.get('delegation_id')} is active with scope(s) absent from its effective-date policy: {', '.join(start_missing)}",
+        )
+
+    # As with newly reserved actions, test every later release boundary. Once a
+    # scope disappears, the old grant must have ceased by that boundary; later
+    # reintroduction requires a new grant and cannot revive the historical one.
+    for effective, vocabulary, _ in _DELEGATION_POLICY_TIMELINE:
+        if effective <= start:
+            continue
+        missing = sorted(granted.difference(vocabulary))
+        if not missing:
+            continue
+        core.require(
+            not ORIG_DELEGATION_ACTIVE_ON(item, effective),
+            f"delegation {item.get('delegation_id')} remained active at policy boundary {effective.isoformat()} removing delegated scope(s): {', '.join(missing)}; revoke it no later than that boundary",
         )
 
 
@@ -240,6 +305,7 @@ def validate_delegations(delegations: dict, status: dict, rules: dict, membershi
     )
     for item in validated:
         _require_reservation_boundary_compliance(item)
+        _require_scope_boundary_compliance(item)
     return validated
 
 
