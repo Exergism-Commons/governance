@@ -84,6 +84,7 @@ jobs:
             python tools/test_reviewer_and_membership_discovery_guards.py
             python tools/test_phase_transition_hardening_guards.py
             python tools/test_membership_transition_authority_guards.py
+            python tools/test_semantic_publication_contract.py
           } 2>&1 | tee "${LOG_PATH}"
       - name: Persist validator diagnostics
         if: always()
