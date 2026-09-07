@@ -4,6 +4,9 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 # Draft structural constraints. Legal/institutional validity remains external.
+# A conforming GovernanceDecision is structurally well formed; it is not proof
+# that the decision was validly adopted. Downstream consumers must additionally
+# honor the versioned downstream-authority snapshot for the governance release.
 
 ecg:GovernanceDecisionShape a sh:NodeShape ;
     sh:targetClass ecg:GovernanceDecision ;
@@ -22,7 +25,15 @@ ecg:GovernanceDecisionShape a sh:NodeShape ;
     sh:property [
         sh:path ecg:governanceVersion ;
         sh:minCount 1 ;
-        sh:maxCount 1
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1
+    ] ;
+    sh:property [
+        sh:path ecg:decisionDate ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:date
     ] .
 
 ecg:DelegationShape a sh:NodeShape ;
